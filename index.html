@@ -420,6 +420,32 @@ option{color:#111a0e;background:#ffffff;}
         <button class="btn btn-green" onclick="addCategory()" style="padding:12px 20px">Add</button>
       </div>
     </div>
+    <div class="settings-section">
+      <div class="settings-heading">Claude AI</div>
+      <div class="settings-card">
+        <div class="settings-row" style="flex-direction:column;align-items:flex-start;gap:8px">
+          <div><div class="settings-row-label">API Key</div><div class="settings-row-sub">Used for meal ideas. Stored locally, never sent elsewhere.</div></div>
+          <div class="add-row" style="margin-top:0;width:100%">
+            <input type="password" id="apikey-input" placeholder="sk-ant-..." autocomplete="off" style="flex:1">
+            <button class="btn btn-green" onclick="saveApiKey()" style="padding:12px 20px">Save</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="settings-section">
+      <div class="settings-heading">Data</div>
+      <div class="settings-card">
+        <div class="settings-row">
+          <div style="flex:1"><div class="settings-row-label">Export</div><div class="settings-row-sub">Download all inventory data as JSON</div></div>
+          <button class="s-btn s-btn-rename" onclick="exportData()">export</button>
+        </div>
+        <div class="settings-row">
+          <div style="flex:1"><div class="settings-row-label">Import</div><div class="settings-row-sub">Restore from a previous export</div></div>
+          <button class="s-btn s-btn-rename" onclick="document.getElementById('import-file-input').click()">import</button>
+          <input type="file" id="import-file-input" accept=".json" style="display:none" onchange="importData(this)">
+        </div>
+      </div>
+    </div>
     <div class="settings-section" style="padding-bottom:32px">
       <div class="settings-heading">About</div>
       <div class="settings-card">
@@ -607,8 +633,8 @@ option{color:#111a0e;background:#ffffff;}
 </div>
 
 <script>
-const ITEMS_KEY='mise_items_v5',SHOP_KEY='mise_shop_v5',LOCS_KEY='mise_locs_v3',CATS_KEY='mise_cats_v3';
-let items=[],shoppingList=[],locations=[],categories=[];
+const ITEMS_KEY='mise_items_v5',SHOP_KEY='mise_shop_v5',LOCS_KEY='mise_locs_v3',CATS_KEY='mise_cats_v3',APIKEY_KEY='mise_apikey_v1';
+let items=[],shoppingList=[],locations=[],categories=[],apiKey='';
 let editingId=null,currentView='category',currentSort='name',scanStream=null;
 let renameType=null,renameIdx=null,confirmCallback=null,reviewItems=[];
 
@@ -624,6 +650,7 @@ function init(){
     locations=JSON.parse(localStorage.getItem(LOCS_KEY))||DEFAULT_LOCS.slice();
     categories=JSON.parse(localStorage.getItem(CATS_KEY))||DEFAULT_CATS.slice();
   }catch(e){items=seed();shoppingList=[];locations=DEFAULT_LOCS.slice();categories=DEFAULT_CATS.slice();}
+  apiKey=localStorage.getItem(APIKEY_KEY)||'';
   // Explicitly set category view active — Chrome iOS doesn't always apply CSS class styles on first paint
   currentView='category';
   const catBtn=document.getElementById('view-cat-btn');
@@ -641,6 +668,7 @@ function save(){
 }
 
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
 
 function seed(){
   return[
@@ -731,7 +759,7 @@ function renderStats(){
 // ── INVENTORY ─────────────────────────────────────────────────────────────────
 function renderInventory(){
   const q=(document.getElementById('search-input').value||'').toLowerCase();
-  let filtered=items.filter(i=>!q||i.name.toLowerCase().includes(q)||(i.notes||'').toLowerCase().includes(q));
+  let filtered=items.filter(i=>!q||i.name.toLowerCase().includes(q)||(i.notes||'').toLowerCase().includes(q)||i.category.toLowerCase().includes(q)||i.location.toLowerCase().includes(q));
   filtered=sortItems(filtered);
   const el=document.getElementById('inventory-main');
   if(!filtered.length){
@@ -763,14 +791,14 @@ function renderCat(filtered,el){
   el.innerHTML=Object.keys(g).sort().map(cat=>`
     <div class="section">
       <div class="section-header">
-        <span class="section-label">${cat}</span>
+        <span class="section-label">${esc(cat)}</span>
         <span class="section-count">${g[cat].length} items</span>
       </div>
       <div class="section-cards-wrap">
         <div class="items-grid">${g[cat].map(item=>`
           <div class="item-card ${sc(item)}" onclick="openEdit('${item.id}')">
-            <div class="item-name">${item.name}</div>
-            <div class="item-meta">${item.location}${item.notes?' · '+item.notes:''}</div>
+            <div class="item-name">${esc(item.name)}</div>
+            <div class="item-meta">${esc(item.location)}${item.notes?' · '+esc(item.notes):''}</div>
             <div class="item-bottom">
               <div class="qty-controls" onclick="event.stopPropagation()">
                 <button class="qty-btn" onclick="adj('${item.id}',-1)">−</button>
@@ -789,14 +817,14 @@ function renderLoc(filtered,el){
   el.innerHTML=Object.keys(g).sort().map(loc=>`
     <div class="loc-section">
       <div class="loc-header">
-        <span class="loc-header-name">${loc}</span>
+        <span class="loc-header-name">${esc(loc)}</span>
         <span class="loc-header-count">${g[loc].length} items</span>
       </div>
       <div class="loc-body">${g[loc].map(item=>`
         <div class="loc-row ${sc(item)}" onclick="openEdit('${item.id}')">
           <div class="loc-info">
-            <div class="loc-name">${item.name}</div>
-            <div class="loc-cat">${item.category}${item.notes?' · '+item.notes:''}</div>
+            <div class="loc-name">${esc(item.name)}</div>
+            <div class="loc-cat">${esc(item.category)}${item.notes?' · '+esc(item.notes):''}</div>
           </div>
           ${pill(item)}
           <div class="qty-controls" onclick="event.stopPropagation()">
@@ -832,8 +860,8 @@ function setView(v){
 
 // ── SELECTS ───────────────────────────────────────────────────────────────────
 function populateSelects(selCat,selLoc){
-  document.getElementById('f-category').innerHTML=categories.map(c=>`<option ${c===selCat?'selected':''}>${c}</option>`).join('');
-  document.getElementById('f-location').innerHTML=locations.map(l=>`<option ${l===selLoc?'selected':''}>${l}</option>`).join('');
+  document.getElementById('f-category').innerHTML=categories.map(c=>`<option value="${esc(c)}" ${c===selCat?'selected':''}>${esc(c)}</option>`).join('');
+  document.getElementById('f-location').innerHTML=locations.map(l=>`<option value="${esc(l)}" ${l===selLoc?'selected':''}>${esc(l)}</option>`).join('');
 }
 
 // ── ADD / EDIT ────────────────────────────────────────────────────────────────
@@ -967,8 +995,8 @@ function renderShopping(){
     <div class="shop-item ${s.checked?'checked':''}">
       <input type="checkbox" class="shop-cb" ${s.checked?'checked':''} onchange="toggleShop('${s.id}',this.checked)">
       <div style="flex:1">
-        <div class="shop-name">${s.name}</div>
-        ${s.note?`<div class="shop-note">${s.note}</div>`:''}
+        <div class="shop-name">${esc(s.name)}</div>
+        ${s.note?`<div class="shop-note">${esc(s.note)}</div>`:''}
       </div>
       <button class="shop-remove" onclick="removeShop('${s.id}')">✕</button>
     </div>`).join('');
@@ -983,16 +1011,19 @@ async function suggestMeals(){
   const el=document.getElementById('meal-result');
   const inStock=items.filter(i=>i.qty>0).map(i=>i.name);
   if(inStock.length<3){el.innerHTML=`<div class="ai-result">Add more items to your station first.</div>`;return;}
+  if(!apiKey){el.innerHTML=`<div class="ai-result" style="color:#e8d060">Add your Claude API key in Settings to use this feature.</div>`;return;}
   el.innerHTML=`<div class="ai-loading"><div class="spinner"></div>thinking...</div>`;
   try{
     const res=await fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:1000,
         messages:[{role:'user',content:`My pantry has: ${inStock.join(', ')}. Suggest 4 practical meal or snack ideas using primarily these. Assume standard fridge staples and fresh produce available. Short punchy title + 1–2 sentences each.`}]})
     });
     const data=await res.json();
-    el.innerHTML=`<div class="ai-result">${(data.content?.[0]?.text||'No ideas.').replace(/\n/g,'<br>')}</div>`;
-  }catch(e){el.innerHTML=`<div class="ai-result" style="color:#e88">Couldn't connect.</div>`;}
+    if(data.error){el.innerHTML=`<div class="ai-result" style="color:#e88">${esc(data.error.message||'API error')}</div>`;return;}
+    el.innerHTML=`<div class="ai-result">${esc(data.content?.[0]?.text||'No ideas.').replace(/\n/g,'<br>')}</div>`;
+  }catch(e){el.innerHTML=`<div class="ai-result" style="color:#e88">Couldn't connect. Check your API key in Settings.</div>`;}
 }
 
 // ── IMPORT ────────────────────────────────────────────────────────────────────
@@ -1043,9 +1074,9 @@ function renderReviewSheet(){
       <div class="review-item-row" onclick="toggleReviewExpand(${idx})">
         <input type="checkbox" class="review-cb" ${r.include?'checked':''} onchange="toggleReviewInclude(${idx},this.checked)" onclick="event.stopPropagation()">
         <div class="review-info">
-          <div class="review-name">${r.matched?r.matched.name:r.name}</div>
+          <div class="review-name">${esc(r.matched?r.matched.name:r.name)}</div>
           <span class="review-tag ${r.matched?'tag-restock':'tag-new'}">${r.matched?`restock +${r.qty}`:'new'}</span>
-          <span class="review-loc-hint">${r.location}</span>
+          <span class="review-loc-hint">${esc(r.location)}</span>
         </div>
         <div class="review-qty" onclick="event.stopPropagation()">
           <button class="review-qty-btn" onclick="adjReview(${idx},-1)">−</button>
@@ -1058,18 +1089,18 @@ function renderReviewSheet(){
         <div class="review-detail-row">
           <label>Location</label>
           <select onchange="updateReviewField(${idx},'location',this.value)">
-            ${locations.map(l=>`<option value="${l}" ${l===r.location?'selected':''}>${l}</option>`).join('')}
+            ${locations.map(l=>`<option value="${esc(l)}" ${l===r.location?'selected':''}>${esc(l)}</option>`).join('')}
           </select>
         </div>
         <div class="review-detail-row">
           <label>Category</label>
           <select onchange="updateReviewField(${idx},'category',this.value)">
-            ${categories.map(c=>`<option value="${c}" ${c===r.category?'selected':''}>${c}</option>`).join('')}
+            ${categories.map(c=>`<option value="${esc(c)}" ${c===r.category?'selected':''}>${esc(c)}</option>`).join('')}
           </select>
         </div>
         <div class="review-detail-row">
           <label>Notes</label>
-          <input type="text" value="${r.notes||''}" placeholder="brand, size..." oninput="updateReviewField(${idx},'notes',this.value)">
+          <input type="text" value="${esc(r.notes||'')}" placeholder="brand, size..." oninput="updateReviewField(${idx},'notes',this.value)">
         </div>
       </div>
     </div>`).join('');
@@ -1097,13 +1128,51 @@ function applyImport(){
 function closeReviewSheet(){document.getElementById('review-sheet').style.display='none';}
 
 // ── SETTINGS ──────────────────────────────────────────────────────────────────
-function renderSettings(){renderLocationsList();renderCategoriesList();}
+function renderSettings(){
+  renderLocationsList();renderCategoriesList();
+  const k=document.getElementById('apikey-input');
+  if(k)k.value=apiKey;
+}
+
+function saveApiKey(){
+  const val=document.getElementById('apikey-input').value.trim();
+  apiKey=val;
+  localStorage.setItem(APIKEY_KEY,val);
+  showToast(val?'API key saved.':'API key cleared.');
+}
+
+function exportData(){
+  const payload={items,shoppingList,locations,categories,exportedAt:new Date().toISOString()};
+  const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download='mise-backup-'+new Date().toISOString().slice(0,10)+'.json';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
+  showToast('data exported.');
+}
+
+function importData(input){
+  const file=input.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      const d=JSON.parse(e.target.result);
+      if(!Array.isArray(d.items))throw new Error('invalid format');
+      showConfirm('Replace all data?','This will overwrite your current inventory with the imported data.','Import',()=>{
+        items=d.items||[];shoppingList=d.shoppingList||[];
+        locations=d.locations||DEFAULT_LOCS.slice();categories=d.categories||DEFAULT_CATS.slice();
+        save();renderInventory();renderSettings();showToast(`imported ${items.length} items.`);
+      });
+    }catch(err){showToast('invalid backup file');}
+  };
+  reader.readAsText(file);
+  input.value='';
+}
 
 function renderLocationsList(){
   document.getElementById('locations-list').innerHTML=
     locations.map((loc,idx)=>`
       <div class="settings-row">
-        <div style="flex:1"><div class="settings-row-label">${loc}</div><div class="settings-row-sub">${items.filter(i=>i.location===loc).length} items</div></div>
+        <div style="flex:1"><div class="settings-row-label">${esc(loc)}</div><div class="settings-row-sub">${items.filter(i=>i.location===loc).length} items</div></div>
         <button class="s-btn s-btn-rename" onclick="openRenameSheet('location',${idx})">rename</button>
         <button class="s-btn s-btn-del" onclick="confirmDeleteLocation(${idx})">✕</button>
       </div>`).join('')||`<div class="settings-row"><div class="settings-row-label" style="color:var(--ink-3);font-style:italic;font-family:'Instrument Serif',serif">no locations yet</div></div>`;
@@ -1113,7 +1182,7 @@ function renderCategoriesList(){
   document.getElementById('categories-list').innerHTML=
     categories.map((cat,idx)=>`
       <div class="settings-row">
-        <div style="flex:1"><div class="settings-row-label">${cat}</div><div class="settings-row-sub">${items.filter(i=>i.category===cat).length} items</div></div>
+        <div style="flex:1"><div class="settings-row-label">${esc(cat)}</div><div class="settings-row-sub">${items.filter(i=>i.category===cat).length} items</div></div>
         <button class="s-btn s-btn-rename" onclick="openRenameSheet('category',${idx})">rename</button>
         <button class="s-btn s-btn-del" onclick="confirmDeleteCategory(${idx})">✕</button>
       </div>`).join('')||`<div class="settings-row"><div class="settings-row-label" style="color:var(--ink-3);font-style:italic;font-family:'Instrument Serif',serif">no categories yet</div></div>`;
