@@ -26,10 +26,11 @@
 –green-light:#ddecd8;
 –green-pale:#edf3ea;
 
-/* Lemon — alert only, not primary CTA */
+/* Lemon — low-stock status only */
 –lemon:#e8e02a;
 –lemon-2:#f5f0a0;
 –lemon-pale:#fdfde8;
+–lemon-dark:#7a6a00;
 
 /* Status */
 –red:#c44040;
@@ -118,7 +119,7 @@ header{background:#ffffff;border-bottom:1.5px solid #e4e8e2;padding:max(env(safe
 
 /* ── ITEM CARDS ── */
 .section{margin-bottom:24px;}
-.section-header{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:#111a0e;border-radius:14px 14px 0 0;margin-bottom:0;}
+.section-header{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:#2d6a2d;border-radius:14px 14px 0 0;margin-bottom:0;}
 .section-label{font-family:‘Instrument Serif’,serif;font-size:16px;color:#ffffff;letter-spacing:-0.3px;}
 .section-count{font-size:10px;color:rgba(255,255,255,0.5);letter-spacing:0.04em;}
 .section-cards-wrap{background:#ffffff;border:1.5px solid #e4e8e2;border-top:none;border-radius:0 0 14px 14px;padding:10px;margin-bottom:0;}
@@ -142,7 +143,7 @@ header{background:#ffffff;border-bottom:1.5px solid #e4e8e2;padding:max(env(safe
 
 .stock-pill{font-size:9px;padding:2px 7px;border-radius:3px;text-transform:uppercase;letter-spacing:0.06em;flex-shrink:0;}
 .pill-ok{background:#ddecd8;color:#2d6a2d;}
-.pill-low{background:#f5f0a0;color:#7a6a00;}
+.pill-low{background:#f5f0a0;color:var(–lemon-dark);}
 .pill-out{background:#fdeaea;color:#c44040;}
 .pill-exp{background:#fdf2e0;color:#c47c20;}
 
@@ -180,17 +181,17 @@ header{background:#ffffff;border-bottom:1.5px solid #e4e8e2;padding:max(env(safe
 /* ── IDEAS ── */
 .ai-panel{background:#111a0e;border-radius:16px;padding:22px 20px;margin:16px;}
 .ai-panel h3{font-family:‘Instrument Serif’,serif;font-size:20px;color:#ffffff;letter-spacing:-0.3px;margin-bottom:3px;font-weight:400;}
-.ai-sub{font-size:10px;color:rgba(255,255,255,0.45);margin-bottom:16px;text-transform:uppercase;letter-spacing:0.06em;}
+.ai-sub{font-size:10px;color:rgba(255,255,255,0.60);margin-bottom:16px;text-transform:uppercase;letter-spacing:0.06em;}
 .ai-result{background:rgba(255,255,255,0.08);border-radius:10px;padding:14px;font-size:13px;line-height:1.75;color:rgba(255,255,255,0.9);margin-top:14px;white-space:pre-wrap;}
 .ai-loading{display:flex;align-items:center;gap:10px;font-size:11px;color:rgba(255,255,255,0.4);padding:14px;margin-top:14px;}
-.spinner{width:14px;height:14px;border:2px solid rgba(255,255,255,0.15);border-top-color:var(–lemon);border-radius:50%;animation:spin 0.7s linear infinite;flex-shrink:0;}
+.spinner{width:14px;height:14px;border:2px solid rgba(255,255,255,0.15);border-top-color:var(–green-2);border-radius:50%;animation:spin 0.7s linear infinite;flex-shrink:0;}
 @keyframes spin{to{transform:rotate(360deg)}}
 
 /* ── IMPORT ── */
 .import-zone{padding:16px;}
 .import-hero{background:var(–ink);border-radius:16px;padding:22px 20px 20px;margin-bottom:16px;}
 .import-hero h3{font-family:‘Instrument Serif’,serif;font-size:20px;color:white;font-weight:400;letter-spacing:-0.3px;margin-bottom:4px;}
-.import-hero p{font-size:10px;color:rgba(255,255,255,0.45);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:14px;}
+.import-hero p{font-size:10px;color:rgba(255,255,255,0.60);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:14px;}
 .import-prompt-box{background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.18);border-radius:10px;padding:13px 14px;font-size:12px;color:rgba(255,255,255,0.88);line-height:1.65;margin-bottom:14px;}
 .import-paste-area{width:100%;min-height:180px;padding:13px 14px;border:1.5px solid var(–border);border-radius:14px;background:var(–white);font-family:‘Geist Mono’,monospace;font-size:13px;color:var(–ink);outline:none;resize:none;-webkit-appearance:none;line-height:1.65;}
 .import-paste-area:focus{border-color:var(–green);}
@@ -220,8 +221,6 @@ header{background:#ffffff;border-bottom:1.5px solid #e4e8e2;padding:max(env(safe
 .btn{font-family:‘Geist Mono’,monospace;font-size:12px;padding:11px 18px;border-radius:10px;border:none;cursor:pointer;transition:all 0.12s;letter-spacing:0.02em;white-space:nowrap;min-height:44px;display:inline-flex;align-items:center;justify-content:center;}
 .btn-green{background:#2d6a2d;color:#ffffff;}
 .btn-green:active{background:#3d8c3d;}
-.btn-lemon{background:#e8e02a;color:#111a0e;font-weight:500;}
-.btn-lemon:active{background:#d4cc10;}
 .btn-outline{background:#ffffff;color:#2c3d28;border:1.5px solid #e4e8e2;}
 .btn-outline:active{border-color:#2d6a2d;color:#2d6a2d;background:#edf3ea;}
 /* Cancel button — solid, visible, clearly secondary */
@@ -249,7 +248,7 @@ select{color:#111a0e !important;}
 option{color:#111a0e;background:#ffffff;}
 .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
 .sheet-actions{display:flex;flex-direction:column;gap:10px;margin-top:20px;}
-.lemon-bar{height:3px;background:#e8e02a;width:28px;border-radius:2px;margin-bottom:18px;}
+.lemon-bar{height:3px;background:#2d6a2d;width:28px;border-radius:2px;margin-bottom:18px;}
 
 /* qty stepper — warm and clear */
 .qty-stepper{display:flex;align-items:center;border:1.5px solid #e4e8e2;border-radius:12px;background:#ffffff;overflow:hidden;min-height:50px;box-shadow:inset 0 1px 3px rgba(0,0,0,0.04);}
@@ -268,7 +267,7 @@ option{color:#111a0e;background:#ffffff;}
 .scanner-box{background:var(–ink);border-radius:12px;overflow:hidden;margin-bottom:14px;position:relative;}
 #scan-video{width:100%;max-height:220px;object-fit:cover;display:block;}
 .scan-reticle-wrap{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;}
-.scan-reticle{width:200px;height:90px;border:2px solid var(–lemon);border-radius:6px;opacity:0.9;}
+.scan-reticle{width:200px;height:90px;border:2px solid var(–green-2);border-radius:6px;opacity:0.9;}
 .scan-status{text-align:center;font-size:10px;color:var(–ink-3);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:16px;}
 
 /* review items */
@@ -343,7 +342,7 @@ option{color:#111a0e;background:#ffffff;}
 .ai-setup-title{font-family:'Instrument Serif',serif;font-size:16px;color:#fff;margin-bottom:6px;}
 .ai-setup-steps{font-size:11px;color:rgba(255,255,255,0.6);line-height:1.9;list-style:none;}
 .ai-setup-steps li::before{content:'→ ';}
-.ai-setup-link{display:inline-flex;align-items:center;margin-top:10px;padding:9px 16px;background:#e8e02a;color:#111a0e;border-radius:8px;font-size:12px;font-family:'Geist Mono',monospace;text-decoration:none;font-weight:500;}
+.ai-setup-link{display:inline-flex;align-items:center;margin-top:10px;padding:9px 16px;background:#3d8c3d;color:#ffffff;border-radius:8px;font-size:12px;font-family:'Geist Mono',monospace;text-decoration:none;font-weight:500;}
 
 /* ── GOOGLE SHEETS SECTION ── */
 .sheets-status-row{display:flex;align-items:center;gap:8px;padding:12px 16px;background:#f8f9f7;border-radius:10px;margin-bottom:12px;border:1.5px solid #e4e8e2;}
@@ -426,7 +425,7 @@ option{color:#111a0e;background:#ffffff;}
     <div class="ai-panel">
       <h3>What can we make?</h3>
       <div class="ai-sub">based on your station, right now</div>
-      <button class="btn btn-lemon" onclick="suggestMeals()">✦ generate ideas</button>
+      <button class="btn btn-green" onclick="suggestMeals()">✦ generate ideas</button>
       <div id="meal-result"></div>
     </div>
     <div id="ideas-setup-hint"></div>
@@ -448,7 +447,7 @@ option{color:#111a0e;background:#ffffff;}
           <strong>item name, quantity</strong><br>
           Plain names only. No commentary."
         </div>
-        <button class="btn btn-lemon btn-full" onclick="copyPrompt()" style="border-radius:12px;min-height:50px">⎘ copy prompt for Claude</button>
+        <button class="btn btn-green btn-full" onclick="copyPrompt()" style="border-radius:12px;min-height:50px">⎘ copy prompt for Claude</button>
       </div>
       <div class="form-row">
         <label>Paste Claude's response here</label>
