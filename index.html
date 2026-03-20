@@ -328,6 +328,10 @@ option{color:#111a0e;background:#ffffff;}
 .page-title{font-family:'Instrument Serif',serif;font-size:22px;color:#111a0e;letter-spacing:-0.5px;font-weight:400;}
 .page-sub{font-size:10px;color:#5a6e52;text-transform:uppercase;letter-spacing:0.06em;margin-top:2px;}
 
+/* ── MUTED ITEM CARD ── */
+.item-card.muted{opacity:0.45;border-top:none;}
+.item-card.muted .item-name{color:#5a6e52;}
+
 /* ── STAT DOTS — coloured by type ── */
 .stat-dot.dot-low{background:#e8e02a;}
 .stat-dot.dot-out{background:#c44040;}
@@ -631,6 +635,17 @@ option{color:#111a0e;background:#ffffff;}
             <input type="text" id="f-notes" placeholder="brand, size...">
           </div>
         </div>
+        <div class="form-row" style="display:flex;align-items:center;justify-content:space-between;border:1.5px solid #e4e8e2;border-radius:12px;padding:13px 14px;background:#f8f9f7;">
+          <div>
+            <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:#5a6e52;margin-bottom:2px;">Mute alerts</div>
+            <div style="font-size:11px;color:#9aab92;">No low/out warnings or restock suggestions</div>
+          </div>
+          <label style="position:relative;display:inline-block;width:44px;height:26px;flex-shrink:0;">
+            <input type="checkbox" id="f-noAlert" style="opacity:0;width:0;height:0;position:absolute;">
+            <span id="f-noAlert-track" style="position:absolute;inset:0;border-radius:13px;background:#e4e8e2;transition:background 0.2s;cursor:pointer;" onclick="this.previousElementSibling.click()"></span>
+            <span id="f-noAlert-thumb" style="position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,0.18);transition:transform 0.2s;pointer-events:none;"></span>
+          </label>
+        </div>
       </div>
       <div class="sheet-actions">
         <button class="btn btn-green btn-full" onclick="saveItem()">placed.</button>
@@ -930,9 +945,9 @@ function expiryPill(item){
 
 // ── STATS ─────────────────────────────────────────────────────────────────────
 function renderStats(){
-  const low=items.filter(i=>i.qty>0&&i.qty<=i.threshold).length;
-  const out=items.filter(i=>i.qty===0).length;
-  const exp=items.filter(i=>{const d=daysUntilExpiry(i.expiry);return d!==null&&d<=30&&d>0;}).length;
+  const low=items.filter(i=>!i.noAlert&&i.qty>0&&i.qty<=i.threshold).length;
+  const out=items.filter(i=>!i.noAlert&&i.qty===0).length;
+  const exp=items.filter(i=>!i.noAlert&&(()=>{const d=daysUntilExpiry(i.expiry);return d!==null&&d<=30&&d>0;})()).length;
   document.getElementById('stats-strip').innerHTML=`
     <div class="stat"><strong>${items.length}</strong> items</div>
     <div class="stat low"><span class="stat-dot dot-low"></span><strong>${low}</strong> low</div>
@@ -955,6 +970,7 @@ function renderInventory(){
 }
 
 function sc(i){
+  if(i.noAlert) return'muted';
   const ec=expiryClass(i);
   if(ec) return ec;
   if(i.qty===0) return'out';
@@ -963,6 +979,7 @@ function sc(i){
 }
 
 function pill(i){
+  if(i.noAlert) return`<span class="stock-pill" style="background:#f0f0ec;color:#9aab92;">muted</span>`;
   const ep=expiryPill(i);
   if(ep) return ep;
   if(i.qty===0) return`<span class="stock-pill pill-out">out</span>`;
@@ -1049,6 +1066,17 @@ function populateSelects(selCat,selLoc){
 }
 
 // ── ADD / EDIT ────────────────────────────────────────────────────────────────
+function setNoAlertToggle(v){
+  const cb=document.getElementById('f-noAlert');
+  const track=document.getElementById('f-noAlert-track');
+  const thumb=document.getElementById('f-noAlert-thumb');
+  if(!cb)return;
+  cb.checked=v;
+  track.style.background=v?'#2d6a2d':'#e4e8e2';
+  thumb.style.transform=v?'translateX(18px)':'translateX(0)';
+}
+document.addEventListener('change',function(e){if(e.target.id==='f-noAlert')setNoAlertToggle(e.target.checked);});
+
 function openAddSheet(prefill){
   editingId=null;
   document.getElementById('sheet-title').textContent='Place item';
@@ -1057,6 +1085,7 @@ function openAddSheet(prefill){
   document.getElementById('f-thresh').value=1;
   document.getElementById('f-notes').value='';
   document.getElementById('f-expiry').value='';
+  setNoAlertToggle(false);
   document.getElementById('delete-btn').style.display='none';
   document.getElementById('method-chooser').style.display='';
   populateSelects('','');
@@ -1075,6 +1104,7 @@ function openEdit(id){
   document.getElementById('f-thresh').value=item.threshold;
   document.getElementById('f-notes').value=item.notes||'';
   document.getElementById('f-expiry').value=item.expiry||'';
+  setNoAlertToggle(!!item.noAlert);
   document.getElementById('delete-btn').style.display='';
   document.getElementById('method-chooser').style.display='none';
   document.getElementById('scan-panel').style.display='none';
@@ -1110,6 +1140,7 @@ function saveItem(){
     threshold:parseInt(document.getElementById('f-thresh').value)||1,
     notes:document.getElementById('f-notes').value.trim(),
     expiry:document.getElementById('f-expiry').value||'',
+    noAlert:document.getElementById('f-noAlert').checked,
   };
   if(editingId){
     const idx=items.findIndex(i=>i.id===editingId);
@@ -1159,7 +1190,7 @@ function saveQuickAdd(){
 
 // ── SHOPPING ──────────────────────────────────────────────────────────────────
 function generateShoppingList(){
-  const low=items.filter(i=>i.qty<=i.threshold);
+  const low=items.filter(i=>!i.noAlert&&i.qty<=i.threshold);
   const existing=shoppingList.map(s=>s.name);
   let added=0;
   low.forEach(item=>{
