@@ -831,7 +831,9 @@ function init(){
     categories=JSON.parse(localStorage.getItem(CATS_KEY))||DEFAULT_CATS.slice();
   }catch(e){items=seed();shoppingList=[];locations=DEFAULT_LOCS.slice();categories=DEFAULT_CATS.slice();}
   apiKey=localStorage.getItem(APIKEY_KEY)||'';
-  sheetsUrl=localStorage.getItem(SHEETS_KEY)||'';
+  const DEFAULT_SHEETS_URL='https://script.google.com/macros/s/AKfycbxyrG_XWfQAEDPdtzyq9NypIu5TC-QejSFlW_lB6slfjXcOjGSftHu4A56sWs-i_UOl/exec';
+  sheetsUrl=localStorage.getItem(SHEETS_KEY)||DEFAULT_SHEETS_URL;
+  if(!localStorage.getItem(SHEETS_KEY))localStorage.setItem(SHEETS_KEY,DEFAULT_SHEETS_URL);
   sheetsLastSync=localStorage.getItem(SHEETS_SYNC_KEY)||'';
   // Explicitly set category view active — Chrome iOS doesn't always apply CSS class styles on first paint
   currentView='category';
