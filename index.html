@@ -368,6 +368,47 @@ option{color:#111a0e;background:#ffffff;}
 .copy-code-btn:active{background:#edf3ea;color:#2d6a2d;border-color:#ddecd8;}
 .sync-btn-row{display:flex;gap:8px;margin-top:12px;}
 .sync-btn-row .btn{flex:1;}
+
+/* ── RECIPES ── */
+.recipe-card{background:#ffffff;border:1.5px solid #e4e8e2;border-radius:14px;padding:16px;margin-bottom:10px;cursor:pointer;display:flex;align-items:center;gap:14px;transition:transform 0.1s;}
+.recipe-card:active{transform:scale(0.98);}
+.recipe-card.ready{border-left:4px solid #2d6a2d;}
+.recipe-card.mostly{border-left:4px solid #c47c20;}
+.recipe-card.missing{border-left:4px solid #c44040;}
+.recipe-readiness{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.recipe-readiness.ready{background:#ddecd8;}
+.recipe-readiness.mostly{background:#fdf2e0;}
+.recipe-readiness.missing{background:#fdeaea;}
+.recipe-info{flex:1;min-width:0;}
+.recipe-name{font-family:'Instrument Serif',serif;font-size:17px;letter-spacing:-0.2px;color:#111a0e;margin-bottom:2px;}
+.recipe-meta{font-size:10px;color:#5a6e52;letter-spacing:0.03em;}
+.recipe-badge{font-size:9px;padding:2px 8px;border-radius:3px;text-transform:uppercase;letter-spacing:0.06em;white-space:nowrap;flex-shrink:0;}
+.recipe-badge.ready{background:#ddecd8;color:#2d6a2d;}
+.recipe-badge.mostly{background:#fdf2e0;color:#c47c20;}
+.recipe-badge.missing{background:#fdeaea;color:#c44040;}
+.recipe-empty{text-align:center;padding:64px 24px;}
+.recipe-empty h3{font-family:'Instrument Serif',serif;font-size:22px;color:#2c3d28;margin-bottom:8px;font-weight:400;font-style:italic;}
+.recipe-empty p{font-size:12px;color:#5a6e52;line-height:1.6;margin-bottom:20px;}
+/* ingredient rows in detail sheet */
+.ing-row{display:flex;align-items:center;padding:11px 0;border-bottom:1px solid #e4e8e2;gap:12px;}
+.ing-row:last-child{border-bottom:none;}
+.ing-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.ing-dot.ok{background:#2d6a2d;}
+.ing-dot.low{background:#e8e02a;}
+.ing-dot.out{background:#c44040;}
+.ing-dot.unknown{background:#9aab92;}
+.ing-name{flex:1;font-family:'Instrument Serif',serif;font-size:15px;letter-spacing:-0.2px;color:#111a0e;}
+.ing-qty{font-size:11px;color:#5a6e52;white-space:nowrap;}
+.ing-stock{font-size:10px;color:#9aab92;white-space:nowrap;}
+/* ingredient builder in edit sheet */
+.ing-builder-row{display:flex;gap:6px;align-items:center;margin-bottom:8px;}
+.ing-builder-row input{flex:2;padding:10px 12px;border:1.5px solid #e4e8e2;border-radius:10px;background:#f8f9f7;font-family:'Geist Mono',monospace;font-size:13px;color:#111a0e;outline:none;min-height:44px;}
+.ing-builder-row input.ing-qty-field{flex:1;}
+.ing-builder-row input:focus{border-color:#2d6a2d;background:#fff;}
+.ing-del-btn{width:36px;height:36px;border-radius:50%;border:none;background:none;color:#9aab92;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;line-height:1;}
+.ing-del-btn:active{color:#c44040;}
+.add-ing-btn{width:100%;padding:11px;border:1.5px dashed #e4e8e2;border-radius:10px;background:none;font-family:'Geist Mono',monospace;font-size:11px;color:#5a6e52;cursor:pointer;letter-spacing:0.04em;margin-bottom:4px;}
+.add-ing-btn:active{border-color:#2d6a2d;color:#2d6a2d;background:#edf3ea;}
 </style>
 
 </head>
@@ -435,12 +476,17 @@ option{color:#111a0e;background:#ffffff;}
     <div id="ideas-setup-hint"></div>
   </div>
 
-  <!-- IMPORT -->
+  <!-- IMPORT (hidden screen, opened as overlay) -->
 
-  <div class="screen" id="screen-import">
+  <div class="screen" id="screen-import" style="display:none">
     <div class="page-header">
-      <div class="page-title">Import</div>
-      <div class="page-sub">haul import via Claude</div>
+      <div class="page-header-row">
+        <div>
+          <div class="page-title">Haul Import</div>
+          <div class="page-sub">import via Claude</div>
+        </div>
+        <button class="btn btn-ghost" onclick="switchScreen('station',document.getElementById('nav-station'))" style="font-size:11px;padding:8px 14px;">← back</button>
+      </div>
     </div>
     <div class="import-zone">
       <div class="import-hero">
@@ -462,6 +508,21 @@ option{color:#111a0e;background:#ffffff;}
         <button class="btn btn-ghost btn-full" onclick="clearImport()">clear</button>
       </div>
     </div>
+  </div>
+
+  <!-- RECIPES -->
+
+  <div class="screen" id="screen-recipes">
+    <div class="page-header">
+      <div class="page-header-row">
+        <div>
+          <div class="page-title">Recipes</div>
+          <div class="page-sub">what you can cook right now</div>
+        </div>
+        <button class="btn btn-green" onclick="openRecipeEdit(null)" style="font-size:11px;padding:8px 14px;">+ new</button>
+      </div>
+    </div>
+    <div class="content-pad" id="recipes-list"></div>
   </div>
 
   <!-- SETTINGS -->
@@ -527,6 +588,10 @@ option{color:#111a0e;background:#ffffff;}
       <div class="settings-heading">Data</div>
       <div class="settings-card">
         <div class="settings-row">
+          <div style="flex:1"><div class="settings-row-label">Haul import</div><div class="settings-row-sub">Paste a grocery haul via Claude</div></div>
+          <button class="s-btn s-btn-rename" onclick="switchScreen('import',null)">open →</button>
+        </div>
+        <div class="settings-row">
           <div style="flex:1"><div class="settings-row-label">Export backup</div><div class="settings-row-sub">Download inventory as JSON</div></div>
           <button class="s-btn s-btn-rename" onclick="exportData()">export</button>
         </div>
@@ -561,8 +626,8 @@ option{color:#111a0e;background:#ffffff;}
     <div class="nav-item" id="nav-ideas" onclick="switchScreen('ideas',this)">
       <span class="nav-icon">✦</span><span class="nav-label">Ideas</span>
     </div>
-    <div class="nav-item" id="nav-import" onclick="switchScreen('import',this)">
-      <span class="nav-icon">⇣</span><span class="nav-label">Import</span>
+    <div class="nav-item" id="nav-recipes" onclick="switchScreen('recipes',this)">
+      <span class="nav-icon">◫</span><span class="nav-label">Recipes</span>
     </div>
   </nav>
 </div>
@@ -811,6 +876,55 @@ option{color:#111a0e;background:#ffffff;}
   </div>
 </div>
 
+<!-- RECIPE DETAIL SHEET -->
+
+<div id="recipe-detail-sheet" style="display:none">
+  <div class="modal-overlay" onclick="if(event.target===event.currentTarget)closeRecipeDetail()">
+    <div class="sheet" onclick="event.stopPropagation()">
+      <div class="sheet-handle"></div>
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:4px;">
+        <h2 id="rd-title" style="margin-bottom:0;flex:1;padding-right:12px;"></h2>
+        <button onclick="editCurrentRecipe()" style="border:none;background:none;font-family:'Geist Mono',monospace;font-size:11px;color:#5a6e52;cursor:pointer;padding:6px 0;white-space:nowrap;margin-top:6px;">edit →</button>
+      </div>
+      <div id="rd-notes" style="font-size:12px;color:#5a6e52;margin-bottom:18px;line-height:1.5;"></div>
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:#5a6e52;margin-bottom:10px;">Ingredients</div>
+      <div id="rd-ingredients"></div>
+      <div class="sheet-actions" style="margin-top:20px;">
+        <button class="btn btn-green btn-full" id="rd-cook-btn" onclick="cookRecipe()">✓ cook it — update my station</button>
+        <button class="btn btn-ghost btn-full" onclick="closeRecipeDetail()">close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- RECIPE EDIT SHEET -->
+
+<div id="recipe-edit-sheet" style="display:none">
+  <div class="modal-overlay" onclick="if(event.target===event.currentTarget)closeRecipeEdit()">
+    <div class="sheet" onclick="event.stopPropagation()">
+      <div class="sheet-handle"></div>
+      <div class="lemon-bar"></div>
+      <h2 id="re-title">New recipe</h2>
+      <div class="form-row">
+        <label>Recipe name</label>
+        <input type="text" id="re-name" placeholder="e.g. Oat porridge" autocomplete="off">
+      </div>
+      <div class="form-row">
+        <label>Notes (optional)</label>
+        <input type="text" id="re-notes" placeholder="serves 2, 20 min...">
+      </div>
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:#5a6e52;margin-bottom:10px;margin-top:4px;">Ingredients</div>
+      <div id="re-ingredients-list"></div>
+      <button class="add-ing-btn" onclick="addIngredientRow()">+ add ingredient</button>
+      <div class="sheet-actions" style="margin-top:12px;">
+        <button class="btn btn-green btn-full" onclick="saveRecipe()">save recipe</button>
+        <button class="btn btn-ghost btn-full" onclick="closeRecipeEdit()">cancel</button>
+        <button class="btn-danger-full" id="re-delete-btn" style="display:none" onclick="confirmDeleteRecipe()">delete recipe</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- CONFIRM -->
 
 <div id="confirm-dialog" style="display:none">
@@ -855,6 +969,7 @@ function init(){
   const locBtn=document.getElementById('view-loc-btn');
   if(catBtn){catBtn.classList.add('active');catBtn.style.background='#2d6a2d';catBtn.style.color='#ffffff';}
   if(locBtn){locBtn.classList.remove('active');locBtn.style.background='#f8f9f7';locBtn.style.color='#5a6e52';}
+  loadRecipes();
   renderInventory();
 }
 
@@ -895,6 +1010,7 @@ function switchScreen(name,el){
   if(name==='restock') renderShopping();
   if(name==='settings') renderSettings();
   if(name==='ideas') renderIdeasHint();
+  if(name==='recipes') renderRecipes();
 }
 
 // ── SEARCH & SORT ─────────────────────────────────────────────────────────────
@@ -1541,6 +1657,216 @@ function showToast(msg){
   document.querySelector('.toast')?.remove();
   const t=document.createElement('div');t.className='toast';t.textContent=msg;
   document.body.appendChild(t);setTimeout(()=>t.remove(),2400);
+}
+
+// ── RECIPES ───────────────────────────────────────────────────────────────────
+const RECIPES_KEY='mise_recipes_v1';
+let recipes=[];
+let editingRecipeId=null,viewingRecipeId=null;
+
+function loadRecipes(){
+  try{recipes=JSON.parse(localStorage.getItem(RECIPES_KEY))||defaultRecipes();}
+  catch(e){recipes=defaultRecipes();}
+}
+function saveRecipes(){localStorage.setItem(RECIPES_KEY,JSON.stringify(recipes));}
+
+function defaultRecipes(){
+  return[
+    {id:uid(),name:'Morning Oats',notes:'Quick breakfast, serves 1',ingredients:[
+      {name:'Rolled Oats',qty:1,unit:'cup'},
+      {name:'Coconut Milk',qty:0.5,unit:'cup'},
+    ]},
+    {id:uid(),name:'Rice & Sauce',notes:'Simple pantry dinner',ingredients:[
+      {name:'Nep Rice',qty:2,unit:'cups'},
+      {name:'Bamboo Shoots',qty:1,unit:'can'},
+      {name:'Olive Oil',qty:2,unit:'tbsp'},
+    ]},
+  ];
+}
+
+// Match ingredient name to an inventory item (case-insensitive substring)
+function matchItem(ingName){
+  const n=ingName.toLowerCase();
+  return items.find(i=>i.name.toLowerCase().includes(n)||n.includes(i.name.toLowerCase()));
+}
+
+// Returns 'ready' | 'mostly' | 'missing'
+function recipeReadiness(recipe){
+  if(!recipe.ingredients.length) return'ready';
+  let matched=0,ok=0;
+  for(const ing of recipe.ingredients){
+    const item=matchItem(ing.name);
+    if(item){matched++;if(!item.noAlert&&item.qty>0) ok++; else if(item.noAlert) ok++;}
+  }
+  if(matched===0) return'missing';
+  if(ok===recipe.ingredients.length) return'ready';
+  if(ok>=Math.ceil(recipe.ingredients.length/2)) return'mostly';
+  return'missing';
+}
+
+const READINESS_ICON={ready:'✓',mostly:'~',missing:'✕'};
+const READINESS_LABEL={ready:'ready',mostly:'mostly',missing:'missing'};
+
+function renderRecipes(){
+  const el=document.getElementById('recipes-list');
+  if(!el) return;
+  if(!recipes.length){
+    el.innerHTML=`<div class="recipe-empty"><h3>No recipes yet.</h3><p>Add your first recipe to see what you can cook from your station.</p><button class="btn btn-green" onclick="openRecipeEdit(null)">+ add recipe</button></div>`;
+    return;
+  }
+  // Sort: ready first, then mostly, then missing
+  const order={ready:0,mostly:1,missing:2};
+  const sorted=[...recipes].sort((a,b)=>order[recipeReadiness(a)]-order[recipeReadiness(b)]);
+  el.innerHTML=sorted.map(r=>{
+    const rd=recipeReadiness(r);
+    const ingCount=r.ingredients.length;
+    return`<div class="recipe-card ${rd}" onclick="openRecipeDetail('${esc(r.id)}')">
+      <div class="recipe-readiness ${rd}">${esc(READINESS_ICON[rd])}</div>
+      <div class="recipe-info">
+        <div class="recipe-name">${esc(r.name)}</div>
+        <div class="recipe-meta">${ingCount} ingredient${ingCount!==1?'s':''}${r.notes?` · ${esc(r.notes)}`:''}.</div>
+      </div>
+      <span class="recipe-badge ${rd}">${esc(READINESS_LABEL[rd])}</span>
+    </div>`;
+  }).join('');
+}
+
+function openRecipeDetail(id){
+  const r=recipes.find(x=>x.id===id);
+  if(!r) return;
+  viewingRecipeId=id;
+  document.getElementById('rd-title').textContent=r.name;
+  document.getElementById('rd-notes').textContent=r.notes||'';
+  const ings=r.ingredients.map(ing=>{
+    const item=matchItem(ing.name);
+    let dotClass='unknown',stockLabel='not in station';
+    if(item){
+      if(item.noAlert){dotClass='ok';stockLabel='muted';}
+      else if(item.qty===0){dotClass='out';stockLabel='out of stock';}
+      else if(item.qty<=item.threshold){dotClass='low';stockLabel=`${item.qty} left (low)`;}
+      else{dotClass='ok';stockLabel=`${item.qty} in stock`;}
+    }
+    const qtyStr=ing.qty?`${ing.qty}${ing.unit?' '+ing.unit:''}`:'';
+    return`<div class="ing-row">
+      <div class="ing-dot ${dotClass}"></div>
+      <div class="ing-name">${esc(ing.name)}</div>
+      ${qtyStr?`<div class="ing-qty">${esc(qtyStr)}</div>`:''}
+      <div class="ing-stock">${esc(stockLabel)}</div>
+    </div>`;
+  }).join('');
+  document.getElementById('rd-ingredients').innerHTML=ings||'<div style="font-size:12px;color:#9aab92;padding:8px 0">No ingredients listed.</div>';
+  document.getElementById('recipe-detail-sheet').style.display='';
+}
+
+function closeRecipeDetail(){
+  document.getElementById('recipe-detail-sheet').style.display='none';
+  viewingRecipeId=null;
+}
+
+function editCurrentRecipe(){
+  closeRecipeDetail();
+  openRecipeEdit(viewingRecipeId);
+}
+
+function cookRecipe(){
+  const r=recipes.find(x=>x.id===viewingRecipeId);
+  if(!r) return;
+  let updated=0;
+  for(const ing of r.ingredients){
+    const item=matchItem(ing.name);
+    if(item&&item.qty>0&&!item.noAlert){
+      const use=ing.qty&&ing.qty>=1?Math.floor(ing.qty):1;
+      item.qty=Math.max(0,item.qty-use);
+      updated++;
+    }
+  }
+  save();
+  renderInventory();
+  renderStats();
+  closeRecipeDetail();
+  showToast(updated?`Cooked! ${updated} item${updated!==1?'s':''} updated.`:'Nothing to decrement.');
+}
+
+// ── RECIPE EDIT ──
+function openRecipeEdit(id){
+  editingRecipeId=id;
+  const r=id?recipes.find(x=>x.id===id):null;
+  document.getElementById('re-title').textContent=r?'Edit recipe':'New recipe';
+  document.getElementById('re-name').value=r?r.name:'';
+  document.getElementById('re-notes').value=r?r.notes:'';
+  document.getElementById('re-delete-btn').style.display=r?'':'none';
+  renderIngredientBuilder(r?r.ingredients:[{name:'',qty:'',unit:''}]);
+  document.getElementById('recipe-edit-sheet').style.display='';
+  setTimeout(()=>document.getElementById('re-name').focus(),300);
+}
+
+function closeRecipeEdit(){
+  document.getElementById('recipe-edit-sheet').style.display='none';
+}
+
+function renderIngredientBuilder(ings){
+  const el=document.getElementById('re-ingredients-list');
+  el.innerHTML='';
+  (ings.length?ings:[{name:'',qty:'',unit:''}]).forEach((ing,i)=>{
+    el.appendChild(makeIngRow(ing,i));
+  });
+}
+
+function makeIngRow(ing,i){
+  const wrap=document.createElement('div');
+  wrap.className='ing-builder-row';
+  wrap.innerHTML=`
+    <input type="text" placeholder="Ingredient name" value="${esc(ing.name||'')}" data-ing="name" autocomplete="off" autocorrect="off">
+    <input type="text" class="ing-qty-field" placeholder="Qty" value="${esc(String(ing.qty||''))}" data-ing="qty" inputmode="decimal" style="flex:0.6">
+    <input type="text" class="ing-qty-field" placeholder="Unit" value="${esc(ing.unit||'')}" data-ing="unit" autocomplete="off" style="flex:0.8">
+    <button class="ing-del-btn" onclick="removeIngRow(this)" title="Remove">×</button>`;
+  return wrap;
+}
+
+function addIngredientRow(){
+  const el=document.getElementById('re-ingredients-list');
+  el.appendChild(makeIngRow({name:'',qty:'',unit:''},el.children.length));
+  el.lastElementChild.querySelector('input').focus();
+}
+
+function removeIngRow(btn){
+  btn.closest('.ing-builder-row').remove();
+}
+
+function collectIngredients(){
+  return Array.from(document.getElementById('re-ingredients-list').querySelectorAll('.ing-builder-row')).map(row=>{
+    const name=row.querySelector('[data-ing="name"]').value.trim();
+    const qty=parseFloat(row.querySelector('[data-ing="qty"]').value)||0;
+    const unit=row.querySelector('[data-ing="unit"]').value.trim();
+    return{name,qty,unit};
+  }).filter(i=>i.name);
+}
+
+function saveRecipe(){
+  const name=document.getElementById('re-name').value.trim();
+  if(!name){showToast('Recipe needs a name');return;}
+  const data={name,notes:document.getElementById('re-notes').value.trim(),ingredients:collectIngredients()};
+  if(editingRecipeId){
+    const idx=recipes.findIndex(x=>x.id===editingRecipeId);
+    if(idx!==-1) recipes[idx]={...recipes[idx],...data};
+    showToast('Recipe updated.');
+  }else{
+    recipes.push({id:uid(),...data});
+    showToast('Recipe saved.');
+  }
+  saveRecipes();
+  closeRecipeEdit();
+  renderRecipes();
+}
+
+function confirmDeleteRecipe(){
+  showConfirm('Delete recipe?','This cannot be undone.',()=>{
+    recipes=recipes.filter(x=>x.id!==editingRecipeId);
+    saveRecipes();
+    closeRecipeEdit();
+    renderRecipes();
+    showToast('Recipe deleted.');
+  });
 }
 
 init();
