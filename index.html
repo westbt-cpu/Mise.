@@ -613,8 +613,8 @@ option{color:#111a0e;background:#ffffff;}
       <div class="settings-heading">Data</div>
       <div class="settings-card">
         <div class="settings-row">
-          <div style="flex:1"><div class="settings-row-label">Haul import</div><div class="settings-row-sub">Paste a grocery haul via Claude</div></div>
-          <button class="s-btn s-btn-rename" onclick="switchScreen('import',null)">open →</button>
+          <div style="flex:1"><div class="settings-row-label">Haul import</div><div class="settings-row-sub">Snap a photo of your haul via Claude</div></div>
+          <button class="s-btn s-btn-rename" onclick="openAddSheet();setTimeout(()=>setMethod('haul'),120)">open →</button>
         </div>
         <div class="settings-row">
           <div style="flex:1"><div class="settings-row-label">Export backup</div><div class="settings-row-sub">Download inventory as JSON</div></div>
@@ -716,6 +716,7 @@ option{color:#111a0e;background:#ffffff;}
         <div style="margin-top:12px;display:flex;flex-direction:column;gap:8px">
           <button class="btn btn-green btn-full" onclick="openHaulInClaude()">Open Claude →</button>
           <button class="btn btn-outline btn-full" onclick="goToHaulPaste()">Paste result →</button>
+          <button class="btn btn-ghost btn-full" onclick="closeItemSheet()">cancel</button>
         </div>
       </div>
       <div id="scan-panel" style="display:none">
@@ -1367,6 +1368,7 @@ function setMethod(m){
   document.getElementById('scan-panel').style.display=m==='scan'?'':'none';
   document.getElementById('haul-panel').style.display=m==='haul'?'':'none';
   document.getElementById('item-form').style.display=m==='manual'?'':'none';
+  document.querySelector('#item-sheet .sheet-actions').style.display=m==='haul'?'none':'';
   if(m==='scan') startScan();
   else if(m==='haul'){stopScan();const sel=document.getElementById('haul-loc-select');sel.innerHTML=locations.map(l=>`<option value="${esc(l)}">${esc(l)}</option>`).join('');}
   else{stopScan();setTimeout(()=>document.getElementById('f-name').focus(),200);}
