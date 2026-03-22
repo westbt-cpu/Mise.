@@ -293,6 +293,8 @@ option{color:#111a0e;background:#ffffff;}
 .review-name{font-family:‘Instrument Serif’,serif;font-size:15px;letter-spacing:-0.2px;}
 .review-tag{display:inline-block;font-size:9px;padding:2px 7px;border-radius:3px;text-transform:uppercase;letter-spacing:0.05em;margin-top:3px;}
 .review-loc-hint{font-size:10px;color:var(–ink-3);display:inline-block;margin-left:6px;}
+.review-loc-sel{font-size:11px;padding:5px 8px;border:1.5px solid var(–border);border-radius:8px;background:var(–off);font-family:'Geist Mono',monospace;color:var(–ink-2);-webkit-appearance:none;appearance:none;max-width:96px;cursor:pointer;}
+.review-loc-sel:focus{border-color:#2d6a2d;outline:none;}
 .tag-restock{background:var(–green-light);color:var(–green);}
 .tag-new{background:var(–lemon-2);color:#7a6a00;}
 .review-qty{display:flex;align-items:center;gap:8px;}
@@ -840,7 +842,7 @@ option{color:#111a0e;background:#ffffff;}
       <div class="lemon-bar"></div>
       <h2>Review haul</h2>
       <div style="font-size:10px;color:var(--ink-3);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px" id="review-summary"></div>
-      <div style="font-size:11px;color:var(--ink-3);margin-bottom:16px">Tap any item to set location, category &amp; notes.</div>
+      <div style="font-size:11px;color:var(--ink-3);margin-bottom:16px">Location auto-assigned from existing items. Change inline or tap ▾ for category &amp; notes.</div>
       <div id="review-list"></div>
       <div class="sheet-actions" style="margin-top:16px">
         <button class="btn btn-green btn-full" onclick="applyImport()">apply to station</button>
@@ -1560,13 +1562,29 @@ function parseImport(){
   openReviewSheet(parsed,getImportLoc());
 }
 
+function guessItemLoc(name,defLoc){
+  const n=s=>s.toLowerCase().replace(/[^a-z0-9 ]/g,'').trim();
+  const nn=n(name);
+  let m=items.find(i=>n(i.name)===nn);
+  if(!m) m=items.find(i=>n(i.name).includes(nn)||nn.includes(n(i.name)));
+  if(!m){
+    const words=nn.split(' ').filter(w=>w.length>2);
+    if(words.length) m=items.find(i=>{
+      const iw=n(i.name).split(' ').filter(w=>w.length>2);
+      return words.filter(w=>iw.includes(w)).length>=Math.min(2,words.length,iw.length);
+    });
+  }
+  return m?m.location:defLoc;
+}
 function openReviewSheet(parsed,forceLoc){
   const defCat=categories[0]||'Other',defLoc=forceLoc||(locations[0]||'Pantry');
   reviewItems=parsed.map(p=>{
-    const match=items.find(i=>i.name.toLowerCase()===p.name.toLowerCase()||i.name.toLowerCase().includes(p.name.toLowerCase())||p.name.toLowerCase().includes(i.name.toLowerCase()));
+    const nn=s=>s.toLowerCase().replace(/[^a-z0-9 ]/g,'').trim();
+    const pn=nn(p.name);
+    const match=items.find(i=>nn(i.name)===pn||nn(i.name).includes(pn)||pn.includes(nn(i.name)));
     return{...p,matched:match||null,include:true,expanded:false,
       category:match?match.category:defCat,
-      location:match?match.location:defLoc,
+      location:guessItemLoc(p.name,defLoc),
       notes:match?(match.notes||''):'',
     };
   });
@@ -1584,8 +1602,10 @@ function renderReviewSheet(){
         <div class="review-info">
           <div class="review-name">${esc(r.matched?r.matched.name:r.name)}</div>
           <span class="review-tag ${r.matched?'tag-restock':'tag-new'}">${r.matched?`restock +${r.qty}`:'new'}</span>
-          <span class="review-loc-hint">${esc(r.location)}</span>
         </div>
+        <select class="review-loc-sel" onchange="updateReviewField(${idx},'location',this.value)" onclick="event.stopPropagation()">
+          ${locations.map(l=>`<option value="${esc(l)}" ${l===r.location?'selected':''}>${esc(l)}</option>`).join('')}
+        </select>
         <div class="review-qty" onclick="event.stopPropagation()">
           <button class="review-qty-btn" onclick="adjReview(${idx},-1)">−</button>
           <span class="review-qty-val" id="rqty-${idx}">${r.qty}</span>
@@ -1594,12 +1614,6 @@ function renderReviewSheet(){
         <span class="review-expand ${r.expanded?'open':''}">▾</span>
       </div>
       <div class="review-detail ${r.expanded?'open':''}">
-        <div class="review-detail-row">
-          <label>Location</label>
-          <select onchange="updateReviewField(${idx},'location',this.value)">
-            ${locations.map(l=>`<option value="${esc(l)}" ${l===r.location?'selected':''}>${esc(l)}</option>`).join('')}
-          </select>
-        </div>
         <div class="review-detail-row">
           <label>Category</label>
           <select onchange="updateReviewField(${idx},'category',this.value)">
@@ -1617,10 +1631,7 @@ function renderReviewSheet(){
 function toggleReviewExpand(idx){reviewItems[idx].expanded=!reviewItems[idx].expanded;renderReviewSheet();}
 function toggleReviewInclude(idx,v){reviewItems[idx].include=v;document.getElementById('ri-'+idx).className=`review-item ${v?'':'excluded'}`;}
 function adjReview(idx,d){reviewItems[idx].qty=Math.max(1,reviewItems[idx].qty+d);const el=document.getElementById('rqty-'+idx);if(el)el.textContent=reviewItems[idx].qty;}
-function updateReviewField(idx,field,val){
-  reviewItems[idx][field]=val;
-  if(field==='location'){const el=document.querySelector(`#ri-${idx} .review-loc-hint`);if(el)el.textContent=val;}
-}
+function updateReviewField(idx,field,val){reviewItems[idx][field]=val;}
 
 function applyImport(){
   let restocked=0,added=0;
