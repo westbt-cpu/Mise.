@@ -490,13 +490,15 @@ option{color:#111a0e;background:#ffffff;}
     </div>
     <div class="import-zone">
       <div class="import-hero">
-        <h3>Haul import</h3>
-        <p>paste Claude's list · review · apply</p>
-        <div class="import-prompt-box">
-          "Here's my grocery haul. List every item you can see, one per line:<br>
-          <strong>item name, quantity</strong><br>
-          Plain names only. No commentary."
+        <h3>Location import</h3>
+        <p>scan tag · snap a photo · paste · apply</p>
+        <div class="form-row" style="margin-bottom:12px">
+          <label>Location</label>
+          <select id="import-loc-select" onchange="onImportLocChange()" style="width:100%;padding:12px 14px;border:1.5px solid #e4e8e2;border-radius:10px;background:#f8f9f7;font-family:'Geist Mono',monospace;font-size:13px;color:#111a0e;appearance:auto;">
+            <!-- populated by renderImportLocSelect() -->
+          </select>
         </div>
+        <div class="import-prompt-box" id="import-prompt-preview" style="min-height:56px;transition:opacity 0.2s;"></div>
         <button class="btn btn-green btn-full" onclick="copyPrompt()" style="border-radius:12px;min-height:50px">⎘ copy prompt for Claude</button>
       </div>
       <div class="form-row">
@@ -607,6 +609,23 @@ option{color:#111a0e;background:#ffffff;}
       <div class="settings-card">
         <div class="settings-row">
           <div><div class="settings-row-label">mise.</div><div class="settings-row-sub">your kitchen, prepped.</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="settings-section" style="padding-bottom:48px">
+      <div class="settings-heading">NFC Tags</div>
+      <div class="settings-card">
+        <div class="settings-row">
+          <div style="flex:1"><div class="settings-row-label">Location tag URLs</div><div class="settings-row-sub">Tap a location to copy its NFC tag URL</div></div>
+        </div>
+        <div id="nfc-urls-list"></div>
+        <div class="settings-row" style="flex-direction:column;align-items:flex-start;gap:6px;padding-top:12px">
+          <div class="settings-row-label">iOS setup</div>
+          <div class="settings-row-sub" style="line-height:1.7">1. Write the tag URL to an NFC tag using <strong>NFC Tools</strong> (free, App Store)<br>2. In <strong>Shortcuts</strong>, create a new automation → trigger: NFC → scan your tag<br>3. Add action: <em>Open URL</em> with the tag URL<br>4. Add action: <em>Get Clipboard</em> → <em>Open App</em>: Claude (optional — share Claude's response back via copy)<br>5. Tap the tag → Mise opens to that location's import screen</div>
+        </div>
+        <div class="settings-row" style="flex-direction:column;align-items:flex-start;gap:6px">
+          <div class="settings-row-label">Android setup</div>
+          <div class="settings-row-sub" style="line-height:1.7">1. Install <strong>NFC Tools</strong> (free, Play Store)<br>2. Write a <em>URL record</em> with the tag URL to your NFC tag<br>3. On Android, tapping the tag opens the URL directly in your default browser — no extra app needed<br>4. For a photo-to-Claude shortcut use <strong>Tasker</strong> + <em>HTTP Request</em> or the Claude app's share sheet</div>
         </div>
       </div>
     </div>
@@ -971,6 +990,7 @@ function init(){
   if(locBtn){locBtn.classList.remove('active');locBtn.style.background='#f8f9f7';locBtn.style.color='#5a6e52';}
   loadRecipes();
   renderInventory();
+  handleUrlParams();
 }
 
 function save(){
@@ -978,6 +998,19 @@ function save(){
   localStorage.setItem(SHOP_KEY,JSON.stringify(shoppingList));
   localStorage.setItem(LOCS_KEY,JSON.stringify(locations));
   localStorage.setItem(CATS_KEY,JSON.stringify(categories));
+}
+
+function handleUrlParams(){
+  try{
+    const p=new URLSearchParams(location.search);
+    if(p.has('import')||p.has('loc')){
+      const loc=p.get('loc')||'';
+      // Switch to import screen without marking a nav item active
+      switchScreen('import',null);
+      // Pre-select the location from the tag
+      renderImportLocSelect(loc||locations[0]||'');
+    }
+  }catch(e){}
 }
 
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
@@ -1011,6 +1044,7 @@ function switchScreen(name,el){
   if(name==='settings') renderSettings();
   if(name==='ideas') renderIdeasHint();
   if(name==='recipes') renderRecipes();
+  if(name==='import') renderImportLocSelect();
 }
 
 // ── SEARCH & SORT ─────────────────────────────────────────────────────────────
@@ -1358,8 +1392,39 @@ async function suggestMeals(){
 }
 
 // ── IMPORT ────────────────────────────────────────────────────────────────────
+function locationPromptText(loc){
+  const l=(loc||'').toLowerCase();
+  if(l.includes('fridge'))
+    return `What's in this fridge? List every item you can see, one per line:\nitem name, quantity\nInclude fresh produce, dairy, leftovers, condiments. Plain names only (e.g. "Cheddar Cheese, 1"). No commentary, no headers.`;
+  if(l.includes('freezer'))
+    return `What's in this freezer? List every item you can see, one per line:\nitem name, quantity\nInclude frozen meals, proteins, vegetables, ice cream. Plain names only. No commentary, no headers.`;
+  if(l.includes('pantry'))
+    return `What's on this pantry shelf? List every item you can see, one per line:\nitem name, quantity\nInclude canned goods, dry goods, jars, boxes, packets. Plain names only (e.g. "Coconut Milk, 2"). No commentary, no headers.`;
+  if(l.includes('basement')||l.includes('box')||l.includes('shelf'))
+    return `What's in this storage area? List every item you can see, one per line:\nitem name, quantity\nInclude all packaged items, bottles, cans, boxes. Plain names only. No commentary, no headers.`;
+  return `List every item you can see, one per line:\nitem name, quantity\nPlain names only (e.g. "Coconut Milk, 2"). No commentary, no headers.`;
+}
+
+function getImportLoc(){
+  const sel=document.getElementById('import-loc-select');
+  return sel?sel.value:(locations[0]||'');
+}
+
+function onImportLocChange(){
+  const loc=getImportLoc();
+  const box=document.getElementById('import-prompt-preview');
+  if(box) box.textContent='"'+locationPromptText(loc)+'"';
+}
+
+function renderImportLocSelect(preselect){
+  const sel=document.getElementById('import-loc-select');
+  if(!sel) return;
+  sel.innerHTML=locations.map(l=>`<option value="${esc(l)}"${l===preselect?' selected':''}>${esc(l)}</option>`).join('');
+  onImportLocChange();
+}
+
 function copyPrompt(){
-  const p=`Here's my grocery haul. List every item you can see, one per line:\nitem name, quantity\nPlain names only (e.g. "Coconut Milk, 2"). No commentary.`;
+  const p=locationPromptText(getImportLoc());
   navigator.clipboard?.writeText(p).then(()=>showToast('prompt copied.')).catch(()=>showToast('copy prompt manually'));
 }
 function clearImport(){document.getElementById('import-paste').value='';showToast('cleared.');}
@@ -1380,11 +1445,11 @@ function parseImport(){
     if(name) parsed.push({name,qty:qty||1});
   }
   if(!parsed.length){showToast("couldn't parse any items");return;}
-  openReviewSheet(parsed);
+  openReviewSheet(parsed,getImportLoc());
 }
 
-function openReviewSheet(parsed){
-  const defCat=categories[0]||'Other',defLoc=locations[0]||'Pantry';
+function openReviewSheet(parsed,forceLoc){
+  const defCat=categories[0]||'Other',defLoc=forceLoc||(locations[0]||'Pantry');
   reviewItems=parsed.map(p=>{
     const match=items.find(i=>i.name.toLowerCase()===p.name.toLowerCase()||i.name.toLowerCase().includes(p.name.toLowerCase())||p.name.toLowerCase().includes(i.name.toLowerCase()));
     return{...p,matched:match||null,include:true,expanded:false,
@@ -1460,12 +1525,40 @@ function closeReviewSheet(){document.getElementById('review-sheet').style.displa
 
 // ── SETTINGS ──────────────────────────────────────────────────────────────────
 function renderSettings(){
-  renderLocationsList();renderCategoriesList();
+  renderLocationsList();renderCategoriesList();renderNfcUrls();
   const k=document.getElementById('apikey-input');
   if(k)k.value=apiKey;
   const u=document.getElementById('sheets-url-input');
   if(u)u.value=sheetsUrl;
   updateSheetsSyncStatus();
+}
+
+function nfcTagUrl(loc){
+  const base=location.href.split('?')[0];
+  return `${base}?import&loc=${encodeURIComponent(loc)}`;
+}
+
+function renderNfcUrls(){
+  const el=document.getElementById('nfc-urls-list');
+  if(!el) return;
+  el.innerHTML=locations.map(loc=>{
+    const url=nfcTagUrl(loc);
+    return`<div class="settings-row" style="cursor:pointer;user-select:none" onclick="copyNfcUrl('${esc(loc)}',this)" title="Tap to copy">
+      <div style="flex:1;min-width:0">
+        <div class="settings-row-label">${esc(loc)}</div>
+        <div class="settings-row-sub" style="font-family:'Geist Mono',monospace;font-size:9px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:220px">${esc(url)}</div>
+      </div>
+      <span style="font-size:10px;color:#5a6e52;white-space:nowrap;padding-left:8px">⎘ copy</span>
+    </div>`;
+  }).join('');
+}
+
+function copyNfcUrl(loc,el){
+  const url=nfcTagUrl(loc);
+  navigator.clipboard?.writeText(url).then(()=>{
+    const lbl=el.querySelector('span');
+    if(lbl){lbl.textContent='✓ copied';setTimeout(()=>{lbl.textContent='⎘ copy';},1800);}
+  }).catch(()=>showToast('copy manually: '+url));
 }
 
 function updateSheetsSyncStatus(){
