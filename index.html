@@ -181,15 +181,6 @@ header{background:#ffffff;border-bottom:1.5px solid #e4e8e2;padding:max(env(safe
 .shop-remove::after{content:’’;position:absolute;inset:-4px;}
 .shop-remove:active{background:var(–red-light);color:var(–red);}
 
-/* ── IDEAS ── */
-.ai-panel{background:#111a0e;border-radius:16px;padding:22px 20px;margin:16px;}
-.ai-panel h3{font-family:‘Instrument Serif’,serif;font-size:20px;color:#ffffff;letter-spacing:-0.3px;margin-bottom:3px;font-weight:400;}
-.ai-sub{font-size:10px;color:rgba(255,255,255,0.60);margin-bottom:16px;text-transform:uppercase;letter-spacing:0.06em;}
-.ai-result{background:rgba(255,255,255,0.08);border-radius:10px;padding:14px;font-size:13px;line-height:1.75;color:rgba(255,255,255,0.9);margin-top:14px;white-space:pre-wrap;}
-.ai-loading{display:flex;align-items:center;gap:10px;font-size:11px;color:rgba(255,255,255,0.4);padding:14px;margin-top:14px;}
-.spinner{width:14px;height:14px;border:2px solid rgba(255,255,255,0.15);border-top-color:var(–green-2);border-radius:50%;animation:spin 0.7s linear infinite;flex-shrink:0;}
-@keyframes spin{to{transform:rotate(360deg)}}
-
 /* ── IMPORT ── */
 .import-zone{padding:16px;}
 .import-hero{background:var(–ink);border-radius:16px;padding:22px 20px 20px;margin-bottom:16px;}
@@ -346,13 +337,6 @@ option{color:#111a0e;background:#ffffff;}
 .restock-bar .btn-primary-action{background:#2d6a2d;color:#ffffff;border-color:#2d6a2d;}
 .restock-bar .btn-primary-action:active{background:#3d8c3d;}
 
-/* ── AI SETUP PROMPT ── */
-.ai-setup{background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.15);border-radius:12px;padding:16px;margin-top:16px;}
-.ai-setup-title{font-family:'Instrument Serif',serif;font-size:16px;color:#fff;margin-bottom:6px;}
-.ai-setup-steps{font-size:11px;color:rgba(255,255,255,0.6);line-height:1.9;list-style:none;}
-.ai-setup-steps li::before{content:'→ ';}
-.ai-setup-link{display:inline-flex;align-items:center;margin-top:10px;padding:9px 16px;background:#3d8c3d;color:#ffffff;border-radius:8px;font-size:12px;font-family:'Geist Mono',monospace;text-decoration:none;font-weight:500;}
-
 /* ── GOOGLE SHEETS SECTION ── */
 .sheets-status-row{display:flex;align-items:center;gap:8px;padding:12px 16px;background:#f8f9f7;border-radius:10px;margin-bottom:12px;border:1.5px solid #e4e8e2;}
 .sheets-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
@@ -485,20 +469,6 @@ option{color:#111a0e;background:#ffffff;}
 
   <!-- IDEAS -->
 
-  <div class="screen" id="screen-ideas">
-    <div class="page-header">
-      <div class="page-title">Ideas</div>
-      <div class="page-sub">AI meal suggestions</div>
-    </div>
-    <div class="ai-panel">
-      <h3>What can we make?</h3>
-      <div class="ai-sub">based on your station, right now</div>
-      <button class="btn btn-green" onclick="suggestMeals()">✦ generate ideas</button>
-      <div id="meal-result"></div>
-    </div>
-    <div id="ideas-setup-hint"></div>
-  </div>
-
   <!-- IMPORT (hidden screen, opened as overlay) -->
 
   <div class="screen" id="screen-import">
@@ -571,18 +541,6 @@ option{color:#111a0e;background:#ffffff;}
       <div class="add-row">
         <input type="text" id="new-cat-input" placeholder="New category..." autocomplete="off">
         <button class="btn btn-green" onclick="addCategory()" style="padding:12px 20px">Add</button>
-      </div>
-    </div>
-    <div class="settings-section">
-      <div class="settings-heading">Claude AI</div>
-      <div class="settings-card">
-        <div class="settings-row" style="flex-direction:column;align-items:flex-start;gap:8px">
-          <div><div class="settings-row-label">API Key</div><div class="settings-row-sub">Used for meal ideas. Stored locally, never sent elsewhere.</div></div>
-          <div class="add-row" style="margin-top:0;width:100%">
-            <input type="password" id="apikey-input" placeholder="sk-ant-..." autocomplete="off" style="flex:1">
-            <button class="btn btn-green" onclick="saveApiKey()" style="padding:12px 20px">Save</button>
-          </div>
-        </div>
       </div>
     </div>
     <div class="settings-section">
@@ -673,9 +631,7 @@ option{color:#111a0e;background:#ffffff;}
       <div class="nav-add-circle">+</div>
       <span class="nav-label">Place</span>
     </div>
-    <div class="nav-item" id="nav-ideas" onclick="switchScreen('ideas',this)">
-      <span class="nav-icon">✦</span><span class="nav-label">Ideas</span>
-    </div>
+
     <div class="nav-item" id="nav-recipes" onclick="switchScreen('recipes',this)">
       <span class="nav-icon">◫</span><span class="nav-label">Recipes</span>
     </div>
@@ -1041,8 +997,8 @@ option{color:#111a0e;background:#ffffff;}
 </div>
 
 <script>
-const ITEMS_KEY='mise_items_v5',SHOP_KEY='mise_shop_v5',LOCS_KEY='mise_locs_v3',CATS_KEY='mise_cats_v3',APIKEY_KEY='mise_apikey_v1',SHEETS_KEY='mise_sheets_v1',SHEETS_SYNC_KEY='mise_sheets_sync_v1';
-let items=[],shoppingList=[],locations=[],categories=[],apiKey='',sheetsUrl='',sheetsLastSync='';
+const ITEMS_KEY='mise_items_v5',SHOP_KEY='mise_shop_v5',LOCS_KEY='mise_locs_v3',CATS_KEY='mise_cats_v3',SHEETS_KEY='mise_sheets_v1',SHEETS_SYNC_KEY='mise_sheets_sync_v1';
+let items=[],shoppingList=[],locations=[],categories=[],sheetsUrl='',sheetsLastSync='';
 let editingId=null,currentView='category',currentSort='name',scanStream=null;
 let renameType=null,renameIdx=null,confirmCallback=null,reviewItems=[];
 
@@ -1058,7 +1014,6 @@ function init(){
     locations=JSON.parse(localStorage.getItem(LOCS_KEY))||DEFAULT_LOCS.slice();
     categories=JSON.parse(localStorage.getItem(CATS_KEY))||DEFAULT_CATS.slice();
   }catch(e){items=seed();shoppingList=[];locations=DEFAULT_LOCS.slice();categories=DEFAULT_CATS.slice();}
-  apiKey=localStorage.getItem(APIKEY_KEY)||'';
   const DEFAULT_SHEETS_URL='https://script.google.com/macros/s/AKfycbxyrG_XWfQAEDPdtzyq9NypIu5TC-QejSFlW_lB6slfjXcOjGSftHu4A56sWs-i_UOl/exec';
   sheetsUrl=localStorage.getItem(SHEETS_KEY)||DEFAULT_SHEETS_URL;
   if(!localStorage.getItem(SHEETS_KEY))localStorage.setItem(SHEETS_KEY,DEFAULT_SHEETS_URL);
@@ -1137,7 +1092,6 @@ function switchScreen(name,el){
   if(el) el.classList.add('active');
   if(name==='restock') renderShopping();
   if(name==='settings') renderSettings();
-  if(name==='ideas') renderIdeasHint();
   if(name==='recipes') renderRecipes();
   if(name==='import') renderImportLocSelect();
 }
@@ -1471,25 +1425,6 @@ function removeShop(id){shoppingList=shoppingList.filter(i=>i.id!==id);save();re
 function clearChecked(){shoppingList=shoppingList.filter(i=>!i.checked);save();renderShopping();}
 
 // ── IDEAS ─────────────────────────────────────────────────────────────────────
-async function suggestMeals(){
-  const el=document.getElementById('meal-result');
-  const inStock=items.filter(i=>i.qty>0).map(i=>i.name);
-  if(inStock.length<3){el.innerHTML=`<div class="ai-result">Add more items to your station first.</div>`;return;}
-  if(!apiKey){el.innerHTML=`<div class="ai-result" style="color:#e8d060">Add your Claude API key in Settings to use this feature.</div>`;return;}
-  el.innerHTML=`<div class="ai-loading"><div class="spinner"></div>thinking...</div>`;
-  try{
-    const res=await fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST',
-      headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-      body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:1000,
-        messages:[{role:'user',content:`My pantry has: ${inStock.join(', ')}. Suggest 4 practical meal or snack ideas using primarily these. Assume standard fridge staples and fresh produce available. Short punchy title + 1–2 sentences each.`}]})
-    });
-    const data=await res.json();
-    if(data.error){el.innerHTML=`<div class="ai-result" style="color:#e88">${esc(data.error.message||'API error')}</div>`;return;}
-    el.innerHTML=`<div class="ai-result">${esc(data.content?.[0]?.text||'No ideas.').replace(/\n/g,'<br>')}</div>`;
-  }catch(e){el.innerHTML=`<div class="ai-result" style="color:#e88">Couldn't connect. Check your API key in Settings.</div>`;}
-}
-
 // ── IMPORT ────────────────────────────────────────────────────────────────────
 function locationPromptText(loc){
   const l=(loc||'').toLowerCase();
@@ -1651,8 +1586,6 @@ function closeReviewSheet(){document.getElementById('review-sheet').style.displa
 // ── SETTINGS ──────────────────────────────────────────────────────────────────
 function renderSettings(){
   renderLocationsList();renderCategoriesList();renderNfcUrls();renderMiseUrl();
-  const k=document.getElementById('apikey-input');
-  if(k)k.value=apiKey;
   const u=document.getElementById('sheets-url-input');
   if(u)u.value=sheetsUrl;
   updateSheetsSyncStatus();
@@ -1707,30 +1640,6 @@ function updateSheetsSyncStatus(){
   if(!sheetsUrl){dot.className='sheets-dot off';txt.textContent='Not connected — tap "view →" for setup guide';}
   else if(sheetsLastSync){dot.className='sheets-dot ok';txt.textContent='Connected · last synced '+sheetsLastSync;}
   else{dot.className='sheets-dot ok';txt.textContent='URL saved — tap Sync ↑ to push data';}
-}
-
-function renderIdeasHint(){
-  const el=document.getElementById('ideas-setup-hint');
-  if(!el)return;
-  if(apiKey){el.innerHTML='';return;}
-  el.innerHTML=`<div style="margin:0 16px 16px">
-    <div class="ai-setup">
-      <div class="ai-setup-title">Set up AI Ideas</div>
-      <ul class="ai-setup-steps">
-        <li>Get a free Claude API key at console.anthropic.com</li>
-        <li>Go to Settings → Claude AI → paste your key</li>
-        <li>Come back here and tap Generate Ideas</li>
-      </ul>
-      <a class="ai-setup-link" href="https://console.anthropic.com" target="_blank" rel="noopener">↗ Get API key</a>
-    </div>
-  </div>`;
-}
-
-function saveApiKey(){
-  const val=document.getElementById('apikey-input').value.trim();
-  apiKey=val;
-  localStorage.setItem(APIKEY_KEY,val);
-  showToast(val?'API key saved.':'API key cleared.');
 }
 
 function exportData(){
