@@ -696,6 +696,24 @@ option{color:#111a0e;background:#ffffff;}
           <button class="method-btn" id="method-scan" onclick="setMethod('scan')">
             <span class="method-icon">⊞</span>scan barcode
           </button>
+          <button class="method-btn" id="method-haul" onclick="setMethod('haul')">
+            <span class="method-icon">⊛</span>haul import
+          </button>
+        </div>
+      </div>
+      <div id="haul-panel" style="display:none">
+        <div class="form-row" style="margin-top:4px">
+          <label>Location</label>
+          <select id="haul-loc-select" style="width:100%;padding:12px 14px;border:1.5px solid #e4e8e2;border-radius:10px;background:#f8f9f7;font-family:'Geist Mono',monospace;font-size:13px;color:#111a0e;appearance:auto;"></select>
+        </div>
+        <div style="margin-top:14px;padding:13px 14px;background:#f8f9f7;border:1.5px solid #e4e8e2;border-radius:12px;font-size:12px;color:#5a6e52;line-height:1.7">
+          1. Tap <strong>Open Claude</strong> — the prompt is copied<br>
+          2. Paste it in Claude, take a photo of your haul<br>
+          3. Copy Claude's reply, come back &amp; tap <strong>Paste result</strong>
+        </div>
+        <div style="margin-top:12px;display:flex;flex-direction:column;gap:8px">
+          <button class="btn btn-green btn-full" onclick="openHaulInClaude()">Open Claude →</button>
+          <button class="btn btn-outline btn-full" onclick="goToHaulPaste()">Paste result →</button>
         </div>
       </div>
       <div id="scan-panel" style="display:none">
@@ -1343,9 +1361,12 @@ function closeSheetOverlay(e){if(e.target===e.currentTarget)closeItemSheet();}
 function setMethod(m){
   document.getElementById('method-manual').classList.toggle('active',m==='manual');
   document.getElementById('method-scan').classList.toggle('active',m==='scan');
+  document.getElementById('method-haul').classList.toggle('active',m==='haul');
   document.getElementById('scan-panel').style.display=m==='scan'?'':'none';
+  document.getElementById('haul-panel').style.display=m==='haul'?'':'none';
   document.getElementById('item-form').style.display=m==='manual'?'':'none';
   if(m==='scan') startScan();
+  else if(m==='haul'){stopScan();const sel=document.getElementById('haul-loc-select');sel.innerHTML=locations.map(l=>`<option value="${esc(l)}">${esc(l)}</option>`).join('');}
   else{stopScan();setTimeout(()=>document.getElementById('f-name').focus(),200);}
 }
 
@@ -1500,6 +1521,20 @@ function renderImportLocSelect(preselect){
 function copyPrompt(){
   const p=locationPromptText(getImportLoc());
   navigator.clipboard?.writeText(p).then(()=>showToast('prompt copied.')).catch(()=>showToast('copy prompt manually'));
+}
+function openHaulInClaude(){
+  const loc=document.getElementById('haul-loc-select')?.value||(locations[0]||'');
+  const prompt=locationPromptText(loc);
+  navigator.clipboard?.writeText(prompt).catch(()=>{});
+  window.open('https://claude.ai','_blank');
+  showToast('prompt copied — paste in Claude');
+}
+function goToHaulPaste(){
+  const loc=document.getElementById('haul-loc-select')?.value||(locations[0]||'');
+  closeItemSheet();
+  switchScreen('import',null);
+  renderImportLocSelect(loc);
+  setTimeout(()=>document.getElementById('import-paste')?.focus(),400);
 }
 function clearImport(){document.getElementById('import-paste').value='';showToast('cleared.');}
 
@@ -1875,7 +1910,7 @@ function parseListLine(line){
 function runListCheck(){
   const raw=document.getElementById('lc-paste').value.trim();
   if(!raw){showToast('paste a list first');return;}
-  const parsed=raw.split('\n').map(parseListLine).filter(Boolean);
+  const parsed=raw.split('\n').filter(l=>/[•·]/.test(l)).map(parseListLine).filter(Boolean);
   if(!parsed.length){showToast("couldn't read any items");return;}
 
   lcCheckedItems=parsed.map(p=>{
