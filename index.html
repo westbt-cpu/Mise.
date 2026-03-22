@@ -499,7 +499,7 @@ option{color:#111a0e;background:#ffffff;}
 
   <!-- IMPORT (hidden screen, opened as overlay) -->
 
-  <div class="screen" id="screen-import" style="display:none">
+  <div class="screen" id="screen-import">
     <div class="page-header">
       <div class="page-header-row">
         <div>
@@ -1526,7 +1526,10 @@ function openHaulInClaude(){
   const loc=document.getElementById('haul-loc-select')?.value||(locations[0]||'');
   const prompt=locationPromptText(loc);
   navigator.clipboard?.writeText(prompt).catch(()=>{});
-  window.open('https://claude.ai','_blank');
+  // Try the Claude app URL scheme; fall back to web after 1.5 s if not installed
+  const t=Date.now();
+  location.href='claude://';
+  setTimeout(()=>{if(Date.now()-t<2000)window.open('https://claude.ai','_blank');},1500);
   showToast('prompt copied — paste in Claude');
 }
 function goToHaulPaste(){
