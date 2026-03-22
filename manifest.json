@@ -1,0 +1,25 @@
+{
+  "name": "mise.",
+  "short_name": "mise",
+  "description": "your kitchen, prepped.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f8f9f7",
+  "theme_color": "#2d6a2d",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "share_target": {
+    "action": "./index.html",
+    "method": "GET",
+    "params": {
+      "text": "cl"
+    }
+  }
+}
