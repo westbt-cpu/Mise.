@@ -7,7 +7,10 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="theme-color" content="#ffffff">
+<meta name="apple-mobile-web-app-title" content="mise.">
+<meta name="theme-color" content="#2d6a2d">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon.svg">
 <title>mise.</title>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist+Mono:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
@@ -409,6 +412,23 @@ option{color:#111a0e;background:#ffffff;}
 .ing-del-btn:active{color:#c44040;}
 .add-ing-btn{width:100%;padding:11px;border:1.5px dashed #e4e8e2;border-radius:10px;background:none;font-family:'Geist Mono',monospace;font-size:11px;color:#5a6e52;cursor:pointer;letter-spacing:0.04em;margin-bottom:4px;}
 .add-ing-btn:active{border-color:#2d6a2d;color:#2d6a2d;background:#edf3ea;}
+
+/* ── LIST CHECK (AnyList) ── */
+.lc-section-label{font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:#5a6e52;margin:16px 0 8px;}
+.lc-section-label:first-child{margin-top:0;}
+.lc-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #e4e8e2;}
+.lc-row:last-child{border-bottom:none;}
+.lc-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.lc-dot.ok{background:#2d6a2d;}
+.lc-dot.low{background:#e8c02a;}
+.lc-dot.out{background:#c44040;}
+.lc-dot.unknown{background:#c0c0b8;}
+.lc-name{flex:1;font-family:'Instrument Serif',serif;font-size:15px;letter-spacing:-0.2px;color:#111a0e;}
+.lc-name.stocked{text-decoration:line-through;color:#9aab92;}
+.lc-meta{font-size:10px;color:#9aab92;white-space:nowrap;}
+.lc-empty{text-align:center;padding:32px 0;font-size:12px;color:#9aab92;}
+.lc-copy-bar{display:flex;gap:8px;margin-top:16px;}
+.lc-copy-bar .btn{flex:1;}
 </style>
 
 </head>
@@ -455,6 +475,7 @@ option{color:#111a0e;background:#ffffff;}
     <div class="restock-bar">
       <button class="btn btn-green restock-bar-primary" onclick="generateShoppingList()">↻ refresh</button>
       <button class="btn btn-outline" onclick="openQuickAddSheet()">+ add item</button>
+      <button class="btn btn-outline" onclick="openListCheck()">⊘ check list</button>
       <button class="btn btn-outline" onclick="clearChecked()">✕ clear done</button>
     </div>
     <div class="content-pad" id="shopping-list"></div>
@@ -490,13 +511,15 @@ option{color:#111a0e;background:#ffffff;}
     </div>
     <div class="import-zone">
       <div class="import-hero">
-        <h3>Haul import</h3>
-        <p>paste Claude's list · review · apply</p>
-        <div class="import-prompt-box">
-          "Here's my grocery haul. List every item you can see, one per line:<br>
-          <strong>item name, quantity</strong><br>
-          Plain names only. No commentary."
+        <h3>Location import</h3>
+        <p>scan tag · snap a photo · paste · apply</p>
+        <div class="form-row" style="margin-bottom:12px">
+          <label>Location</label>
+          <select id="import-loc-select" onchange="onImportLocChange()" style="width:100%;padding:12px 14px;border:1.5px solid #e4e8e2;border-radius:10px;background:#f8f9f7;font-family:'Geist Mono',monospace;font-size:13px;color:#111a0e;appearance:auto;">
+            <!-- populated by renderImportLocSelect() -->
+          </select>
         </div>
+        <div class="import-prompt-box" id="import-prompt-preview" style="min-height:56px;transition:opacity 0.2s;"></div>
         <button class="btn btn-green btn-full" onclick="copyPrompt()" style="border-radius:12px;min-height:50px">⎘ copy prompt for Claude</button>
       </div>
       <div class="form-row">
@@ -607,6 +630,27 @@ option{color:#111a0e;background:#ffffff;}
       <div class="settings-card">
         <div class="settings-row">
           <div><div class="settings-row-label">mise.</div><div class="settings-row-sub">your kitchen, prepped.</div></div>
+        </div>
+        <div class="settings-row" style="flex-direction:column;align-items:flex-start;gap:6px">
+          <div class="settings-row-label">Install as app</div>
+          <div class="settings-row-sub" style="line-height:1.7"><strong>iOS:</strong> Safari → Share → Add to Home Screen<br><strong>Android:</strong> Chrome menu → Add to Home Screen<br>Once installed, mise. appears in your share sheet — share directly from AnyList.</div>
+        </div>
+      </div>
+    </div>
+    <div class="settings-section" style="padding-bottom:48px">
+      <div class="settings-heading">NFC Tags</div>
+      <div class="settings-card">
+        <div class="settings-row">
+          <div style="flex:1"><div class="settings-row-label">Location tag URLs</div><div class="settings-row-sub">Tap a location to copy its NFC tag URL</div></div>
+        </div>
+        <div id="nfc-urls-list"></div>
+        <div class="settings-row" style="flex-direction:column;align-items:flex-start;gap:6px;padding-top:12px">
+          <div class="settings-row-label">iOS setup</div>
+          <div class="settings-row-sub" style="line-height:1.7">1. Write the tag URL to an NFC tag using <strong>NFC Tools</strong> (free, App Store)<br>2. In <strong>Shortcuts</strong>, create a new automation → trigger: NFC → scan your tag<br>3. Add action: <em>Open URL</em> with the tag URL<br>4. Add action: <em>Get Clipboard</em> → <em>Open App</em>: Claude (optional — share Claude's response back via copy)<br>5. Tap the tag → Mise opens to that location's import screen</div>
+        </div>
+        <div class="settings-row" style="flex-direction:column;align-items:flex-start;gap:6px">
+          <div class="settings-row-label">Android setup</div>
+          <div class="settings-row-sub" style="line-height:1.7">1. Install <strong>NFC Tools</strong> (free, Play Store)<br>2. Write a <em>URL record</em> with the tag URL to your NFC tag<br>3. On Android, tapping the tag opens the URL directly in your default browser — no extra app needed<br>4. For a photo-to-Claude shortcut use <strong>Tasker</strong> + <em>HTTP Request</em> or the Claude app's share sheet</div>
         </div>
       </div>
     </div>
@@ -925,6 +969,37 @@ option{color:#111a0e;background:#ffffff;}
   </div>
 </div>
 
+<!-- LIST CHECK SHEET -->
+
+<div id="list-check-sheet" style="display:none">
+  <div class="modal-overlay" onclick="if(event.target===event.currentTarget)closeListCheck()">
+    <div class="sheet" onclick="event.stopPropagation()">
+      <div class="sheet-handle"></div>
+      <div class="lemon-bar"></div>
+      <h2>Check my list</h2>
+      <div style="font-size:12px;color:#5a6e52;margin-bottom:16px;line-height:1.5">Paste your AnyList (or any shopping list) below. Mise will flag what you already have.</div>
+      <div id="lc-paste-area" style="display:block">
+        <div class="form-row" style="margin-bottom:10px">
+          <label>Paste list here</label>
+          <textarea id="lc-paste" style="width:100%;min-height:140px;padding:12px;border:1.5px solid #e4e8e2;border-radius:10px;background:#f8f9f7;font-family:'Geist Mono',monospace;font-size:13px;color:#111a0e;outline:none;resize:vertical;box-sizing:border-box" placeholder="Coconut Milk, 2&#10;Olive Oil, 1&#10;Black Beans, 3&#10;..."></textarea>
+        </div>
+        <div class="sheet-actions" style="margin-top:0">
+          <button class="btn btn-green btn-full" onclick="runListCheck()">check against my station →</button>
+          <button class="btn btn-ghost btn-full" onclick="closeListCheck()">cancel</button>
+        </div>
+      </div>
+      <div id="lc-results-area" style="display:none">
+        <div id="lc-summary" style="font-size:11px;color:#5a6e52;margin-bottom:14px;line-height:1.6"></div>
+        <div id="lc-results"></div>
+        <div class="lc-copy-bar">
+          <button class="btn btn-green" onclick="copyFilteredList()">⎘ copy filtered list</button>
+          <button class="btn btn-ghost" onclick="resetListCheck()">← back</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- CONFIRM -->
 
 <div id="confirm-dialog" style="display:none">
@@ -971,6 +1046,7 @@ function init(){
   if(locBtn){locBtn.classList.remove('active');locBtn.style.background='#f8f9f7';locBtn.style.color='#5a6e52';}
   loadRecipes();
   renderInventory();
+  handleUrlParams();
 }
 
 function save(){
@@ -978,6 +1054,33 @@ function save(){
   localStorage.setItem(SHOP_KEY,JSON.stringify(shoppingList));
   localStorage.setItem(LOCS_KEY,JSON.stringify(locations));
   localStorage.setItem(CATS_KEY,JSON.stringify(categories));
+}
+
+function handleUrlParams(){
+  try{
+    const p=new URLSearchParams(location.search);
+    // NFC location import deep-link
+    if(p.has('import')||p.has('loc')){
+      const loc=p.get('loc')||'';
+      switchScreen('import',null);
+      renderImportLocSelect(loc||locations[0]||'');
+    }
+    // AnyList / share-target: ?cl=<list text>
+    const cl=p.get('cl')||p.get('text')||'';
+    if(cl){
+      switchScreen('restock',document.getElementById('nav-restock'));
+      openListCheck();
+      document.getElementById('lc-paste').value=decodeURIComponent(cl);
+      runListCheck();
+      // Clean URL so it doesn't re-trigger on refresh
+      history.replaceState({},'',location.pathname);
+    }
+  }catch(e){}
+}
+
+// ── SERVICE WORKER ────────────────────────────────────────────────────────────
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('./sw.js').catch(()=>{});
 }
 
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
@@ -1011,6 +1114,7 @@ function switchScreen(name,el){
   if(name==='settings') renderSettings();
   if(name==='ideas') renderIdeasHint();
   if(name==='recipes') renderRecipes();
+  if(name==='import') renderImportLocSelect();
 }
 
 // ── SEARCH & SORT ─────────────────────────────────────────────────────────────
@@ -1358,8 +1462,39 @@ async function suggestMeals(){
 }
 
 // ── IMPORT ────────────────────────────────────────────────────────────────────
+function locationPromptText(loc){
+  const l=(loc||'').toLowerCase();
+  if(l.includes('fridge'))
+    return `What's in this fridge? List every item you can see, one per line:\nitem name, quantity\nInclude fresh produce, dairy, leftovers, condiments. Plain names only (e.g. "Cheddar Cheese, 1"). No commentary, no headers.`;
+  if(l.includes('freezer'))
+    return `What's in this freezer? List every item you can see, one per line:\nitem name, quantity\nInclude frozen meals, proteins, vegetables, ice cream. Plain names only. No commentary, no headers.`;
+  if(l.includes('pantry'))
+    return `What's on this pantry shelf? List every item you can see, one per line:\nitem name, quantity\nInclude canned goods, dry goods, jars, boxes, packets. Plain names only (e.g. "Coconut Milk, 2"). No commentary, no headers.`;
+  if(l.includes('basement')||l.includes('box')||l.includes('shelf'))
+    return `What's in this storage area? List every item you can see, one per line:\nitem name, quantity\nInclude all packaged items, bottles, cans, boxes. Plain names only. No commentary, no headers.`;
+  return `List every item you can see, one per line:\nitem name, quantity\nPlain names only (e.g. "Coconut Milk, 2"). No commentary, no headers.`;
+}
+
+function getImportLoc(){
+  const sel=document.getElementById('import-loc-select');
+  return sel?sel.value:(locations[0]||'');
+}
+
+function onImportLocChange(){
+  const loc=getImportLoc();
+  const box=document.getElementById('import-prompt-preview');
+  if(box) box.textContent='"'+locationPromptText(loc)+'"';
+}
+
+function renderImportLocSelect(preselect){
+  const sel=document.getElementById('import-loc-select');
+  if(!sel) return;
+  sel.innerHTML=locations.map(l=>`<option value="${esc(l)}"${l===preselect?' selected':''}>${esc(l)}</option>`).join('');
+  onImportLocChange();
+}
+
 function copyPrompt(){
-  const p=`Here's my grocery haul. List every item you can see, one per line:\nitem name, quantity\nPlain names only (e.g. "Coconut Milk, 2"). No commentary.`;
+  const p=locationPromptText(getImportLoc());
   navigator.clipboard?.writeText(p).then(()=>showToast('prompt copied.')).catch(()=>showToast('copy prompt manually'));
 }
 function clearImport(){document.getElementById('import-paste').value='';showToast('cleared.');}
@@ -1380,11 +1515,11 @@ function parseImport(){
     if(name) parsed.push({name,qty:qty||1});
   }
   if(!parsed.length){showToast("couldn't parse any items");return;}
-  openReviewSheet(parsed);
+  openReviewSheet(parsed,getImportLoc());
 }
 
-function openReviewSheet(parsed){
-  const defCat=categories[0]||'Other',defLoc=locations[0]||'Pantry';
+function openReviewSheet(parsed,forceLoc){
+  const defCat=categories[0]||'Other',defLoc=forceLoc||(locations[0]||'Pantry');
   reviewItems=parsed.map(p=>{
     const match=items.find(i=>i.name.toLowerCase()===p.name.toLowerCase()||i.name.toLowerCase().includes(p.name.toLowerCase())||p.name.toLowerCase().includes(i.name.toLowerCase()));
     return{...p,matched:match||null,include:true,expanded:false,
@@ -1460,12 +1595,40 @@ function closeReviewSheet(){document.getElementById('review-sheet').style.displa
 
 // ── SETTINGS ──────────────────────────────────────────────────────────────────
 function renderSettings(){
-  renderLocationsList();renderCategoriesList();
+  renderLocationsList();renderCategoriesList();renderNfcUrls();
   const k=document.getElementById('apikey-input');
   if(k)k.value=apiKey;
   const u=document.getElementById('sheets-url-input');
   if(u)u.value=sheetsUrl;
   updateSheetsSyncStatus();
+}
+
+function nfcTagUrl(loc){
+  const base=location.href.split('?')[0];
+  return `${base}?import&loc=${encodeURIComponent(loc)}`;
+}
+
+function renderNfcUrls(){
+  const el=document.getElementById('nfc-urls-list');
+  if(!el) return;
+  el.innerHTML=locations.map(loc=>{
+    const url=nfcTagUrl(loc);
+    return`<div class="settings-row" style="cursor:pointer;user-select:none" onclick="copyNfcUrl('${esc(loc)}',this)" title="Tap to copy">
+      <div style="flex:1;min-width:0">
+        <div class="settings-row-label">${esc(loc)}</div>
+        <div class="settings-row-sub" style="font-family:'Geist Mono',monospace;font-size:9px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:220px">${esc(url)}</div>
+      </div>
+      <span style="font-size:10px;color:#5a6e52;white-space:nowrap;padding-left:8px">⎘ copy</span>
+    </div>`;
+  }).join('');
+}
+
+function copyNfcUrl(loc,el){
+  const url=nfcTagUrl(loc);
+  navigator.clipboard?.writeText(url).then(()=>{
+    const lbl=el.querySelector('span');
+    if(lbl){lbl.textContent='✓ copied';setTimeout(()=>{lbl.textContent='⎘ copy';},1800);}
+  }).catch(()=>showToast('copy manually: '+url));
 }
 
 function updateSheetsSyncStatus(){
@@ -1657,6 +1820,109 @@ function showToast(msg){
   document.querySelector('.toast')?.remove();
   const t=document.createElement('div');t.className='toast';t.textContent=msg;
   document.body.appendChild(t);setTimeout(()=>t.remove(),2400);
+}
+
+// ── LIST CHECK ────────────────────────────────────────────────────────────────
+let lcCheckedItems=[];
+
+function openListCheck(){
+  resetListCheck();
+  document.getElementById('list-check-sheet').style.display='';
+}
+function closeListCheck(){document.getElementById('list-check-sheet').style.display='none';}
+
+function resetListCheck(){
+  document.getElementById('lc-paste').value='';
+  document.getElementById('lc-paste-area').style.display='block';
+  document.getElementById('lc-results-area').style.display='none';
+  lcCheckedItems=[];
+}
+
+function parseListLine(line){
+  const clean=line.replace(/^[\s\-•·–*]+/,'').trim();
+  if(!clean) return null;
+  let name='',qty=1;
+  const m1=clean.match(/^(.+?)[,\-–]\s*(\d+)\s*$/);
+  const m2=clean.match(/^(\d+)\s*[x×]\s*(.+)$/i);
+  const m3=clean.match(/^(.+?)\s*\((\d+)\)\s*$/);
+  const m4=clean.match(/^(.+?)\s+(\d+)$/);
+  if(m1){name=m1[1].trim();qty=parseInt(m1[2]);}
+  else if(m2){qty=parseInt(m2[1]);name=m2[2].trim();}
+  else if(m3){name=m3[1].trim();qty=parseInt(m3[2]);}
+  else if(m4){name=m4[1].trim();qty=parseInt(m4[2]);}
+  else{name=clean;qty=1;}
+  return name?{name,qty:qty||1}:null;
+}
+
+function runListCheck(){
+  const raw=document.getElementById('lc-paste').value.trim();
+  if(!raw){showToast('paste a list first');return;}
+  const parsed=raw.split('\n').map(parseListLine).filter(Boolean);
+  if(!parsed.length){showToast("couldn't read any items");return;}
+
+  lcCheckedItems=parsed.map(p=>{
+    const item=items.find(i=>
+      i.name.toLowerCase()===p.name.toLowerCase()||
+      i.name.toLowerCase().includes(p.name.toLowerCase())||
+      p.name.toLowerCase().includes(i.name.toLowerCase())
+    );
+    let status='unknown';
+    if(item){
+      if(item.noAlert) status='ok';
+      else if(item.qty===0) status='out';
+      else if(item.qty<=item.threshold) status='low';
+      else status='ok';
+    }
+    return{name:p.name,qty:p.qty,status,matchedName:item?item.name:null,stock:item?item.qty:null,threshold:item?item.threshold:null};
+  });
+
+  renderListCheckResults();
+  document.getElementById('lc-paste-area').style.display='none';
+  document.getElementById('lc-results-area').style.display='block';
+}
+
+function renderListCheckResults(){
+  const ok=lcCheckedItems.filter(i=>i.status==='ok');
+  const low=lcCheckedItems.filter(i=>i.status==='low');
+  const out=lcCheckedItems.filter(i=>i.status==='out');
+  const unknown=lcCheckedItems.filter(i=>i.status==='unknown');
+  const need=[...out,...unknown,...low];
+
+  const summary=`${need.length} still needed · ${ok.length} already stocked`;
+  document.getElementById('lc-summary').innerHTML=`<strong>${esc(summary)}</strong><br>Items in <span style="color:#2d6a2d">green</span> are crossed off. Items below are your filtered list.`;
+
+  let html='';
+
+  if(need.length){
+    html+=`<div class="lc-section-label">Still need (${need.length})</div>`;
+    html+=need.map(i=>{
+      const dotClass=i.status==='out'?'out':i.status==='low'?'low':'unknown';
+      const meta=i.status==='out'?'out of stock':i.status==='low'?`only ${i.stock} left`:i.matchedName?`matched: ${i.matchedName}`:'not in station';
+      return`<div class="lc-row">
+        <div class="lc-dot ${dotClass}"></div>
+        <div class="lc-name">${esc(i.name)}</div>
+        <div class="lc-meta">${esc(meta)}</div>
+      </div>`;
+    }).join('');
+  }
+
+  if(ok.length){
+    html+=`<div class="lc-section-label">Already stocked (${ok.length}) — remove these</div>`;
+    html+=ok.map(i=>`<div class="lc-row">
+      <div class="lc-dot ok"></div>
+      <div class="lc-name stocked">${esc(i.name)}</div>
+      <div class="lc-meta">${i.stock!==null?`${i.stock} in stock`:''}</div>
+    </div>`).join('');
+  }
+
+  document.getElementById('lc-results').innerHTML=html||`<div class="lc-empty">Nothing matched your station.</div>`;
+}
+
+function copyFilteredList(){
+  const need=lcCheckedItems.filter(i=>i.status!=='ok');
+  if(!need.length){showToast('nothing to copy — you have everything!');return;}
+  const text=need.map(i=>`${i.name}, ${i.qty}`).join('\n');
+  navigator.clipboard?.writeText(text).then(()=>showToast(`${need.length} items copied.`)).catch(()=>showToast('copy manually'));
 }
 
 // ── RECIPES ───────────────────────────────────────────────────────────────────
