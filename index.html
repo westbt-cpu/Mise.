@@ -409,6 +409,23 @@ option{color:#111a0e;background:#ffffff;}
 .ing-del-btn:active{color:#c44040;}
 .add-ing-btn{width:100%;padding:11px;border:1.5px dashed #e4e8e2;border-radius:10px;background:none;font-family:'Geist Mono',monospace;font-size:11px;color:#5a6e52;cursor:pointer;letter-spacing:0.04em;margin-bottom:4px;}
 .add-ing-btn:active{border-color:#2d6a2d;color:#2d6a2d;background:#edf3ea;}
+
+/* ── LIST CHECK (AnyList) ── */
+.lc-section-label{font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:#5a6e52;margin:16px 0 8px;}
+.lc-section-label:first-child{margin-top:0;}
+.lc-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #e4e8e2;}
+.lc-row:last-child{border-bottom:none;}
+.lc-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.lc-dot.ok{background:#2d6a2d;}
+.lc-dot.low{background:#e8c02a;}
+.lc-dot.out{background:#c44040;}
+.lc-dot.unknown{background:#c0c0b8;}
+.lc-name{flex:1;font-family:'Instrument Serif',serif;font-size:15px;letter-spacing:-0.2px;color:#111a0e;}
+.lc-name.stocked{text-decoration:line-through;color:#9aab92;}
+.lc-meta{font-size:10px;color:#9aab92;white-space:nowrap;}
+.lc-empty{text-align:center;padding:32px 0;font-size:12px;color:#9aab92;}
+.lc-copy-bar{display:flex;gap:8px;margin-top:16px;}
+.lc-copy-bar .btn{flex:1;}
 </style>
 
 </head>
@@ -455,6 +472,7 @@ option{color:#111a0e;background:#ffffff;}
     <div class="restock-bar">
       <button class="btn btn-green restock-bar-primary" onclick="generateShoppingList()">↻ refresh</button>
       <button class="btn btn-outline" onclick="openQuickAddSheet()">+ add item</button>
+      <button class="btn btn-outline" onclick="openListCheck()">⊘ check list</button>
       <button class="btn btn-outline" onclick="clearChecked()">✕ clear done</button>
     </div>
     <div class="content-pad" id="shopping-list"></div>
@@ -939,6 +957,37 @@ option{color:#111a0e;background:#ffffff;}
         <button class="btn btn-green btn-full" onclick="saveRecipe()">save recipe</button>
         <button class="btn btn-ghost btn-full" onclick="closeRecipeEdit()">cancel</button>
         <button class="btn-danger-full" id="re-delete-btn" style="display:none" onclick="confirmDeleteRecipe()">delete recipe</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- LIST CHECK SHEET -->
+
+<div id="list-check-sheet" style="display:none">
+  <div class="modal-overlay" onclick="if(event.target===event.currentTarget)closeListCheck()">
+    <div class="sheet" onclick="event.stopPropagation()">
+      <div class="sheet-handle"></div>
+      <div class="lemon-bar"></div>
+      <h2>Check my list</h2>
+      <div style="font-size:12px;color:#5a6e52;margin-bottom:16px;line-height:1.5">Paste your AnyList (or any shopping list) below. Mise will flag what you already have.</div>
+      <div id="lc-paste-area" style="display:block">
+        <div class="form-row" style="margin-bottom:10px">
+          <label>Paste list here</label>
+          <textarea id="lc-paste" style="width:100%;min-height:140px;padding:12px;border:1.5px solid #e4e8e2;border-radius:10px;background:#f8f9f7;font-family:'Geist Mono',monospace;font-size:13px;color:#111a0e;outline:none;resize:vertical;box-sizing:border-box" placeholder="Coconut Milk, 2&#10;Olive Oil, 1&#10;Black Beans, 3&#10;..."></textarea>
+        </div>
+        <div class="sheet-actions" style="margin-top:0">
+          <button class="btn btn-green btn-full" onclick="runListCheck()">check against my station →</button>
+          <button class="btn btn-ghost btn-full" onclick="closeListCheck()">cancel</button>
+        </div>
+      </div>
+      <div id="lc-results-area" style="display:none">
+        <div id="lc-summary" style="font-size:11px;color:#5a6e52;margin-bottom:14px;line-height:1.6"></div>
+        <div id="lc-results"></div>
+        <div class="lc-copy-bar">
+          <button class="btn btn-green" onclick="copyFilteredList()">⎘ copy filtered list</button>
+          <button class="btn btn-ghost" onclick="resetListCheck()">← back</button>
+        </div>
       </div>
     </div>
   </div>
@@ -1750,6 +1799,109 @@ function showToast(msg){
   document.querySelector('.toast')?.remove();
   const t=document.createElement('div');t.className='toast';t.textContent=msg;
   document.body.appendChild(t);setTimeout(()=>t.remove(),2400);
+}
+
+// ── LIST CHECK ────────────────────────────────────────────────────────────────
+let lcCheckedItems=[];
+
+function openListCheck(){
+  resetListCheck();
+  document.getElementById('list-check-sheet').style.display='';
+}
+function closeListCheck(){document.getElementById('list-check-sheet').style.display='none';}
+
+function resetListCheck(){
+  document.getElementById('lc-paste').value='';
+  document.getElementById('lc-paste-area').style.display='block';
+  document.getElementById('lc-results-area').style.display='none';
+  lcCheckedItems=[];
+}
+
+function parseListLine(line){
+  const clean=line.replace(/^[\s\-•·–*]+/,'').trim();
+  if(!clean) return null;
+  let name='',qty=1;
+  const m1=clean.match(/^(.+?)[,\-–]\s*(\d+)\s*$/);
+  const m2=clean.match(/^(\d+)\s*[x×]\s*(.+)$/i);
+  const m3=clean.match(/^(.+?)\s*\((\d+)\)\s*$/);
+  const m4=clean.match(/^(.+?)\s+(\d+)$/);
+  if(m1){name=m1[1].trim();qty=parseInt(m1[2]);}
+  else if(m2){qty=parseInt(m2[1]);name=m2[2].trim();}
+  else if(m3){name=m3[1].trim();qty=parseInt(m3[2]);}
+  else if(m4){name=m4[1].trim();qty=parseInt(m4[2]);}
+  else{name=clean;qty=1;}
+  return name?{name,qty:qty||1}:null;
+}
+
+function runListCheck(){
+  const raw=document.getElementById('lc-paste').value.trim();
+  if(!raw){showToast('paste a list first');return;}
+  const parsed=raw.split('\n').map(parseListLine).filter(Boolean);
+  if(!parsed.length){showToast("couldn't read any items");return;}
+
+  lcCheckedItems=parsed.map(p=>{
+    const item=items.find(i=>
+      i.name.toLowerCase()===p.name.toLowerCase()||
+      i.name.toLowerCase().includes(p.name.toLowerCase())||
+      p.name.toLowerCase().includes(i.name.toLowerCase())
+    );
+    let status='unknown';
+    if(item){
+      if(item.noAlert) status='ok';
+      else if(item.qty===0) status='out';
+      else if(item.qty<=item.threshold) status='low';
+      else status='ok';
+    }
+    return{name:p.name,qty:p.qty,status,matchedName:item?item.name:null,stock:item?item.qty:null,threshold:item?item.threshold:null};
+  });
+
+  renderListCheckResults();
+  document.getElementById('lc-paste-area').style.display='none';
+  document.getElementById('lc-results-area').style.display='block';
+}
+
+function renderListCheckResults(){
+  const ok=lcCheckedItems.filter(i=>i.status==='ok');
+  const low=lcCheckedItems.filter(i=>i.status==='low');
+  const out=lcCheckedItems.filter(i=>i.status==='out');
+  const unknown=lcCheckedItems.filter(i=>i.status==='unknown');
+  const need=[...out,...unknown,...low];
+
+  const summary=`${need.length} still needed · ${ok.length} already stocked`;
+  document.getElementById('lc-summary').innerHTML=`<strong>${esc(summary)}</strong><br>Items in <span style="color:#2d6a2d">green</span> are crossed off. Items below are your filtered list.`;
+
+  let html='';
+
+  if(need.length){
+    html+=`<div class="lc-section-label">Still need (${need.length})</div>`;
+    html+=need.map(i=>{
+      const dotClass=i.status==='out'?'out':i.status==='low'?'low':'unknown';
+      const meta=i.status==='out'?'out of stock':i.status==='low'?`only ${i.stock} left`:i.matchedName?`matched: ${i.matchedName}`:'not in station';
+      return`<div class="lc-row">
+        <div class="lc-dot ${dotClass}"></div>
+        <div class="lc-name">${esc(i.name)}</div>
+        <div class="lc-meta">${esc(meta)}</div>
+      </div>`;
+    }).join('');
+  }
+
+  if(ok.length){
+    html+=`<div class="lc-section-label">Already stocked (${ok.length}) — remove these</div>`;
+    html+=ok.map(i=>`<div class="lc-row">
+      <div class="lc-dot ok"></div>
+      <div class="lc-name stocked">${esc(i.name)}</div>
+      <div class="lc-meta">${i.stock!==null?`${i.stock} in stock`:''}</div>
+    </div>`).join('');
+  }
+
+  document.getElementById('lc-results').innerHTML=html||`<div class="lc-empty">Nothing matched your station.</div>`;
+}
+
+function copyFilteredList(){
+  const need=lcCheckedItems.filter(i=>i.status!=='ok');
+  if(!need.length){showToast('nothing to copy — you have everything!');return;}
+  const text=need.map(i=>`${i.name}, ${i.qty}`).join('\n');
+  navigator.clipboard?.writeText(text).then(()=>showToast(`${need.length} items copied.`)).catch(()=>showToast('copy manually'));
 }
 
 // ── RECIPES ───────────────────────────────────────────────────────────────────
