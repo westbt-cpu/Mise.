@@ -633,7 +633,11 @@ option{color:#111a0e;background:#ffffff;}
         </div>
         <div class="settings-row" style="flex-direction:column;align-items:flex-start;gap:6px">
           <div class="settings-row-label">Install as app</div>
-          <div class="settings-row-sub" style="line-height:1.7"><strong>iOS:</strong> Safari → Share → Add to Home Screen<br><strong>Android:</strong> Chrome menu → Add to Home Screen<br>Once installed, mise. appears in your share sheet — share directly from AnyList.</div>
+          <div class="settings-row-sub" style="line-height:1.7"><strong>iOS:</strong> Safari → Share → Add to Home Screen<br><strong>Android:</strong> Chrome menu → Add to Home Screen<br>On Android, mise. also appears in the share sheet once installed.</div>
+        </div>
+        <div class="settings-row" style="flex-direction:column;align-items:flex-start;gap:6px">
+          <div class="settings-row-label">AnyList → mise. (iOS)</div>
+          <div class="settings-row-sub" style="line-height:1.7">iOS doesn't support web app share targets. Use a Shortcut instead — it appears in any app's share sheet:<br><br>1. Open <strong>Shortcuts</strong> → tap <strong>+</strong><br>2. Tap the name at top → rename to <strong>mise.</strong><br>3. Add action → search <strong>URL</strong> → type your mise URL then add <code>?cl=</code> at the end<br>4. Tap the cursor after <code>cl=</code> → tap the token picker → choose <strong>Shortcut Input</strong> (Shortcuts auto-encodes it)<br>5. Add action → <strong>Open URLs</strong><br>6. Tap the shortcut name → <strong>Add to Share Sheet</strong> → set input type to <strong>Text</strong><br><br>Your mise URL: <span id="mise-url-display" style="font-family:monospace;word-break:break-all"></span> <button id="copy-mise-url" style="margin-left:6px;padding:2px 8px;font-size:11px;border-radius:4px;border:1px solid var(--text-secondary);background:transparent;color:var(--text-secondary);cursor:pointer">Copy</button></div>
         </div>
       </div>
     </div>
@@ -1595,12 +1599,26 @@ function closeReviewSheet(){document.getElementById('review-sheet').style.displa
 
 // ── SETTINGS ──────────────────────────────────────────────────────────────────
 function renderSettings(){
-  renderLocationsList();renderCategoriesList();renderNfcUrls();
+  renderLocationsList();renderCategoriesList();renderNfcUrls();renderMiseUrl();
   const k=document.getElementById('apikey-input');
   if(k)k.value=apiKey;
   const u=document.getElementById('sheets-url-input');
   if(u)u.value=sheetsUrl;
   updateSheetsSyncStatus();
+}
+
+function renderMiseUrl(){
+  const base=location.href.split('?')[0];
+  const d=document.getElementById('mise-url-display');
+  if(d) d.textContent=base;
+  const btn=document.getElementById('copy-mise-url');
+  if(btn){
+    btn.onclick=()=>{
+      navigator.clipboard.writeText(base+'?cl=').then(()=>{
+        btn.textContent='Copied!';setTimeout(()=>btn.textContent='Copy',1500);
+      });
+    };
+  }
 }
 
 function nfcTagUrl(loc){
