@@ -664,6 +664,14 @@ option{color:#111a0e;background:#ffffff;}
           <label>Location</label>
           <select id="haul-loc-select" style="width:100%;padding:12px 14px;border:1.5px solid #e4e8e2;border-radius:10px;background:#f8f9f7;font-family:'Geist Mono',monospace;font-size:13px;color:#111a0e;appearance:auto;"></select>
         </div>
+        <div class="form-row" style="margin-top:8px">
+          <label>Box / area label <span style="color:#9aab92;font-weight:400">(optional)</span></label>
+          <input type="text" id="haul-box-input" placeholder="e.g. DS-B2 · Box 54" autocomplete="off" style="width:100%;padding:12px 14px;border:1.5px solid #e4e8e2;border-radius:10px;background:#f8f9f7;font-family:'Geist Mono',monospace;font-size:13px;color:#111a0e;box-sizing:border-box;outline:none;">
+        </div>
+        <label style="display:flex;align-items:center;gap:8px;margin-top:12px;font-size:12px;color:#5a6e52;cursor:pointer">
+          <input type="checkbox" id="haul-replace" checked style="width:16px;height:16px;accent-color:#2d6a2d;flex-shrink:0">
+          Replace existing contents at this location
+        </label>
         <div style="margin-top:14px;padding:13px 14px;background:#f8f9f7;border:1.5px solid #e4e8e2;border-radius:12px;font-size:12px;color:#5a6e52;line-height:1.7">
           1. Tap <strong>Open Claude</strong> — the prompt is copied<br>
           2. Paste it in Claude, take a photo of your haul<br>
@@ -1000,7 +1008,7 @@ option{color:#111a0e;background:#ffffff;}
 const ITEMS_KEY='mise_items_v5',SHOP_KEY='mise_shop_v5',LOCS_KEY='mise_locs_v3',CATS_KEY='mise_cats_v3',SHEETS_KEY='mise_sheets_v1',SHEETS_SYNC_KEY='mise_sheets_sync_v1';
 let items=[],shoppingList=[],locations=[],categories=[],sheetsUrl='',sheetsLastSync='';
 let editingId=null,currentView='category',currentSort='name',scanStream=null;
-let renameType=null,renameIdx=null,confirmCallback=null,reviewItems=[];
+let renameType=null,renameIdx=null,confirmCallback=null,reviewItems=[],haulReplaceLoc=null;
 
 const DEFAULT_LOCS=['Pantry — Top','Pantry — Middle','Pantry — Bottom','Basement — Shelf A','Basement — Shelf B','Basement — Box','Fridge','Freezer'];
 const DEFAULT_CATS=['Grains & Pasta','Canned Goods','Snacks','Baking','Condiments','Beverages','Spices','Frozen','Other'];
@@ -1324,7 +1332,7 @@ function setMethod(m){
   document.getElementById('item-form').style.display=m==='manual'?'':'none';
   document.querySelector('#item-sheet .sheet-actions').style.display=m==='haul'?'none':'';
   if(m==='scan') startScan();
-  else if(m==='haul'){stopScan();const sel=document.getElementById('haul-loc-select');sel.innerHTML=locations.map(l=>`<option value="${esc(l)}">${esc(l)}</option>`).join('');}
+  else if(m==='haul'){stopScan();const sel=document.getElementById('haul-loc-select');sel.innerHTML=locations.map(l=>`<option value="${esc(l)}">${esc(l)}</option>`).join('');document.getElementById('haul-box-input').value='';}
   else{stopScan();setTimeout(()=>document.getElementById('f-name').focus(),200);}
 }
 
@@ -1434,6 +1442,8 @@ function locationPromptText(loc){
     return `What's in this freezer? List every item you can see, one per line:\nitem name, quantity\nInclude frozen meals, proteins, vegetables, ice cream. Plain names only. No commentary, no headers.`;
   if(l.includes('pantry'))
     return `What's on this pantry shelf? List every item you can see, one per line:\nitem name, quantity\nInclude canned goods, dry goods, jars, boxes, packets. Plain names only (e.g. "Coconut Milk, 2"). No commentary, no headers.`;
+  if(l.includes(' — '))
+    return `List every item you can see inside this box or area, one per line:\nitem name, quantity\nPlain names only (e.g. "Baking Soda, 2"). No commentary, no headers, no categories.`;
   if(l.includes('basement')||l.includes('box')||l.includes('shelf'))
     return `What's in this storage area? List every item you can see, one per line:\nitem name, quantity\nInclude all packaged items, bottles, cans, boxes. Plain names only. No commentary, no headers.`;
   return `List every item you can see, one per line:\nitem name, quantity\nPlain names only (e.g. "Coconut Milk, 2"). No commentary, no headers.`;
@@ -1461,21 +1471,28 @@ function copyPrompt(){
   const p=locationPromptText(getImportLoc());
   navigator.clipboard?.writeText(p).then(()=>showToast('prompt copied.')).catch(()=>showToast('copy prompt manually'));
 }
-function openHaulInClaude(){
+function haulEffectiveLoc(){
   const loc=document.getElementById('haul-loc-select')?.value||(locations[0]||'');
-  const prompt=locationPromptText(loc);
+  const box=(document.getElementById('haul-box-input')?.value||'').trim();
+  return box?`${loc} — ${box}`:loc;
+}
+function openHaulInClaude(){
+  const effectiveLoc=haulEffectiveLoc();
+  const prompt=locationPromptText(effectiveLoc);
   navigator.clipboard?.writeText(prompt).catch(()=>{});
-  // Try the Claude app URL scheme; fall back to web after 1.5 s if not installed
   const t=Date.now();
   location.href='claude://';
   setTimeout(()=>{if(Date.now()-t<2000)window.open('https://claude.ai','_blank');},1500);
   showToast('prompt copied — paste in Claude');
 }
 function goToHaulPaste(){
-  const loc=document.getElementById('haul-loc-select')?.value||(locations[0]||'');
+  const effectiveLoc=haulEffectiveLoc();
+  const replace=document.getElementById('haul-replace')?.checked;
+  if(!locations.includes(effectiveLoc)){locations.push(effectiveLoc);save();}
+  haulReplaceLoc=replace?effectiveLoc:null;
   closeItemSheet();
   switchScreen('import',null);
-  renderImportLocSelect(loc);
+  renderImportLocSelect(effectiveLoc);
   setTimeout(()=>document.getElementById('import-paste')?.focus(),400);
 }
 function clearImport(){document.getElementById('import-paste').value='';showToast('cleared.');}
@@ -1521,7 +1538,8 @@ function openReviewSheet(parsed,forceLoc){
     const match=items.find(i=>nn(i.name)===pn||nn(i.name).includes(pn)||pn.includes(nn(i.name)));
     return{...p,matched:match||null,include:true,expanded:false,
       category:match?match.category:defCat,
-      location:guessItemLoc(p.name,defLoc),
+      // In replace mode every item goes to the exact box location; otherwise guess from inventory
+      location:haulReplaceLoc?defLoc:guessItemLoc(p.name,defLoc),
       notes:match?(match.notes||''):'',
     };
   });
@@ -1531,7 +1549,10 @@ function openReviewSheet(parsed,forceLoc){
 
 function renderReviewSheet(){
   const total=reviewItems.length,restocks=reviewItems.filter(r=>r.matched).length;
-  document.getElementById('review-summary').textContent=`${total} items · ${restocks} restocks · ${total-restocks} new`;
+  const existing=haulReplaceLoc?items.filter(i=>i.location===haulReplaceLoc).length:0;
+  document.getElementById('review-summary').innerHTML=haulReplaceLoc
+    ?`${total} items · replaces ${existing} at <strong>${esc(haulReplaceLoc)}</strong>`
+    :`${total} items · ${restocks} restocks · ${total-restocks} new`;
   document.getElementById('review-list').innerHTML=reviewItems.map((r,idx)=>`
     <div class="review-item ${r.include?'':'excluded'}" id="ri-${idx}">
       <div class="review-item-row" onclick="toggleReviewExpand(${idx})">
@@ -1571,17 +1592,20 @@ function adjReview(idx,d){reviewItems[idx].qty=Math.max(1,reviewItems[idx].qty+d
 function updateReviewField(idx,field,val){reviewItems[idx][field]=val;}
 
 function applyImport(){
+  const replacing=haulReplaceLoc;
+  if(replacing) items=items.filter(i=>i.location!==replacing);
   let restocked=0,added=0;
   reviewItems.filter(r=>r.include).forEach(r=>{
-    if(r.matched){r.matched.qty+=r.qty;r.matched.category=r.category;r.matched.location=r.location;if(r.notes)r.matched.notes=r.notes;restocked++;}
+    if(r.matched&&!replacing){r.matched.qty+=r.qty;r.matched.category=r.category;r.matched.location=r.location;if(r.notes)r.matched.notes=r.notes;restocked++;}
     else{items.push({id:uid(),name:r.name,category:r.category,location:r.location,qty:r.qty,threshold:1,notes:r.notes||'',expiry:''});added++;}
   });
+  haulReplaceLoc=null;
   save();renderInventory();closeReviewSheet();
   document.getElementById('import-paste').value='';
-  showToast(`↑${restocked} restocked · +${added} new`);
+  showToast(replacing?`${added} items placed at ${replacing}`:`↑${restocked} restocked · +${added} new`);
   switchScreen('station',document.getElementById('nav-station'));
 }
-function closeReviewSheet(){document.getElementById('review-sheet').style.display='none';}
+function closeReviewSheet(){document.getElementById('review-sheet').style.display='none';haulReplaceLoc=null;}
 
 // ── SETTINGS ──────────────────────────────────────────────────────────────────
 function renderSettings(){
