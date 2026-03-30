@@ -13,6 +13,7 @@
 <link rel="apple-touch-icon" href="icon.svg">
 <title>mise.</title>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/nosleep/0.12.0/NoSleep.min.js"></script>
 <style>
 :root {
   /* Neutrals */
@@ -399,6 +400,37 @@ option{color:#111a0e;background:#ffffff;}
 .add-ing-btn{width:100%;padding:11px;border:1.5px dashed #e4e8e2;border-radius:10px;background:none;font-family:'Geist Mono',monospace;font-size:11px;color:#5a6e52;cursor:pointer;letter-spacing:0.04em;margin-bottom:4px;}
 .add-ing-btn:active{border-color:#2d6a2d;color:#2d6a2d;background:#edf3ea;}
 
+/* ── RECIPE TAGS ── */
+.recipe-tag{display:inline-block;padding:2px 8px;background:#edf3ea;color:#2d6a2d;border-radius:4px;font-family:'Geist Mono',monospace;font-size:9px;letter-spacing:0.05em;text-transform:lowercase;}
+.recipe-tags{display:flex;flex-wrap:wrap;gap:4px;}
+/* ── RECIPE STEPS ── */
+.step-row{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid #e4e8e2;}
+.step-row:last-child{border-bottom:none;}
+.step-num{width:24px;height:24px;border-radius:50%;background:#edf3ea;color:#2d6a2d;font-family:'Geist Mono',monospace;font-size:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px;}
+.step-body{flex:1;}
+.step-title{font-family:'Instrument Serif',serif;font-size:15px;color:#111a0e;margin-bottom:4px;}
+.step-content{font-size:13px;color:#5a6e52;line-height:1.6;}
+.step-timer-badge{display:inline-block;margin-top:6px;padding:3px 8px;background:#fdf2e0;color:#c47c20;border-radius:5px;font-family:'Geist Mono',monospace;font-size:10px;}
+.ing-dot.staple{background:#9aab92;}
+/* ── COOK MODE ── */
+#cook-mode-overlay{display:none;position:fixed;inset:0;background:#1c3a1e;z-index:2000;flex-direction:column;overflow:hidden;}
+#cook-mode-overlay.active{display:flex;}
+#cook-ing-drawer{position:absolute;bottom:0;left:0;right:0;background:#243d26;border-radius:16px 16px 0 0;transform:translateY(calc(100% - 50px));transition:transform 0.3s ease;}
+.cook-ing-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.08);}
+.cook-ing-row:last-child{border-bottom:none;}
+.cook-ing-name{font-family:'Instrument Serif',serif;font-size:15px;color:rgba(255,255,255,0.85);}
+.cook-ing-amt{font-family:'Geist Mono',monospace;font-size:11px;color:rgba(255,255,255,0.5);}
+/* ── WHAT CAN I COOK ── */
+.wcc-section-head{font-size:12px;font-weight:600;color:#5a6e52;padding:12px 0 6px;margin-top:4px;letter-spacing:0.03em;}
+.wcc-section-head:first-child{padding-top:0;margin-top:0;}
+.wcc-card{padding:14px 16px;border-radius:12px;margin-bottom:8px;cursor:pointer;border-left:4px solid transparent;background:#fff;border:1.5px solid #e4e8e2;transition:transform 0.1s;}
+.wcc-card:active{transform:scale(0.98);}
+.wcc-card.ready{border-left:4px solid #2d6a2d;background:#fafcf9;}
+.wcc-card.mostly{border-left:4px solid #c47c20;background:#fffaf5;}
+.wcc-card.missing{border-left:4px solid #c44040;background:#fffafa;}
+/* ── STAPLES in settings ── */
+.s-btn-delete{background:none;border:none;color:#9aab92;font-size:18px;cursor:pointer;padding:6px 8px;line-height:1;}
+.s-btn-delete:active{color:#c44040;}
 /* ── LIST CHECK (AnyList) ── */
 .lc-section-label{font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:#5a6e52;margin:16px 0 8px;}
 .lc-section-label:first-child{margin-top:0;}
@@ -514,8 +546,9 @@ option{color:#111a0e;background:#ffffff;}
           <div class="page-title">Recipes</div>
           <div class="page-sub">what you can cook right now</div>
         </div>
-        <button class="btn btn-green" onclick="openRecipeEdit(null)" style="font-size:11px;padding:8px 14px;">+ new</button>
+        <button class="btn btn-green" onclick="openRecipeImport()" style="font-size:11px;padding:8px 14px;">Import →</button>
       </div>
+      <button class="btn btn-outline btn-full" onclick="openWhatCanCook()" style="margin-top:8px;font-size:12px;">What can I cook tonight? →</button>
     </div>
     <div class="content-pad" id="recipes-list"></div>
   </div>
@@ -564,6 +597,33 @@ option{color:#111a0e;background:#ffffff;}
         <div class="settings-row">
           <div style="flex:1"><div class="settings-row-label">Set up guide</div><div class="settings-row-sub">Step-by-step Google Sheets setup</div></div>
           <button class="s-btn s-btn-rename" onclick="openGuideSheet()">view →</button>
+        </div>
+      </div>
+    </div>
+    <div class="settings-section">
+      <div class="settings-heading">Staples</div>
+      <div style="font-size:11px;color:#9aab92;margin-bottom:10px;line-height:1.5;">Staples are assumed always present — never checked against your pantry.</div>
+      <div class="settings-card" id="staples-list"></div>
+      <div class="add-row">
+        <input type="text" id="new-staple-input" placeholder="e.g. flour, sugar..." autocomplete="off" onkeydown="if(event.key==='Enter')addStaple()">
+        <button class="btn btn-green" onclick="addStaple()" style="padding:12px 20px">Add</button>
+      </div>
+      <button onclick="resetStaples()" style="background:none;border:none;font-size:11px;color:#9aab92;cursor:pointer;padding:4px 0;font-family:'Geist Mono',monospace;margin-top:4px;">reset to defaults</button>
+    </div>
+    <div class="settings-section">
+      <div class="settings-heading">Notion sync</div>
+      <div style="font-size:11px;color:#9aab92;margin-bottom:10px;line-height:1.5;" id="notion-status">Not connected</div>
+      <div class="settings-card">
+        <div class="settings-row" style="flex-direction:column;align-items:flex-start;gap:6px">
+          <div class="settings-row-label">Integration secret</div>
+          <input type="password" id="notion-token-input" placeholder="secret_..." autocomplete="off" style="width:100%;padding:10px 12px;border:1.5px solid #e4e8e2;border-radius:8px;background:#f8f9f7;font-family:'Geist Mono',monospace;font-size:11px;color:#111a0e;box-sizing:border-box;">
+        </div>
+        <div class="settings-row" style="flex-direction:column;align-items:flex-start;gap:6px;margin-top:8px;">
+          <div class="settings-row-label">Database ID</div>
+          <input type="text" id="notion-db-input" placeholder="paste database ID..." autocomplete="off" style="width:100%;padding:10px 12px;border:1.5px solid #e4e8e2;border-radius:8px;background:#f8f9f7;font-family:'Geist Mono',monospace;font-size:11px;color:#111a0e;box-sizing:border-box;">
+        </div>
+        <div style="margin-top:10px;">
+          <button class="btn btn-green" onclick="saveNotionToken()" style="width:100%;padding:12px;">Save Notion settings</button>
         </div>
       </div>
     </div>
@@ -915,15 +975,33 @@ option{color:#111a0e;background:#ffffff;}
   <div class="modal-overlay" onclick="if(event.target===event.currentTarget)closeRecipeDetail()">
     <div class="sheet" onclick="event.stopPropagation()">
       <div class="sheet-handle"></div>
-      <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:4px;">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:6px;">
         <h2 id="rd-title" style="margin-bottom:0;flex:1;padding-right:12px;"></h2>
-        <button onclick="editCurrentRecipe()" style="border:none;background:none;font-family:'Geist Mono',monospace;font-size:11px;color:#5a6e52;cursor:pointer;padding:6px 0;white-space:nowrap;margin-top:6px;">edit →</button>
+        <div style="display:flex;gap:8px;flex-shrink:0;margin-top:4px;">
+          <button onclick="printRecipe()" style="border:none;background:none;font-family:'Geist Mono',monospace;font-size:11px;color:#9aab92;cursor:pointer;padding:6px 0;">PDF</button>
+          <button onclick="editCurrentRecipe()" style="border:none;background:none;font-family:'Geist Mono',monospace;font-size:11px;color:#5a6e52;cursor:pointer;padding:6px 0;white-space:nowrap;">edit →</button>
+        </div>
       </div>
-      <div id="rd-notes" style="font-size:12px;color:#5a6e52;margin-bottom:18px;line-height:1.5;"></div>
+      <div id="rd-tags" style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px;"></div>
+      <div id="rd-notes" style="font-size:12px;color:#5a6e52;margin-bottom:14px;line-height:1.5;"></div>
+      <!-- Servings scaler -->
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:11px 14px;background:#f8f9f7;border:1.5px solid #e4e8e2;border-radius:10px;margin-bottom:18px;">
+        <div>
+          <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:#5a6e52;">Servings</div>
+          <div style="font-size:10px;color:#9aab92;" id="rd-servings-base"></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <button onclick="adjRecipeScale(-1)" style="width:36px;height:36px;border-radius:50%;border:1.5px solid #e4e8e2;background:#fff;font-size:18px;color:#2d6a2d;cursor:pointer;line-height:1;">−</button>
+          <span id="rd-servings-val" style="font-family:'Geist Mono',monospace;font-size:18px;font-weight:500;color:#111a0e;min-width:24px;text-align:center;"></span>
+          <button onclick="adjRecipeScale(1)" style="width:36px;height:36px;border-radius:50%;border:1.5px solid #e4e8e2;background:#fff;font-size:18px;color:#2d6a2d;cursor:pointer;line-height:1;">+</button>
+        </div>
+      </div>
       <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:#5a6e52;margin-bottom:10px;">Ingredients</div>
       <div id="rd-ingredients"></div>
+      <div id="rd-steps"></div>
       <div class="sheet-actions" style="margin-top:20px;">
-        <button class="btn btn-green btn-full" id="rd-cook-btn" onclick="cookRecipe()">✓ cook it — update my station</button>
+        <button class="btn btn-green btn-full" id="rd-cook-mode-btn" onclick="openCookMode()">▶ Start Cooking</button>
+        <button class="btn btn-outline btn-full" onclick="cookRecipe()">✓ cook it — update my station</button>
         <button class="btn btn-ghost btn-full" onclick="closeRecipeDetail()">close</button>
       </div>
     </div>
@@ -955,6 +1033,71 @@ option{color:#111a0e;background:#ffffff;}
         <button class="btn-danger-full" id="re-delete-btn" style="display:none" onclick="confirmDeleteRecipe()">delete recipe</button>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- RECIPE IMPORT SHEET -->
+
+<div id="recipe-import-sheet" style="display:none">
+  <div class="modal-overlay" onclick="if(event.target===event.currentTarget)closeRecipeImport()">
+    <div class="sheet" onclick="event.stopPropagation()">
+      <div class="sheet-handle"></div>
+      <h2>Import from Claude</h2>
+      <div style="font-size:12px;color:#5a6e52;line-height:1.6;margin-bottom:14px;">Develop a recipe in Claude chat, then copy the JSON and paste it here.</div>
+      <textarea id="recipe-import-textarea" rows="7" placeholder='Paste recipe JSON here...' oninput="previewRecipeImport()" style="width:100%;padding:12px;border:1.5px solid #e4e8e2;border-radius:10px;background:#f8f9f7;font-family:'Geist Mono',monospace;font-size:11px;color:#111a0e;resize:none;box-sizing:border-box;outline:none;line-height:1.6;"></textarea>
+      <div id="recipe-import-error" style="display:none;margin-top:8px;padding:10px 12px;background:#fdeaea;border:1.5px solid #f5c6c6;border-radius:8px;font-size:11px;color:#c44040;font-family:'Geist Mono',monospace;"></div>
+      <div id="recipe-import-preview" style="display:none;margin-top:10px;padding:13px 14px;background:#edf3ea;border:1.5px solid #ddecd8;border-radius:10px;"></div>
+      <div class="sheet-actions" style="margin-top:14px;">
+        <button class="btn btn-green btn-full" onclick="confirmRecipeImport()">Save to library</button>
+        <button class="btn btn-ghost btn-full" onclick="closeRecipeImport()">cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- WHAT CAN I COOK SHEET -->
+
+<div id="what-can-cook-sheet" style="display:none">
+  <div class="modal-overlay" onclick="if(event.target===event.currentTarget)closeWhatCanCook()">
+    <div class="sheet" style="max-height:90vh;overflow-y:auto;" onclick="event.stopPropagation()">
+      <div class="sheet-handle"></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+        <h2 style="margin:0;">Tonight?</h2>
+        <button onclick="closeWhatCanCook()" style="border:none;background:none;font-size:20px;color:#9aab92;cursor:pointer;padding:6px;">×</button>
+      </div>
+      <div id="wcc-list"></div>
+    </div>
+  </div>
+</div>
+
+<!-- COOK MODE OVERLAY -->
+
+<div id="cook-mode-overlay">
+  <div style="padding:env(safe-area-inset-top,16px) 20px 0;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
+    <div id="cook-progress" style="font-family:'Geist Mono',monospace;font-size:11px;color:rgba(255,255,255,0.5);letter-spacing:0.06em;">STEP 1 OF 1</div>
+    <button onclick="closeCookMode()" style="width:44px;height:44px;background:rgba(255,255,255,0.12);border:none;border-radius:50%;color:rgba(255,255,255,0.8);font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;">×</button>
+  </div>
+  <div style="flex:1;overflow-y:auto;padding:24px 24px 12px;">
+    <div id="cook-step-title" style="font-family:'Instrument Serif',serif;font-size:30px;color:#ffffff;margin-bottom:16px;line-height:1.2;"></div>
+    <div id="cook-step-content" style="font-size:17px;color:rgba(255,255,255,0.85);line-height:1.75;"></div>
+    <div id="cook-timer-wrap" style="display:none;margin-top:28px;text-align:center;padding:20px;background:rgba(0,0,0,0.2);border-radius:16px;">
+      <div id="cook-timer-display" style="font-family:'Instrument Serif',serif;font-size:58px;color:#d4a843;line-height:1;margin-bottom:18px;letter-spacing:0.02em;">00:00</div>
+      <div style="display:flex;gap:10px;justify-content:center;">
+        <button id="cook-timer-start" onclick="toggleTimer()" style="padding:13px 32px;background:#d4a843;border:none;border-radius:10px;font-family:'Geist Mono',monospace;font-size:12px;color:#1c3a1e;cursor:pointer;font-weight:500;letter-spacing:0.04em;">START</button>
+        <button onclick="resetTimer()" style="padding:13px 20px;background:rgba(255,255,255,0.12);border:none;border-radius:10px;font-family:'Geist Mono',monospace;font-size:12px;color:rgba(255,255,255,0.7);cursor:pointer;letter-spacing:0.04em;">RESET</button>
+      </div>
+    </div>
+  </div>
+  <div style="padding:10px 16px;display:grid;grid-template-columns:1fr 1fr;gap:10px;flex-shrink:0;padding-bottom:calc(10px + env(safe-area-inset-bottom,0px));">
+    <button id="cook-prev-btn" onclick="cookPrev()" style="height:58px;background:rgba(255,255,255,0.12);border:none;border-radius:12px;font-family:'Geist Mono',monospace;font-size:13px;color:rgba(255,255,255,0.8);cursor:pointer;letter-spacing:0.03em;">← Prev</button>
+    <button id="cook-next-btn" onclick="cookNext()" style="height:58px;background:#2d6a2d;border:none;border-radius:12px;font-family:'Geist Mono',monospace;font-size:13px;color:#ffffff;cursor:pointer;letter-spacing:0.03em;">Next →</button>
+  </div>
+  <!-- Ingredient drawer -->
+  <div id="cook-ing-drawer">
+    <div onclick="toggleIngDrawer()" style="height:50px;display:flex;align-items:center;justify-content:center;cursor:pointer;border-radius:16px 16px 0 0;">
+      <span id="cook-ing-toggle" style="font-family:'Geist Mono',monospace;font-size:11px;color:rgba(255,255,255,0.5);letter-spacing:0.06em;">INGREDIENTS ▲</span>
+    </div>
+    <div id="cook-ing-list" style="max-height:45vh;overflow-y:auto;padding:0 20px 16px;"></div>
   </div>
 </div>
 
@@ -1032,7 +1175,7 @@ function init(){
   const locBtn=document.getElementById('view-loc-btn');
   if(catBtn){catBtn.classList.add('active');catBtn.style.background='#2d6a2d';catBtn.style.color='#ffffff';}
   if(locBtn){locBtn.classList.remove('active');locBtn.style.background='#f8f9f7';locBtn.style.color='#5a6e52';}
-  loadRecipes();
+  loadRecipes();loadStaples();
   renderInventory();
   handleUrlParams();
 }
@@ -1613,6 +1756,7 @@ function renderSettings(){
   const u=document.getElementById('sheets-url-input');
   if(u)u.value=sheetsUrl;
   updateSheetsSyncStatus();
+  renderStaplesList();renderNotionStatus();
 }
 
 function renderMiseUrl(){
@@ -1927,213 +2071,465 @@ function copyFilteredList(){
   navigator.clipboard?.writeText(text).then(()=>showToast(`${need.length} items copied.`)).catch(()=>showToast('copy manually'));
 }
 
-// ── RECIPES ───────────────────────────────────────────────────────────────────
+// ── RECIPES v2 ────────────────────────────────────────────────────────────────
 const RECIPES_KEY='mise_recipes_v1';
-let recipes=[];
-let editingRecipeId=null,viewingRecipeId=null;
+const STAPLES_KEY='mise_staples_v1';
+const NOTION_TOKEN_KEY='mise_notion_token';
+const NOTION_DB_KEY='mise_notion_recipe_db';
+const DEFAULT_STAPLES=['salt','kosher salt','black pepper','pepper','baking powder','baking soda','sugar','granulated sugar','vanilla extract','vanilla','olive oil','vegetable oil','neutral oil','water'];
+let recipes=[],staples=[];
+let editingRecipeId=null,viewingRecipeId=null,cookModeRecipeId=null,cookModeStep=0;
+let recipeDetailScale=1;
+let timerInterval=null,timerRunning=false,timerStartTime=null,timerDuration=0;
+let ingDrawerOpen=false,swipeStartX=null,cookNoSleepActive=false;
+let noSleep=null;
+function getNoSleep(){if(!noSleep&&window.NoSleep)noSleep=new window.NoSleep();return noSleep;}
 
 function loadRecipes(){
-  try{recipes=JSON.parse(localStorage.getItem(RECIPES_KEY))||defaultRecipes();}
+  try{recipes=(JSON.parse(localStorage.getItem(RECIPES_KEY))||defaultRecipes()).map(migrateRecipe);}
   catch(e){recipes=defaultRecipes();}
 }
 function saveRecipes(){localStorage.setItem(RECIPES_KEY,JSON.stringify(recipes));}
+function loadStaples(){
+  try{staples=JSON.parse(localStorage.getItem(STAPLES_KEY))||DEFAULT_STAPLES.slice();}
+  catch(e){staples=DEFAULT_STAPLES.slice();}
+}
+function saveStaples(){localStorage.setItem(STAPLES_KEY,JSON.stringify(staples));}
+
+function migrateRecipe(r){
+  return{
+    id:r.id||uid(),
+    title:r.title||r.name||'Untitled',
+    servings:r.servings||1,
+    tags:r.tags||[],
+    notes:r.notes||'',
+    ingredients:(r.ingredients||[]).map(i=>({name:i.name||'',amount:parseFloat(i.amount||i.qty)||0,unit:i.unit||''})),
+    steps:r.steps||[],
+    createdAt:r.createdAt||new Date().toISOString(),
+  };
+}
 
 function defaultRecipes(){
   return[
-    {id:uid(),name:'Morning Oats',notes:'Quick breakfast, serves 1',ingredients:[
-      {name:'Rolled Oats',qty:1,unit:'cup'},
-      {name:'Coconut Milk',qty:0.5,unit:'cup'},
-    ]},
-    {id:uid(),name:'Rice & Sauce',notes:'Simple pantry dinner',ingredients:[
-      {name:'Nep Rice',qty:2,unit:'cups'},
-      {name:'Bamboo Shoots',qty:1,unit:'can'},
-      {name:'Olive Oil',qty:2,unit:'tbsp'},
-    ]},
+    {id:uid(),title:'Morning Oats',servings:1,tags:['breakfast'],notes:'Quick breakfast',
+      ingredients:[{name:'Rolled Oats',amount:90,unit:'g'},{name:'Coconut Milk',amount:120,unit:'ml'}],
+      steps:[{title:'Cook',content:'Combine oats and milk. Heat over medium, stirring, until creamy.',timer_seconds:420}],
+      createdAt:new Date().toISOString()},
+    {id:uid(),title:'Rice & Sauce',servings:2,tags:['dinner','pantry'],notes:'Simple pantry dinner',
+      ingredients:[{name:'Nep Rice',amount:2,unit:'cups'},{name:'Bamboo Shoots',amount:1,unit:'can'},{name:'Olive Oil',amount:30,unit:'ml'}],
+      steps:[{title:'Cook rice',content:'Rinse rice, add 1:1.5 water, bring to boil then simmer.',timer_seconds:1200},{title:'Sauté',content:'Heat oil, add bamboo shoots, cook until fragrant.',timer_seconds:300}],
+      createdAt:new Date().toISOString()},
   ];
 }
 
-// Match ingredient name to an inventory item (case-insensitive substring)
-function matchItem(ingName){
-  const n=ingName.toLowerCase();
-  return items.find(i=>i.name.toLowerCase().includes(n)||n.includes(i.name.toLowerCase()));
+// ── INGREDIENT HELPERS ──────────────────────────────────────────────────────
+function gramsToSpoon(g,ingredient){
+  const m={'baking powder':4,'baking soda':6,'salt':6,'kosher salt':6,'sugar':4,'granulated sugar':4,'vanilla':4,'vanilla extract':4,'pepper':2,'black pepper':2,'cinnamon':2,'paprika':2,'cumin':3};
+  const gPerTsp=m[ingredient.toLowerCase()]||4;
+  const tsp=g/gPerTsp;
+  if(tsp<=0.25)return'¼ tsp';if(tsp<=0.5)return'½ tsp';if(tsp<=0.75)return'¾ tsp';
+  if(tsp<=1)return'1 tsp';if(tsp<=1.5)return'1½ tsp';if(tsp<=2)return'2 tsp';
+  if(tsp<=3)return'1 tbsp';return`${Math.round(tsp/3)} tbsp`;
 }
-
-// Returns 'ready' | 'mostly' | 'missing'
+function fmtAmt(ing,scale){
+  scale=scale||1;
+  const a=ing.amount*scale;
+  if(!a)return'';
+  if(ing.unit==='g'&&a<5)return`${parseFloat(a.toFixed(1))}g (${gramsToSpoon(a,ing.name)})`;
+  return`${parseFloat(a.toFixed(1))}${ing.unit?' '+ing.unit:''}`.trimEnd();
+}
+function isStaple(ingName){
+  const n=ingName.toLowerCase().trim();
+  return staples.some(s=>n===s||n.includes(s)||s.includes(n));
+}
+function normIng(n){
+  return n.toLowerCase().replace(/\bunsalted\b|\bsalted\b/g,'').replace(/\ball[-\s]purpose\b|\bplain\b/g,'ap').replace(/,.*$/,'').replace(/\s+/g,' ').trim();
+}
+function matchItem(ingName){
+  const n=normIng(ingName);
+  return items.find(i=>{const m=normIng(i.name);return m===n||m.includes(n)||n.includes(m);});
+}
 function recipeReadiness(recipe){
-  if(!recipe.ingredients.length) return'ready';
-  let matched=0,ok=0;
-  for(const ing of recipe.ingredients){
+  const ings=recipe.ingredients||[];
+  if(!ings.length)return'ready';
+  let ok=0;
+  for(const ing of ings){
+    if(isStaple(ing.name)){ok++;continue;}
     const item=matchItem(ing.name);
-    if(item){matched++;if(!item.noAlert&&item.qty>0) ok++; else if(item.noAlert) ok++;}
+    if(item&&(item.noAlert||item.qty>0))ok++;
   }
-  if(matched===0) return'missing';
-  if(ok===recipe.ingredients.length) return'ready';
-  if(ok>=Math.ceil(recipe.ingredients.length/2)) return'mostly';
+  if(ok===ings.length)return'ready';
+  if(ok>=Math.ceil(ings.length/2))return'mostly';
   return'missing';
 }
-
+function recipeReadinessDetail(recipe,scale){
+  scale=scale||1;
+  const details=(recipe.ingredients||[]).map(ing=>{
+    if(isStaple(ing.name))return{...ing,status:'staple'};
+    const item=matchItem(ing.name);
+    if(!item)return{...ing,status:'missing'};
+    const needed=ing.amount*scale;
+    if(item.noAlert||item.qty>=(needed>0?needed:1))return{...ing,status:'ok',haveQty:item.qty,haveUnit:item.unit||''};
+    return{...ing,status:'low',haveQty:item.qty,haveUnit:item.unit||''};
+  });
+  return{details};
+}
+function formatDuration(s){
+  if(!s)return'';
+  const m=Math.floor(s/60),r=s%60;
+  return m?(r?`${m}m ${r}s`:`${m} min`):`${s}s`;
+}
 const READINESS_ICON={ready:'✓',mostly:'~',missing:'✕'};
-const READINESS_LABEL={ready:'ready',mostly:'mostly',missing:'missing'};
+const READINESS_LABEL={ready:'ready',mostly:'almost',missing:'missing'};
 
+// ── RECIPE LIBRARY ──────────────────────────────────────────────────────────
 function renderRecipes(){
   const el=document.getElementById('recipes-list');
-  if(!el) return;
+  if(!el)return;
   if(!recipes.length){
-    el.innerHTML=`<div class="recipe-empty"><h3>No recipes yet.</h3><p>Add your first recipe to see what you can cook from your station.</p><button class="btn btn-green" onclick="openRecipeEdit(null)">+ add recipe</button></div>`;
+    el.innerHTML=`<div class="recipe-empty"><h3>No recipes yet.</h3><p>Develop a recipe in Claude chat and tap <strong>Import →</strong> to bring it here.</p><button class="btn btn-green" onclick="openRecipeImport()">Import from Claude</button></div>`;
     return;
   }
-  // Sort: ready first, then mostly, then missing
   const order={ready:0,mostly:1,missing:2};
   const sorted=[...recipes].sort((a,b)=>order[recipeReadiness(a)]-order[recipeReadiness(b)]);
   el.innerHTML=sorted.map(r=>{
     const rd=recipeReadiness(r);
-    const ingCount=r.ingredients.length;
+    const tags=(r.tags||[]).map(t=>`<span class="recipe-tag">${esc(t)}</span>`).join('');
     return`<div class="recipe-card ${rd}" onclick="openRecipeDetail('${esc(r.id)}')">
       <div class="recipe-readiness ${rd}">${esc(READINESS_ICON[rd])}</div>
       <div class="recipe-info">
-        <div class="recipe-name">${esc(r.name)}</div>
-        <div class="recipe-meta">${ingCount} ingredient${ingCount!==1?'s':''}${r.notes?` · ${esc(r.notes)}`:''}.</div>
+        <div class="recipe-name">${esc(r.title)}</div>
+        <div class="recipe-meta">${r.servings?r.servings+' srv · ':''}${r.ingredients.length} ingredients${r.steps&&r.steps.length?' · '+r.steps.length+' steps':''}</div>
+        ${tags?`<div class="recipe-tags" style="margin-top:4px">${tags}</div>`:''}
       </div>
       <span class="recipe-badge ${rd}">${esc(READINESS_LABEL[rd])}</span>
     </div>`;
   }).join('');
 }
 
+// ── RECIPE DETAIL ───────────────────────────────────────────────────────────
 function openRecipeDetail(id){
   const r=recipes.find(x=>x.id===id);
-  if(!r) return;
-  viewingRecipeId=id;
-  document.getElementById('rd-title').textContent=r.name;
-  document.getElementById('rd-notes').textContent=r.notes||'';
-  const ings=r.ingredients.map(ing=>{
-    const item=matchItem(ing.name);
-    let dotClass='unknown',stockLabel='not in station';
-    if(item){
-      if(item.noAlert){dotClass='ok';stockLabel='muted';}
-      else if(item.qty===0){dotClass='out';stockLabel='out of stock';}
-      else if(item.qty<=item.threshold){dotClass='low';stockLabel=`${item.qty} left (low)`;}
-      else{dotClass='ok';stockLabel=`${item.qty} in stock`;}
-    }
-    const qtyStr=ing.qty?`${ing.qty}${ing.unit?' '+ing.unit:''}`:'';
-    return`<div class="ing-row">
-      <div class="ing-dot ${dotClass}"></div>
-      <div class="ing-name">${esc(ing.name)}</div>
-      ${qtyStr?`<div class="ing-qty">${esc(qtyStr)}</div>`:''}
-      <div class="ing-stock">${esc(stockLabel)}</div>
-    </div>`;
-  }).join('');
-  document.getElementById('rd-ingredients').innerHTML=ings||'<div style="font-size:12px;color:#9aab92;padding:8px 0">No ingredients listed.</div>';
+  if(!r)return;
+  viewingRecipeId=id;recipeDetailScale=1;
+  renderRecipeDetail(r);
   document.getElementById('recipe-detail-sheet').style.display='';
 }
-
-function closeRecipeDetail(){
-  document.getElementById('recipe-detail-sheet').style.display='none';
-  viewingRecipeId=null;
+function renderRecipeDetail(r){
+  const sc=recipeDetailScale,srv=Math.round(r.servings*sc);
+  document.getElementById('rd-title').textContent=r.title;
+  document.getElementById('rd-tags').innerHTML=(r.tags||[]).map(t=>`<span class="recipe-tag">${esc(t)}</span>`).join('');
+  document.getElementById('rd-notes').textContent=r.notes||'';
+  document.getElementById('rd-servings-val').textContent=srv;
+  document.getElementById('rd-servings-base').textContent=sc===1?'':`(base: ${r.servings})`;
+  const{details}=recipeReadinessDetail(r,sc);
+  document.getElementById('rd-ingredients').innerHTML=details.map(d=>{
+    let dc,sl;
+    if(d.status==='staple'){dc='staple';sl='staple ✓';}
+    else if(d.status==='ok'){dc='ok';sl=d.haveQty!=null?`have ${d.haveQty}${d.haveUnit?' '+d.haveUnit:''}`:'in stock';}
+    else if(d.status==='low'){dc='low';sl=`low: ${d.haveQty}${d.haveUnit?' '+d.haveUnit:''}`;}
+    else{dc='out';sl='not in pantry';}
+    const amt=fmtAmt(d,sc);
+    return`<div class="ing-row"><div class="ing-dot ${dc}"></div><div class="ing-name">${esc(d.name)}</div>${amt?`<div class="ing-qty">${esc(amt)}</div>`:''}<div class="ing-stock">${esc(sl)}</div></div>`;
+  }).join('')||'<div style="font-size:12px;color:#9aab92;padding:8px 0">No ingredients listed.</div>';
+  const stepsEl=document.getElementById('rd-steps');
+  if(r.steps&&r.steps.length){
+    stepsEl.style.display='';
+    stepsEl.innerHTML='<div style="font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:#5a6e52;margin:18px 0 10px;">Steps</div>'+
+      r.steps.map((s,i)=>`<div class="step-row"><div class="step-num">${i+1}</div><div class="step-body"><div class="step-title">${esc(s.title)}</div><div class="step-content">${esc(s.content)}</div>${s.timer_seconds?`<div class="step-timer-badge">⏱ ${formatDuration(s.timer_seconds)}</div>`:''}</div></div>`).join('');
+  }else{stepsEl.style.display='none';}
+  const cb=document.getElementById('rd-cook-mode-btn');
+  if(r.steps&&r.steps.length){cb.style.display='';cb.textContent=`▶ Start Cooking (${r.steps.length} steps)`;}
+  else cb.style.display='none';
 }
-
-function editCurrentRecipe(){
-  closeRecipeDetail();
-  openRecipeEdit(viewingRecipeId);
+function adjRecipeScale(d){
+  const r=recipes.find(x=>x.id===viewingRecipeId);if(!r)return;
+  recipeDetailScale=Math.max(0.25,Math.round((recipeDetailScale+d*0.5)*2)/2);
+  renderRecipeDetail(r);
 }
-
+function closeRecipeDetail(){document.getElementById('recipe-detail-sheet').style.display='none';viewingRecipeId=null;}
+function editCurrentRecipe(){closeRecipeDetail();openRecipeEdit(viewingRecipeId);}
 function cookRecipe(){
-  const r=recipes.find(x=>x.id===viewingRecipeId);
-  if(!r) return;
+  const r=recipes.find(x=>x.id===viewingRecipeId);if(!r)return;
   let updated=0;
   for(const ing of r.ingredients){
+    if(isStaple(ing.name))continue;
     const item=matchItem(ing.name);
-    if(item&&item.qty>0&&!item.noAlert){
-      const use=ing.qty&&ing.qty>=1?Math.floor(ing.qty):1;
-      item.qty=Math.max(0,item.qty-use);
-      updated++;
-    }
+    if(item&&item.qty>0&&!item.noAlert){item.qty=Math.max(0,item.qty-Math.max(1,Math.floor(ing.amount*recipeDetailScale)));updated++;}
   }
-  save();
-  renderInventory();
-  renderStats();
-  closeRecipeDetail();
+  save();renderInventory();renderStats();closeRecipeDetail();
   showToast(updated?`Cooked! ${updated} item${updated!==1?'s':''} updated.`:'Nothing to decrement.');
 }
+function printRecipe(){
+  const r=recipes.find(x=>x.id===viewingRecipeId);if(!r)return;
+  const sc=recipeDetailScale,srv=Math.round(r.servings*sc);
+  const w=window.open('','_blank');if(!w)return;
+  const ings=(r.ingredients||[]).map(ing=>`<li>${esc(ing.name)}${ing.amount?` — ${esc(fmtAmt(ing,sc))}`:''}</li>`).join('');
+  const steps=(r.steps||[]).map((s,i)=>`<div style="margin-bottom:14px"><strong>${i+1}. ${esc(s.title)}</strong>${s.timer_seconds?` <em style="color:#5a6e52;font-size:11px">(${formatDuration(s.timer_seconds)})</em>`:''}<br><span style="line-height:1.7">${esc(s.content)}</span></div>`).join('');
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${esc(r.title)}</title><style>body{font-family:Georgia,serif;max-width:600px;margin:40px auto;padding:20px;color:#1a1a14}h1{font-size:28px}h2{font-size:13px;font-weight:normal;color:#5a6e52;margin-top:0}ul{line-height:2.1}footer{margin-top:40px;font-family:monospace;font-size:10px;color:#9aab92}@media print{footer::after{content:'mise. — westbt-cpu.github.io/mise'}}</style></head><body><h1>${esc(r.title)}</h1><h2>${srv} serving${srv!==1?'s':''}${(r.tags||[]).length?' · '+r.tags.join(', '):''}</h2><h3>Ingredients</h3><ul>${ings}</ul>${steps?`<h3>Method</h3>${steps}`:''}${r.notes?`<p><em>${esc(r.notes)}</em></p>`:''}<footer></footer></body></html>`);
+  w.document.close();w.print();
+}
 
-// ── RECIPE EDIT ──
+// ── COOK MODE ───────────────────────────────────────────────────────────────
+function openCookMode(){
+  const r=recipes.find(x=>x.id===viewingRecipeId);
+  if(!r||!r.steps||!r.steps.length)return;
+  cookModeRecipeId=viewingRecipeId;cookModeStep=0;clearTimerState();
+  document.getElementById('recipe-detail-sheet').style.display='none';
+  renderCookStep();
+  document.getElementById('cook-mode-overlay').classList.add('active');
+  ingDrawerOpen=false;
+  document.getElementById('cook-ing-drawer').style.transform='translateY(calc(100% - 50px))';
+  document.getElementById('cook-ing-toggle').textContent='INGREDIENTS ▲';
+  initCookSwipe();
+  try{const ns=getNoSleep();if(ns){ns.enable();cookNoSleepActive=true;}}catch(e){}
+}
+function closeCookMode(){
+  if(timerRunning&&!confirm('Timer is running. Exit anyway?'))return;
+  clearTimerState();
+  document.getElementById('cook-mode-overlay').classList.remove('active');
+  try{if(cookNoSleepActive&&noSleep){noSleep.disable();cookNoSleepActive=false;}}catch(e){}
+  if(cookModeRecipeId)openRecipeDetail(cookModeRecipeId);
+  cookModeRecipeId=null;
+}
+function renderCookStep(){
+  const r=recipes.find(x=>x.id===cookModeRecipeId);if(!r)return;
+  const s=r.steps[cookModeStep],total=r.steps.length;
+  document.getElementById('cook-progress').textContent=`STEP ${cookModeStep+1} OF ${total}`;
+  document.getElementById('cook-step-title').textContent=s.title;
+  document.getElementById('cook-step-content').textContent=s.content;
+  document.getElementById('cook-prev-btn').style.visibility=cookModeStep===0?'hidden':'visible';
+  document.getElementById('cook-next-btn').textContent=cookModeStep===total-1?'Done ✓':'Next →';
+  clearTimerState();
+  const tw=document.getElementById('cook-timer-wrap');
+  if(s.timer_seconds){timerDuration=s.timer_seconds;tw.style.display='';updateTimerDisplay(timerDuration);document.getElementById('cook-timer-start').textContent='START';document.getElementById('cook-timer-display').style.color='#d4a843';}
+  else tw.style.display='none';
+  renderCookIngredients();
+}
+function renderCookIngredients(){
+  const r=recipes.find(x=>x.id===cookModeRecipeId);if(!r)return;
+  document.getElementById('cook-ing-list').innerHTML=(r.ingredients||[]).map(ing=>{
+    const a=fmtAmt(ing,recipeDetailScale);
+    return`<div class="cook-ing-row"><span class="cook-ing-name">${esc(ing.name)}</span>${a?`<span class="cook-ing-amt">${esc(a)}</span>`:''}</div>`;
+  }).join('');
+}
+function cookNext(){
+  const r=recipes.find(x=>x.id===cookModeRecipeId);if(!r)return;
+  if(cookModeStep===r.steps.length-1){
+    if(confirm('Mark recipe as cooked and update pantry?')){
+      let updated=0;
+      for(const ing of r.ingredients){
+        if(isStaple(ing.name))continue;
+        const item=matchItem(ing.name);
+        if(item&&item.qty>0&&!item.noAlert){item.qty=Math.max(0,item.qty-Math.max(1,Math.floor(ing.amount*recipeDetailScale)));updated++;}
+      }
+      save();renderInventory();renderStats();
+      showToast(updated?`${updated} ingredient${updated!==1?'s':''} decremented.`:'Done!');
+    }
+    closeCookMode();return;
+  }
+  clearTimerState();cookModeStep++;renderCookStep();
+}
+function cookPrev(){if(cookModeStep===0)return;clearTimerState();cookModeStep--;renderCookStep();}
+function initCookSwipe(){
+  const el=document.getElementById('cook-mode-overlay');
+  el.ontouchstart=e=>{swipeStartX=e.touches[0].clientX;};
+  el.ontouchend=e=>{
+    if(swipeStartX===null)return;
+    const dx=e.changedTouches[0].clientX-swipeStartX;swipeStartX=null;
+    if(Math.abs(dx)>60){if(dx<0)cookNext();else cookPrev();}
+  };
+}
+function toggleIngDrawer(){
+  ingDrawerOpen=!ingDrawerOpen;
+  document.getElementById('cook-ing-drawer').style.transform=ingDrawerOpen?'translateY(0)':'translateY(calc(100% - 50px))';
+  document.getElementById('cook-ing-toggle').textContent=ingDrawerOpen?'INGREDIENTS ▼':'INGREDIENTS ▲';
+}
+// ── TIMER ────────────────────────────────────────────────────────────────────
+function toggleTimer(){timerRunning?pauseTimer():startTimer();}
+function startTimer(){
+  timerRunning=true;timerStartTime=Date.now();
+  document.getElementById('cook-timer-start').textContent='PAUSE';
+  document.getElementById('cook-timer-display').style.color='#d4a843';
+  timerInterval=setInterval(()=>{
+    const rem=Math.max(0,timerDuration-Math.floor((Date.now()-timerStartTime)/1000));
+    updateTimerDisplay(rem);
+    if(rem===0){
+      clearInterval(timerInterval);timerRunning=false;
+      document.getElementById('cook-timer-display').style.color='#c44040';
+      document.getElementById('cook-timer-start').textContent='START';
+      try{navigator.vibrate([200,100,200,100,200]);}catch(e){}
+      playBeep();
+    }
+  },500);
+}
+function pauseTimer(){
+  timerDuration=Math.max(0,timerDuration-Math.floor((Date.now()-timerStartTime)/1000));
+  clearInterval(timerInterval);timerRunning=false;timerStartTime=null;
+  document.getElementById('cook-timer-start').textContent='START';
+}
+function resetTimer(){
+  clearTimerState();
+  const r=recipes.find(x=>x.id===cookModeRecipeId);
+  timerDuration=r?(r.steps[cookModeStep]||{}).timer_seconds||0:0;
+  updateTimerDisplay(timerDuration);
+  document.getElementById('cook-timer-display').style.color='#d4a843';
+}
+function clearTimerState(){clearInterval(timerInterval);timerInterval=null;timerRunning=false;timerStartTime=null;}
+function updateTimerDisplay(s){
+  const el=document.getElementById('cook-timer-display');if(!el)return;
+  el.textContent=`${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
+}
+function playBeep(){
+  try{const ctx=new(window.AudioContext||window.webkitAudioContext)(),o=ctx.createOscillator(),g=ctx.createGain();o.connect(g);g.connect(ctx.destination);o.frequency.value=880;o.type='sine';g.gain.setValueAtTime(0.4,ctx.currentTime);g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+0.8);o.start();o.stop(ctx.currentTime+0.8);}catch(e){}
+}
+// ── RECIPE IMPORT ────────────────────────────────────────────────────────────
+function openRecipeImport(){
+  document.getElementById('recipe-import-textarea').value='';
+  document.getElementById('recipe-import-preview').style.display='none';
+  document.getElementById('recipe-import-error').style.display='none';
+  document.getElementById('recipe-import-sheet').style.display='';
+}
+function closeRecipeImport(){document.getElementById('recipe-import-sheet').style.display='none';}
+function previewRecipeImport(){
+  const raw=document.getElementById('recipe-import-textarea').value.trim();
+  const errEl=document.getElementById('recipe-import-error'),preEl=document.getElementById('recipe-import-preview');
+  errEl.style.display='none';preEl.style.display='none';
+  if(!raw)return;
+  let obj;try{obj=JSON.parse(raw);}catch(e){errEl.textContent='Invalid JSON: '+e.message;errEl.style.display='';return;}
+  if(!obj.title&&!obj.name){errEl.textContent='Missing required field: title';errEl.style.display='';return;}
+  if(!Array.isArray(obj.ingredients)){errEl.textContent='Missing required field: ingredients';errEl.style.display='';return;}
+  const r=migrateRecipe({...obj,id:obj.id||uid()});
+  preEl.innerHTML=`<div style="font-weight:500;margin-bottom:4px">${esc(r.title)}</div><div style="font-size:12px;color:#5a6e52">${r.servings} serving${r.servings!==1?'s':''} · ${r.ingredients.length} ingredients · ${(r.steps||[]).length} steps</div>${(r.tags||[]).length?`<div style="margin-top:6px">${r.tags.map(t=>`<span class="recipe-tag">${esc(t)}</span>`).join('')}</div>`:''}`;
+  preEl.dataset.parsed=JSON.stringify(r);preEl.style.display='';
+}
+function confirmRecipeImport(){
+  const preEl=document.getElementById('recipe-import-preview');
+  if(!preEl.dataset.parsed)return;
+  const r=JSON.parse(preEl.dataset.parsed);
+  const idx=recipes.findIndex(x=>x.id===r.id);
+  if(idx!==-1)recipes[idx]=r;else recipes.push(r);
+  saveRecipes();renderRecipes();closeRecipeImport();
+  showToast(`"${r.title}" imported ✓`);
+  notionSyncRecipe(r).catch(()=>{});
+}
+// ── WHAT CAN I COOK ──────────────────────────────────────────────────────────
+function openWhatCanCook(){renderWhatCanCook();document.getElementById('what-can-cook-sheet').style.display='';}
+function closeWhatCanCook(){document.getElementById('what-can-cook-sheet').style.display='none';}
+function renderWhatCanCook(){
+  const el=document.getElementById('wcc-list');if(!el)return;
+  const g={ready:[],mostly:[],missing:[]};
+  recipes.forEach(r=>g[recipeReadiness(r)].push(r));
+  let html='';
+  if(g.ready.length){html+=`<div class="wcc-section-head">✅ Ready to cook (${g.ready.length})</div>`;html+=g.ready.map(r=>wccCard(r,'ready')).join('');}
+  if(g.mostly.length){html+=`<div class="wcc-section-head">🟡 Almost there (${g.mostly.length})</div>`;html+=g.mostly.map(r=>wccCard(r,'mostly')).join('');}
+  if(g.missing.length){
+    html+=`<div class="wcc-section-head" onclick="document.getElementById('wcc-miss').style.display=document.getElementById('wcc-miss').style.display?'':'none'" style="cursor:pointer">📦 Need to shop (${g.missing.length}) ▾</div>`;
+    html+=`<div id="wcc-miss" style="display:none">${g.missing.map(r=>wccCard(r,'missing')).join('')}</div>`;
+  }
+  if(!recipes.length)html='<div style="text-align:center;padding:40px 20px;color:#5a6e52;font-size:13px">No recipes yet. Import some first.</div>';
+  el.innerHTML=html;
+}
+function wccCard(r,rd){
+  const{details}=recipeReadinessDetail(r,1);
+  const missing=details.filter(d=>d.status==='missing');
+  const mt=missing.length?`<div style="font-size:11px;color:#c47c20;margin-top:4px">Missing: ${missing.map(d=>d.name+(d.amount?` (${esc(fmtAmt(d,1))})`:'') ).join(', ')}</div>`:'';
+  return`<div class="wcc-card ${rd}" onclick="closeWhatCanCook();openRecipeDetail('${esc(r.id)}')"><div style="font-family:'Instrument Serif',serif;font-size:16px;color:#111a0e;margin-bottom:2px">${esc(r.title)}</div><div style="font-size:11px;color:#5a6e52">${r.servings} servings · ${r.ingredients.length} ingredients</div>${mt}</div>`;
+}
+// ── STAPLES ──────────────────────────────────────────────────────────────────
+function renderStaplesList(){
+  const el=document.getElementById('staples-list');if(!el)return;
+  el.innerHTML=staples.map((s,i)=>`<div class="settings-row"><div style="flex:1"><div class="settings-row-label">${esc(s)}</div></div><button class="s-btn s-btn-delete" onclick="removeStaple(${i})">×</button></div>`).join('');
+}
+function addStaple(){
+  const input=document.getElementById('new-staple-input'),v=(input.value||'').trim().toLowerCase();
+  if(!v)return;if(staples.includes(v)){showToast('Already a staple');return;}
+  staples.push(v);saveStaples();renderStaplesList();input.value='';
+}
+function removeStaple(i){staples.splice(i,1);saveStaples();renderStaplesList();}
+function resetStaples(){staples=DEFAULT_STAPLES.slice();saveStaples();renderStaplesList();}
+// ── NOTION SYNC ──────────────────────────────────────────────────────────────
+async function notionSyncRecipe(r){
+  const token=localStorage.getItem(NOTION_TOKEN_KEY),dbId=localStorage.getItem(NOTION_DB_KEY);
+  if(!token||!dbId)return;
+  const h={'Authorization':'Bearer '+token,'Content-Type':'application/json','Notion-Version':'2022-06-28'};
+  const body={parent:{database_id:dbId},properties:{
+    Title:{title:[{text:{content:r.title}}]},
+    Tags:{multi_select:(r.tags||[]).map(t=>({name:t}))},
+    Servings:{number:r.servings||1},
+    Notes:{rich_text:[{text:{content:(r.notes||'').slice(0,2000)}}]},
+    Ingredients:{rich_text:[{text:{content:JSON.stringify(r.ingredients).slice(0,2000)}}]},
+    Steps:{rich_text:[{text:{content:JSON.stringify(r.steps||[]).slice(0,2000)}}]},
+    CreatedAt:{date:{start:r.createdAt||new Date().toISOString()}},
+  }};
+  try{await fetch('https://api.notion.com/v1/pages',{method:'POST',headers:h,body:JSON.stringify(body)});}catch(e){}
+}
+function saveNotionToken(){
+  const t=(document.getElementById('notion-token-input').value||'').trim();
+  if(!t){showToast('Paste your Notion secret first');return;}
+  localStorage.setItem(NOTION_TOKEN_KEY,t);
+  const db=(document.getElementById('notion-db-input').value||'').trim();
+  if(db)localStorage.setItem(NOTION_DB_KEY,db);
+  renderNotionStatus();showToast('Notion settings saved ✓');
+}
+function renderNotionStatus(){
+  const token=localStorage.getItem(NOTION_TOKEN_KEY),db=localStorage.getItem(NOTION_DB_KEY);
+  const el=document.getElementById('notion-status');
+  if(el)el.textContent=token?(db?'Connected — new recipes sync to Notion automatically':'Token saved — add database ID to enable sync'):'Not connected';
+  const ti=document.getElementById('notion-token-input'),di=document.getElementById('notion-db-input');
+  if(ti&&token)ti.value=token;if(di&&db)di.value=db;
+}
+// ── RECIPE EDIT ──────────────────────────────────────────────────────────────
 function openRecipeEdit(id){
   editingRecipeId=id;
   const r=id?recipes.find(x=>x.id===id):null;
   document.getElementById('re-title').textContent=r?'Edit recipe':'New recipe';
-  document.getElementById('re-name').value=r?r.name:'';
+  document.getElementById('re-name').value=r?r.title:'';
   document.getElementById('re-notes').value=r?r.notes:'';
   document.getElementById('re-delete-btn').style.display=r?'':'none';
-  renderIngredientBuilder(r?r.ingredients:[{name:'',qty:'',unit:''}]);
+  renderIngredientBuilder(r?r.ingredients:[{name:'',amount:'',unit:''}]);
   document.getElementById('recipe-edit-sheet').style.display='';
   setTimeout(()=>document.getElementById('re-name').focus(),300);
 }
-
-function closeRecipeEdit(){
-  document.getElementById('recipe-edit-sheet').style.display='none';
-}
-
+function closeRecipeEdit(){document.getElementById('recipe-edit-sheet').style.display='none';}
 function renderIngredientBuilder(ings){
-  const el=document.getElementById('re-ingredients-list');
-  el.innerHTML='';
-  (ings.length?ings:[{name:'',qty:'',unit:''}]).forEach((ing,i)=>{
-    el.appendChild(makeIngRow(ing,i));
-  });
+  const el=document.getElementById('re-ingredients-list');el.innerHTML='';
+  (ings.length?ings:[{name:'',amount:'',unit:''}]).forEach((ing,i)=>el.appendChild(makeIngRow(ing,i)));
 }
-
 function makeIngRow(ing,i){
-  const wrap=document.createElement('div');
-  wrap.className='ing-builder-row';
-  wrap.innerHTML=`
-    <input type="text" placeholder="Ingredient name" value="${esc(ing.name||'')}" data-ing="name" autocomplete="off" autocorrect="off">
-    <input type="text" class="ing-qty-field" placeholder="Qty" value="${esc(String(ing.qty||''))}" data-ing="qty" inputmode="decimal" style="flex:0.6">
-    <input type="text" class="ing-qty-field" placeholder="Unit" value="${esc(ing.unit||'')}" data-ing="unit" autocomplete="off" style="flex:0.8">
-    <button class="ing-del-btn" onclick="removeIngRow(this)" title="Remove">×</button>`;
-  return wrap;
+  const w=document.createElement('div');w.className='ing-builder-row';
+  w.innerHTML=`<input type="text" placeholder="Ingredient name" value="${esc(ing.name||'')}" data-ing="name" autocomplete="off" autocorrect="off"><input type="text" class="ing-qty-field" placeholder="Amt" value="${esc(String(ing.amount||ing.qty||''))}" data-ing="amount" inputmode="decimal" style="flex:0.6"><input type="text" class="ing-qty-field" placeholder="Unit" value="${esc(ing.unit||'')}" data-ing="unit" autocomplete="off" style="flex:0.8"><button class="ing-del-btn" onclick="removeIngRow(this)" title="Remove">×</button>`;
+  return w;
 }
-
 function addIngredientRow(){
   const el=document.getElementById('re-ingredients-list');
-  el.appendChild(makeIngRow({name:'',qty:'',unit:''},el.children.length));
+  el.appendChild(makeIngRow({name:'',amount:'',unit:''},el.children.length));
   el.lastElementChild.querySelector('input').focus();
 }
-
-function removeIngRow(btn){
-  btn.closest('.ing-builder-row').remove();
-}
-
+function removeIngRow(btn){btn.closest('.ing-builder-row').remove();}
 function collectIngredients(){
-  return Array.from(document.getElementById('re-ingredients-list').querySelectorAll('.ing-builder-row')).map(row=>{
-    const name=row.querySelector('[data-ing="name"]').value.trim();
-    const qty=parseFloat(row.querySelector('[data-ing="qty"]').value)||0;
-    const unit=row.querySelector('[data-ing="unit"]').value.trim();
-    return{name,qty,unit};
-  }).filter(i=>i.name);
+  return Array.from(document.getElementById('re-ingredients-list').querySelectorAll('.ing-builder-row')).map(row=>({
+    name:row.querySelector('[data-ing="name"]').value.trim(),
+    amount:parseFloat(row.querySelector('[data-ing="amount"]').value)||0,
+    unit:row.querySelector('[data-ing="unit"]').value.trim(),
+  })).filter(i=>i.name);
 }
-
 function saveRecipe(){
-  const name=document.getElementById('re-name').value.trim();
-  if(!name){showToast('Recipe needs a name');return;}
-  const data={name,notes:document.getElementById('re-notes').value.trim(),ingredients:collectIngredients()};
+  const title=document.getElementById('re-name').value.trim();
+  if(!title){showToast('Recipe needs a name');return;}
+  const data={title,notes:document.getElementById('re-notes').value.trim(),ingredients:collectIngredients()};
   if(editingRecipeId){
     const idx=recipes.findIndex(x=>x.id===editingRecipeId);
-    if(idx!==-1) recipes[idx]={...recipes[idx],...data};
-    showToast('Recipe updated.');
+    if(idx!==-1)recipes[idx]={...recipes[idx],...data};showToast('Recipe updated.');
   }else{
-    recipes.push({id:uid(),...data});
-    showToast('Recipe saved.');
+    recipes.push({id:uid(),servings:1,tags:[],steps:[],createdAt:new Date().toISOString(),...data});showToast('Recipe saved.');
   }
-  saveRecipes();
-  closeRecipeEdit();
-  renderRecipes();
+  saveRecipes();closeRecipeEdit();renderRecipes();
 }
-
 function confirmDeleteRecipe(){
   showConfirm('Delete recipe?','This cannot be undone.',()=>{
     recipes=recipes.filter(x=>x.id!==editingRecipeId);
-    saveRecipes();
-    closeRecipeEdit();
-    renderRecipes();
-    showToast('Recipe deleted.');
+    saveRecipes();closeRecipeEdit();renderRecipes();showToast('Recipe deleted.');
   });
 }
 
