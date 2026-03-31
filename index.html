@@ -400,6 +400,24 @@ option{color:#111a0e;background:#ffffff;}
 .add-ing-btn{width:100%;padding:11px;border:1.5px dashed #e4e8e2;border-radius:10px;background:none;font-family:'Geist Mono',monospace;font-size:11px;color:#5a6e52;cursor:pointer;letter-spacing:0.04em;margin-bottom:4px;}
 .add-ing-btn:active{border-color:#2d6a2d;color:#2d6a2d;background:#edf3ea;}
 
+/* ── RECIPE SEARCH / FILTER / SORT ── */
+.recipe-search-wrap{display:flex;align-items:center;gap:8px;background:#f8f9f7;border:1.5px solid #e4e8e2;border-radius:10px;padding:10px 12px;margin-top:10px;}
+.recipe-search-wrap:focus-within{border-color:#2d6a2d;background:#fff;}
+#recipe-search{flex:1;border:none;background:none;font-family:'Geist Mono',monospace;font-size:13px;color:#111a0e;outline:none;min-width:0;}
+#recipe-search::placeholder{color:#9aab92;}
+.tag-filter-row{display:flex;gap:6px;overflow-x:auto;padding:8px 0 2px;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
+.tag-filter-row:empty{display:none;}
+.tag-filter-row::-webkit-scrollbar{display:none;}
+.tag-filter-pill{flex-shrink:0;padding:5px 12px;border-radius:20px;border:1.5px solid #e4e8e2;background:#fff;font-family:'Geist Mono',monospace;font-size:10px;color:#5a6e52;cursor:pointer;letter-spacing:0.04em;white-space:nowrap;transition:background 0.1s,border-color 0.1s;}
+.tag-filter-pill:active{transform:scale(0.96);}
+.tag-filter-pill.active{background:#2d6a2d;border-color:#2d6a2d;color:#fff;}
+.recipe-toolbar{display:flex;align-items:center;justify-content:space-between;margin-top:8px;}
+.recipe-sort-wrap{display:flex;align-items:center;gap:4px;}
+.sort-pill{padding:4px 10px;border-radius:20px;border:1.5px solid #e4e8e2;background:#fff;font-family:'Geist Mono',monospace;font-size:10px;color:#9aab92;cursor:pointer;letter-spacing:0.04em;}
+.sort-pill.active{border-color:#2d6a2d;color:#2d6a2d;background:#edf3ea;}
+.btn-tonight{font-family:'Geist Mono',monospace;font-size:10px;color:#2d6a2d;background:none;border:none;cursor:pointer;letter-spacing:0.04em;padding:4px 0;}
+.recipe-filter-empty{text-align:center;padding:48px 24px;}
+.recipe-filter-empty p{font-size:13px;color:#9aab92;margin-bottom:14px;}
 /* ── RECIPE TAGS ── */
 .recipe-tag{display:inline-block;padding:2px 8px;background:#edf3ea;color:#2d6a2d;border-radius:4px;font-family:'Geist Mono',monospace;font-size:9px;letter-spacing:0.05em;text-transform:lowercase;}
 .recipe-tags{display:flex;flex-wrap:wrap;gap:4px;}
@@ -544,11 +562,28 @@ option{color:#111a0e;background:#ffffff;}
       <div class="page-header-row">
         <div>
           <div class="page-title">Recipes</div>
-          <div class="page-sub">what you can cook right now</div>
+          <div class="page-sub" id="recipes-sub">what you can cook right now</div>
         </div>
         <button class="btn btn-green" onclick="openRecipeImport()" style="font-size:11px;padding:8px 14px;">Import →</button>
       </div>
-      <button class="btn btn-outline btn-full" onclick="openWhatCanCook()" style="margin-top:8px;font-size:12px;">What can I cook tonight? →</button>
+      <!-- Search -->
+      <div class="recipe-search-wrap">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9aab92" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="search" id="recipe-search" placeholder="Search recipes…" oninput="onRecipeSearch(this.value)" autocomplete="off" autocorrect="off" spellcheck="false">
+        <button id="recipe-search-clear" onclick="clearRecipeSearch()" style="display:none;background:none;border:none;color:#9aab92;font-size:18px;cursor:pointer;padding:0 2px;line-height:1;">×</button>
+      </div>
+      <!-- Tag filters -->
+      <div class="tag-filter-row" id="tag-filter-row"></div>
+      <!-- Sort + Tonight row -->
+      <div class="recipe-toolbar">
+        <div class="recipe-sort-wrap">
+          <span style="font-size:10px;color:#9aab92;letter-spacing:0.04em;text-transform:uppercase;margin-right:6px;">Sort</span>
+          <button class="sort-pill active" id="sort-readiness" onclick="setRecipeSort('readiness')">readiness</button>
+          <button class="sort-pill" id="sort-alpha" onclick="setRecipeSort('alpha')">A→Z</button>
+          <button class="sort-pill" id="sort-newest" onclick="setRecipeSort('newest')">newest</button>
+        </div>
+        <button class="btn-tonight" onclick="openWhatCanCook()">Tonight? →</button>
+      </div>
     </div>
     <div class="content-pad" id="recipes-list"></div>
   </div>
@@ -2183,23 +2218,82 @@ const READINESS_ICON={ready:'✓',mostly:'~',missing:'✕'};
 const READINESS_LABEL={ready:'ready',mostly:'almost',missing:'missing'};
 
 // ── RECIPE LIBRARY ──────────────────────────────────────────────────────────
+let recipeQuery='', recipeTagFilter=null, recipeSort='readiness';
+
+function onRecipeSearch(val){
+  recipeQuery=val.trim().toLowerCase();
+  document.getElementById('recipe-search-clear').style.display=recipeQuery?'':'none';
+  renderRecipes();
+}
+function clearRecipeSearch(){
+  recipeQuery='';
+  document.getElementById('recipe-search').value='';
+  document.getElementById('recipe-search-clear').style.display='none';
+  renderRecipes();
+}
+function setRecipeSort(s){
+  recipeSort=s;
+  ['readiness','alpha','newest'].forEach(k=>{
+    document.getElementById('sort-'+k).classList.toggle('active',k===s);
+  });
+  renderRecipes();
+}
+function setTagFilter(tag){
+  recipeTagFilter=(tag==='__all'||recipeTagFilter===tag)?null:tag;
+  document.querySelectorAll('.tag-filter-pill').forEach(p=>{
+    p.classList.toggle('active',p.dataset.tag===recipeTagFilter||(!recipeTagFilter&&p.dataset.tag==='__all'));
+  });
+  renderRecipes();
+}
+function renderTagFilters(){
+  const row=document.getElementById('tag-filter-row');
+  if(!row)return;
+  const allTags=[...new Set(recipes.flatMap(r=>r.tags||[]))].sort();
+  if(!allTags.length){row.innerHTML='';return;}
+  const pills=['__all',...allTags].map(t=>{
+    const label=t==='__all'?'all':t;
+    const active=(t==='__all'&&!recipeTagFilter)||(t===recipeTagFilter);
+    return`<button class="tag-filter-pill${active?' active':''}" data-tag="${esc(t)}" onclick="setTagFilter('${esc(t)}')">${esc(label)}</button>`;
+  });
+  row.innerHTML=pills.join('');
+}
+function getFilteredRecipes(){
+  let list=[...recipes];
+  if(recipeTagFilter&&recipeTagFilter!=='__all')
+    list=list.filter(r=>(r.tags||[]).includes(recipeTagFilter));
+  if(recipeQuery)
+    list=list.filter(r=>[r.title,r.notes,...(r.tags||[])].join(' ').toLowerCase().includes(recipeQuery));
+  const order={ready:0,mostly:1,missing:2};
+  if(recipeSort==='readiness') list.sort((a,b)=>order[recipeReadiness(a)]-order[recipeReadiness(b)]);
+  else if(recipeSort==='alpha') list.sort((a,b)=>a.title.localeCompare(b.title));
+  else if(recipeSort==='newest') list.sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt));
+  return list;
+}
 function renderRecipes(){
   const el=document.getElementById('recipes-list');
   if(!el)return;
+  renderTagFilters();
+  const sub=document.getElementById('recipes-sub');
   if(!recipes.length){
     el.innerHTML=`<div class="recipe-empty"><h3>No recipes yet.</h3><p>Develop a recipe in Claude chat and tap <strong>Import →</strong> to bring it here.</p><button class="btn btn-green" onclick="openRecipeImport()">Import from Claude</button></div>`;
+    if(sub)sub.textContent='what you can cook right now';
     return;
   }
-  const order={ready:0,mostly:1,missing:2};
-  const sorted=[...recipes].sort((a,b)=>order[recipeReadiness(a)]-order[recipeReadiness(b)]);
-  el.innerHTML=sorted.map(r=>{
+  const list=getFilteredRecipes();
+  if(sub)sub.textContent=`${list.length} of ${recipes.length} recipe${recipes.length!==1?'s':''}`;
+  if(!list.length){
+    el.innerHTML=`<div class="recipe-filter-empty"><p>No recipes match.</p><button class="btn btn-outline" onclick="clearRecipeSearch();setTagFilter(null)">Clear filters</button></div>`;
+    return;
+  }
+  el.innerHTML=list.map(r=>{
     const rd=recipeReadiness(r);
     const tags=(r.tags||[]).map(t=>`<span class="recipe-tag">${esc(t)}</span>`).join('');
+    const totalTime=(r.steps||[]).reduce((s,st)=>s+(st.timer_seconds||0),0);
     return`<div class="recipe-card ${rd}" onclick="openRecipeDetail('${esc(r.id)}')">
       <div class="recipe-readiness ${rd}">${esc(READINESS_ICON[rd])}</div>
       <div class="recipe-info">
         <div class="recipe-name">${esc(r.title)}</div>
-        <div class="recipe-meta">${r.servings?r.servings+' srv · ':''}${r.ingredients.length} ingredients${r.steps&&r.steps.length?' · '+r.steps.length+' steps':''}</div>
+        <div class="recipe-meta">${r.servings?r.servings+' srv · ':''}${r.ingredients.length} ing${totalTime?' · '+formatDuration(totalTime):''}</div>
         ${tags?`<div class="recipe-tags" style="margin-top:4px">${tags}</div>`:''}
       </div>
       <span class="recipe-badge ${rd}">${esc(READINESS_LABEL[rd])}</span>
