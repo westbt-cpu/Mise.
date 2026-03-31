@@ -2248,7 +2248,7 @@ function adjRecipeScale(d){
   renderRecipeDetail(r);
 }
 function closeRecipeDetail(){document.getElementById('recipe-detail-sheet').style.display='none';viewingRecipeId=null;}
-function editCurrentRecipe(){closeRecipeDetail();openRecipeEdit(viewingRecipeId);}
+function editCurrentRecipe(){const id=viewingRecipeId;closeRecipeDetail();openRecipeEdit(id);}
 function cookRecipe(){
   const r=recipes.find(x=>x.id===viewingRecipeId);if(!r)return;
   let updated=0;
@@ -2520,9 +2520,10 @@ function saveRecipe(){
   const data={title,notes:document.getElementById('re-notes').value.trim(),ingredients:collectIngredients()};
   if(editingRecipeId){
     const idx=recipes.findIndex(x=>x.id===editingRecipeId);
-    if(idx!==-1)recipes[idx]={...recipes[idx],...data};showToast('Recipe updated.');
+    if(idx!==-1){recipes[idx]={...recipes[idx],...data};showToast('Recipe updated.');}
   }else{
-    recipes.push({id:uid(),servings:1,tags:[],steps:[],createdAt:new Date().toISOString(),...data});showToast('Recipe saved.');
+    recipes.push({id:uid(),servings:1,tags:[],steps:[],createdAt:new Date().toISOString(),...data});
+    showToast('Recipe saved.');
   }
   saveRecipes();closeRecipeEdit();renderRecipes();
 }
