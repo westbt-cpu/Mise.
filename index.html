@@ -2654,7 +2654,7 @@ function saveRecipe(){
   saveRecipes();closeRecipeEdit();renderRecipes();
 }
 function confirmDeleteRecipe(){
-  showConfirm('Delete recipe?','This cannot be undone.',()=>{
+  showConfirm('Delete recipe?','This cannot be undone.','Delete',()=>{
     recipes=recipes.filter(x=>x.id!==editingRecipeId);
     saveRecipes();closeRecipeEdit();renderRecipes();showToast('Recipe deleted.');
   });
