@@ -358,6 +358,12 @@ option{color:#111a0e;background:#ffffff;}
 .copy-code-btn:active{background:#edf3ea;color:#2d6a2d;border-color:#ddecd8;}
 .sync-btn-row{display:flex;gap:8px;margin-top:12px;}
 .sync-btn-row .btn{flex:1;}
+/* ── FIREBASE SYNC ── */
+.fb-status-row{display:flex;align-items:center;gap:8px;padding:10px 14px;background:#f8f9f7;border-radius:10px;margin-bottom:12px;border:1.5px solid #e4e8e2;}
+.fb-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;background:#9aab92;}
+.fb-dot.ok{background:#2d6a2d;}
+.fb-dot.syncing{background:#d4a843;}
+.fb-dot.err{background:#c44040;}
 
 /* ── RECIPES ── */
 .recipe-card{background:#ffffff;border:1.5px solid #e4e8e2;border-radius:14px;padding:16px;margin-bottom:10px;cursor:pointer;display:flex;align-items:center;gap:14px;transition:transform 0.1s;}
@@ -660,6 +666,29 @@ option{color:#111a0e;background:#ffffff;}
         <div style="margin-top:10px;">
           <button class="btn btn-green" onclick="saveNotionToken()" style="width:100%;padding:12px;">Save Notion settings</button>
         </div>
+      </div>
+    </div>
+    <div class="settings-section">
+      <div class="settings-heading">Firebase sync</div>
+      <div class="fb-status-row">
+        <div class="fb-dot" id="fb-dot"></div>
+        <div id="fb-status-text" style="font-size:11px;color:#5a6e52;">Not configured</div>
+      </div>
+      <div class="settings-card">
+        <div class="settings-row" style="flex-direction:column;align-items:flex-start;gap:6px">
+          <div class="settings-row-label">Database URL</div>
+          <input type="url" id="fb-url-input" placeholder="https://mise-xxxxx-default-rtdb.firebaseio.com" autocomplete="off" style="width:100%;padding:10px 12px;border:1.5px solid #e4e8e2;border-radius:8px;background:#f8f9f7;font-family:'Geist Mono',monospace;font-size:11px;color:#111a0e;box-sizing:border-box;">
+        </div>
+        <div class="settings-row" style="flex-direction:column;align-items:flex-start;gap:6px;margin-top:8px;">
+          <div class="settings-row-label">Sync key <span style="font-weight:400;color:#9aab92">(shared passphrase — same on both phones)</span></div>
+          <input type="text" id="fb-key-input" placeholder="e.g. brianandjane-mise" autocomplete="off" autocorrect="off" autocapitalize="off" style="width:100%;padding:10px 12px;border:1.5px solid #e4e8e2;border-radius:8px;background:#f8f9f7;font-family:'Geist Mono',monospace;font-size:11px;color:#111a0e;box-sizing:border-box;">
+        </div>
+        <div style="display:flex;gap:8px;margin-top:12px;">
+          <button class="btn btn-green" onclick="saveFbConfig()" style="flex:1;padding:12px;">Save</button>
+          <button class="btn btn-outline" onclick="fbPull()" style="flex:1;padding:12px;">Pull ↓</button>
+          <button class="btn btn-outline" onclick="fbPush()" style="flex:1;padding:12px;">Push ↑</button>
+        </div>
+        <div style="font-size:10px;color:#9aab92;margin-top:10px;line-height:1.6;">Syncs inventory, shopping list, locations, categories, and recipes. Auto-pulls on open. Auto-pushes after every change.</div>
       </div>
     </div>
     <div class="settings-section">
@@ -1211,6 +1240,8 @@ function init(){
   if(catBtn){catBtn.classList.add('active');catBtn.style.background='#2d6a2d';catBtn.style.color='#ffffff';}
   if(locBtn){locBtn.classList.remove('active');locBtn.style.background='#f8f9f7';locBtn.style.color='#5a6e52';}
   loadRecipes();loadStaples();
+  // Auto-pull from Firebase if configured (non-blocking)
+  setTimeout(()=>fbPull(),800);
   renderInventory();
   handleUrlParams();
 }
@@ -1220,6 +1251,7 @@ function save(){
   localStorage.setItem(SHOP_KEY,JSON.stringify(shoppingList));
   localStorage.setItem(LOCS_KEY,JSON.stringify(locations));
   localStorage.setItem(CATS_KEY,JSON.stringify(categories));
+  scheduleFbPush();
 }
 
 function handleUrlParams(){
@@ -1791,7 +1823,7 @@ function renderSettings(){
   const u=document.getElementById('sheets-url-input');
   if(u)u.value=sheetsUrl;
   updateSheetsSyncStatus();
-  renderStaplesList();renderNotionStatus();
+  renderStaplesList();renderNotionStatus();renderFbStatus();
 }
 
 function renderMiseUrl(){
@@ -2124,7 +2156,7 @@ function loadRecipes(){
   try{recipes=(JSON.parse(localStorage.getItem(RECIPES_KEY))||defaultRecipes()).map(migrateRecipe);}
   catch(e){recipes=defaultRecipes();}
 }
-function saveRecipes(){localStorage.setItem(RECIPES_KEY,JSON.stringify(recipes));}
+function saveRecipes(){localStorage.setItem(RECIPES_KEY,JSON.stringify(recipes));scheduleFbPush();}
 function loadStaples(){
   try{staples=JSON.parse(localStorage.getItem(STAPLES_KEY))||DEFAULT_STAPLES.slice();}
   catch(e){staples=DEFAULT_STAPLES.slice();}
@@ -2627,6 +2659,142 @@ function confirmDeleteRecipe(){
     saveRecipes();closeRecipeEdit();renderRecipes();showToast('Recipe deleted.');
   });
 }
+
+// ── FIREBASE SYNC ─────────────────────────────────────────────────────────────
+// Pure REST — no SDK. Isolated module: if FB_URL/FB_KEY not set it's a no-op.
+const FB_URL_KEY   = 'mise_fb_url';
+const FB_KEY_KEY   = 'mise_fb_key';
+const FB_SYNCED_AT = 'mise_fb_synced_at';
+
+let fbPushTimer = null;   // debounce handle
+
+function fbUrl() {
+  const url = localStorage.getItem(FB_URL_KEY);
+  const key = localStorage.getItem(FB_KEY_KEY);
+  if (!url || !key) return null;
+  // sanitise: strip trailing slash, encode key
+  return url.replace(/\/+$/,'') + '/mise/' + encodeURIComponent(key) + '.json';
+}
+
+function fbSetStatus(state, text) {
+  const dot  = document.getElementById('fb-dot');
+  const txt  = document.getElementById('fb-status-text');
+  if (dot) { dot.className = 'fb-dot' + (state ? ' ' + state : ''); }
+  if (txt)   txt.textContent = text;
+}
+
+// ── PUSH ──────────────────────────────────────────────────────────────────────
+async function fbPush() {
+  const url = fbUrl();
+  if (!url) return;
+  fbSetStatus('syncing', 'Pushing…');
+  const payload = {
+    items, shoppingList, locations, categories, recipes,
+    pushedAt: new Date().toISOString(),
+  };
+  try {
+    const res = await fetch(url, {
+      method:  'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify(payload),
+    });
+    if (!res.ok) throw new Error(res.status);
+    const ts = new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+    localStorage.setItem(FB_SYNCED_AT, new Date().toISOString());
+    fbSetStatus('ok', 'Synced · ' + ts);
+  } catch(e) {
+    fbSetStatus('err', 'Push failed — check connection');
+  }
+}
+
+// Debounced push — called after every save()
+function scheduleFbPush() {
+  if (!fbUrl()) return;
+  clearTimeout(fbPushTimer);
+  fbPushTimer = setTimeout(fbPush, 2000);
+}
+
+// ── PULL ──────────────────────────────────────────────────────────────────────
+async function fbPull() {
+  const url = fbUrl();
+  if (!url) return;
+  fbSetStatus('syncing', 'Pulling…');
+  try {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(res.status);
+    const remote = await res.json();
+    if (!remote) { fbSetStatus('ok', 'No remote data yet — push first'); return; }
+
+    // Merge by ID so simultaneous edits on both phones don't wipe each other
+    items        = mergeById(items,        remote.items        || []);
+    shoppingList = mergeById(shoppingList, remote.shoppingList || []);
+    recipes      = mergeById(recipes,      (remote.recipes     || []).map(migrateRecipe));
+    // Locations + categories: union, preserve local order
+    locations  = unionArr(locations,  remote.locations  || []);
+    categories = unionArr(categories, remote.categories || []);
+
+    save();
+    saveRecipes();
+    renderInventory();
+    renderStats();
+    renderShopping();
+    renderRecipes();
+
+    const ts = new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+    localStorage.setItem(FB_SYNCED_AT, new Date().toISOString());
+    fbSetStatus('ok', 'Synced · ' + ts);
+    showToast('Synced ↓');
+  } catch(e) {
+    fbSetStatus('err', 'Pull failed — check URL and key');
+  }
+}
+
+// ── MERGE HELPERS ─────────────────────────────────────────────────────────────
+// Union two arrays of objects by .id — local copy wins on conflict
+function mergeById(local, remote) {
+  const map = {};
+  for (const item of remote) if (item && item.id) map[item.id] = item;
+  for (const item of local)  if (item && item.id) map[item.id] = item; // local overwrites
+  return Object.values(map);
+}
+// Union two string arrays, deduplicated, local order first
+function unionArr(local, remote) {
+  return [...new Set([...local, ...remote])];
+}
+
+// ── CONFIG ────────────────────────────────────────────────────────────────────
+function saveFbConfig() {
+  const url = (document.getElementById('fb-url-input').value  || '').trim();
+  const key = (document.getElementById('fb-key-input').value  || '').trim();
+  if (!url || !key) { showToast('Enter both URL and sync key'); return; }
+  localStorage.setItem(FB_URL_KEY,  url);
+  localStorage.setItem(FB_KEY_KEY,  key);
+  renderFbStatus();
+  showToast('Firebase config saved');
+  fbPull();   // pull immediately so both phones start from the same state
+}
+
+function renderFbStatus() {
+  const url = localStorage.getItem(FB_URL_KEY);
+  const key = localStorage.getItem(FB_KEY_KEY);
+  const inp = document.getElementById('fb-url-input');
+  const ki  = document.getElementById('fb-key-input');
+  if (inp && url) inp.value = url;
+  if (ki  && key) ki.value  = key;
+  if (!url || !key) { fbSetStatus('', 'Not configured'); return; }
+  const synced = localStorage.getItem(FB_SYNCED_AT);
+  if (synced) {
+    const ts = new Date(synced).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+    fbSetStatus('ok', 'Configured · last synced ' + ts);
+  } else {
+    fbSetStatus('', 'Configured — not yet synced');
+  }
+}
+
+// Auto-pull when tab becomes visible (catches background/switch)
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') fbPull();
+});
 
 init();
 </script>
