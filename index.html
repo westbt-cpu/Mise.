@@ -407,7 +407,8 @@ option{color:#111a0e;background:#ffffff;}
 .recipe-sort-wrap{display:flex;align-items:center;gap:4px;}
 .sort-pill{padding:4px 10px;border-radius:20px;border:1.5px solid #e4e8e2;background:#fff;font-family:'Geist Mono',monospace;font-size:10px;color:#9aab92;cursor:pointer;letter-spacing:0.04em;}
 .sort-pill.active{border-color:#2d6a2d;color:#2d6a2d;background:#edf3ea;}
-.btn-tonight{font-family:'Geist Mono',monospace;font-size:10px;color:#2d6a2d;background:none;border:none;cursor:pointer;letter-spacing:0.04em;padding:4px 0;}
+.btn-tonight{font-family:'Geist Mono',monospace;font-size:10px;color:#2d6a2d;background:#edf3ea;border:1.5px solid #ddecd8;border-radius:20px;cursor:pointer;letter-spacing:0.04em;padding:6px 14px;min-height:36px;white-space:nowrap;}
+.btn-tonight:active{background:#ddecd8;}
 .recipe-filter-empty{text-align:center;padding:48px 24px;}
 .recipe-filter-empty p{font-size:13px;color:#9aab92;margin-bottom:14px;}
 /* ── RECIPE TAGS ── */
@@ -441,6 +442,10 @@ option{color:#111a0e;background:#ffffff;}
 /* ── STAPLES in settings ── */
 .s-btn-delete{background:none;border:none;color:#9aab92;font-size:18px;cursor:pointer;padding:6px 8px;line-height:1;}
 .s-btn-delete:active{color:#c44040;}
+/* ── STICKY TOOLBARS ── */
+#screen-station .toolbar{position:sticky;top:0;z-index:10;}
+#screen-recipes .page-header{position:sticky;top:0;z-index:10;}
+
 /* ── LIST CHECK (AnyList) ── */
 .lc-section-label{font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:#5a6e52;margin:16px 0 8px;}
 .lc-section-label:first-child{margin-top:0;}
@@ -501,9 +506,9 @@ option{color:#111a0e;background:#ffffff;}
       </div>
     </div>
     <div class="restock-bar">
-      <button class="btn btn-green restock-bar-primary" onclick="generateShoppingList()">↻ refresh</button>
+      <button class="btn btn-green restock-bar-primary" onclick="generateShoppingList()">↻ from station</button>
       <button class="btn btn-outline" onclick="openQuickAddSheet()">+ add item</button>
-      <button class="btn btn-outline" onclick="openListCheck()">⊘ check list</button>
+      <button class="btn btn-outline" onclick="openListCheck()">⊘ list check</button>
       <button class="btn btn-outline" onclick="clearChecked()">✕ clear done</button>
     </div>
     <div class="content-pad" id="shopping-list"></div>
@@ -892,7 +897,7 @@ option{color:#111a0e;background:#ffffff;}
         <h2 id="rd-title" style="margin-bottom:0;flex:1;padding-right:12px;"></h2>
         <div style="display:flex;gap:8px;flex-shrink:0;margin-top:4px;">
           <button onclick="printRecipe()" style="border:none;background:none;font-family:'Geist Mono',monospace;font-size:11px;color:#9aab92;cursor:pointer;padding:6px 0;">PDF</button>
-          <button onclick="editCurrentRecipe()" style="border:none;background:none;font-family:'Geist Mono',monospace;font-size:11px;color:#5a6e52;cursor:pointer;padding:6px 0;white-space:nowrap;">edit →</button>
+          <button onclick="editCurrentRecipe()" style="border:1.5px solid #e4e8e2;background:#f8f9f7;border-radius:8px;font-family:'Geist Mono',monospace;font-size:11px;color:#5a6e52;cursor:pointer;padding:8px 14px;white-space:nowrap;min-height:38px;">edit →</button>
         </div>
       </div>
       <div id="rd-tags" style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px;"></div>
@@ -914,7 +919,7 @@ option{color:#111a0e;background:#ffffff;}
       <div id="rd-steps"></div>
       <div class="sheet-actions" style="margin-top:20px;">
         <button class="btn btn-green btn-full" id="rd-cook-mode-btn" onclick="openCookMode()">▶ Start Cooking</button>
-        <button class="btn btn-outline btn-full" onclick="cookRecipe()">✓ cook it — update my station</button>
+        <button class="btn btn-outline btn-full" onclick="cookRecipe()">✓ cooked — update pantry</button>
         <button class="btn btn-ghost btn-full" onclick="closeRecipeDetail()">close</button>
       </div>
     </div>
@@ -1469,7 +1474,7 @@ function generateShoppingList(){
 function renderShopping(){
   const el=document.getElementById('shopping-list');
   if(!shoppingList.length){
-    el.innerHTML=`<div class="empty"><h3>the list is bare.</h3><p>Refresh from low stock or add manually.</p></div>`;
+    el.innerHTML=`<div class="empty"><h3>the list is bare.</h3><p>Tap <strong>from station</strong> to pull low-stock items, or add manually.</p></div>`;
     return;
   }
   el.innerHTML=shoppingList.map(s=>`
