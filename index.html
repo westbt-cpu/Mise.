@@ -338,24 +338,10 @@ option{color:#111a0e;background:#ffffff;}
 .restock-bar .btn-primary-action{background:#2d6a2d;color:#ffffff;border-color:#2d6a2d;}
 .restock-bar .btn-primary-action:active{background:#3d8c3d;}
 
-/* ── GOOGLE SHEETS SECTION ── */
-.sheets-status-row{display:flex;align-items:center;gap:8px;padding:12px 16px;background:#f8f9f7;border-radius:10px;margin-bottom:12px;border:1.5px solid #e4e8e2;}
-.sheets-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
-.sheets-dot.off{background:#9aab92;}
-.sheets-dot.ok{background:#2d6a2d;}
-.sheets-dot.err{background:#c44040;}
-.sheets-status-text{font-size:11px;color:#5a6e52;flex:1;}
-.guide-sheet{background:#ffffff;width:100%;max-width:540px;border-radius:22px 22px 0 0;padding:20px 20px calc(env(safe-area-inset-bottom,0px) + 32px);animation:slideUp 0.22s cubic-bezier(0.32,0.72,0,1);max-height:92dvh;overflow-y:auto;-webkit-overflow-scrolling:touch;}
-.guide-step{display:flex;gap:12px;margin-bottom:18px;align-items:flex-start;}
+/* ── GUIDE STEP (used by recipe steps) ── */
 .step-num{width:24px;height:24px;background:#2d6a2d;color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0;font-weight:500;margin-top:1px;}
 .step-body{flex:1;}
 .step-title{font-size:13px;color:#111a0e;font-weight:500;margin-bottom:3px;}
-.step-sub{font-size:11px;color:#5a6e52;line-height:1.6;}
-.step-link{display:inline-flex;align-items:center;gap:5px;margin-top:7px;padding:8px 13px;background:#edf3ea;color:#2d6a2d;border-radius:8px;font-size:11px;text-decoration:none;border:1.5px solid #ddecd8;font-family:'Geist Mono',monospace;}
-.step-link:active{background:#ddecd8;}
-.code-block{background:#111a0e;border-radius:10px;padding:13px 14px;font-size:10px;color:rgba(255,255,255,0.85);line-height:1.75;overflow-x:auto;white-space:pre;margin-top:8px;font-family:'Geist Mono',monospace;-webkit-overflow-scrolling:touch;}
-.copy-code-btn{display:flex;align-items:center;justify-content:center;gap:6px;margin-top:8px;padding:10px 14px;background:#f8f9f7;color:#2c3d28;border:1.5px solid #e4e8e2;border-radius:9px;font-size:11px;cursor:pointer;font-family:'Geist Mono',monospace;width:100%;}
-.copy-code-btn:active{background:#edf3ea;color:#2d6a2d;border-color:#ddecd8;}
 .sync-btn-row{display:flex;gap:8px;margin-top:12px;}
 .sync-btn-row .btn{flex:1;}
 /* ── FIREBASE SYNC ── */
@@ -421,7 +407,8 @@ option{color:#111a0e;background:#ffffff;}
 .recipe-sort-wrap{display:flex;align-items:center;gap:4px;}
 .sort-pill{padding:4px 10px;border-radius:20px;border:1.5px solid #e4e8e2;background:#fff;font-family:'Geist Mono',monospace;font-size:10px;color:#9aab92;cursor:pointer;letter-spacing:0.04em;}
 .sort-pill.active{border-color:#2d6a2d;color:#2d6a2d;background:#edf3ea;}
-.btn-tonight{font-family:'Geist Mono',monospace;font-size:10px;color:#2d6a2d;background:none;border:none;cursor:pointer;letter-spacing:0.04em;padding:4px 0;}
+.btn-tonight{font-family:'Geist Mono',monospace;font-size:10px;color:#2d6a2d;background:#edf3ea;border:1.5px solid #ddecd8;border-radius:20px;cursor:pointer;letter-spacing:0.04em;padding:6px 14px;min-height:36px;white-space:nowrap;}
+.btn-tonight:active{background:#ddecd8;}
 .recipe-filter-empty{text-align:center;padding:48px 24px;}
 .recipe-filter-empty p{font-size:13px;color:#9aab92;margin-bottom:14px;}
 /* ── RECIPE TAGS ── */
@@ -455,6 +442,10 @@ option{color:#111a0e;background:#ffffff;}
 /* ── STAPLES in settings ── */
 .s-btn-delete{background:none;border:none;color:#9aab92;font-size:18px;cursor:pointer;padding:6px 8px;line-height:1;}
 .s-btn-delete:active{color:#c44040;}
+/* ── STICKY TOOLBARS ── */
+#screen-station .toolbar{position:sticky;top:0;z-index:10;}
+#screen-recipes .page-header{position:sticky;top:0;z-index:10;}
+
 /* ── LIST CHECK (AnyList) ── */
 .lc-section-label{font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:#5a6e52;margin:16px 0 8px;}
 .lc-section-label:first-child{margin-top:0;}
@@ -515,9 +506,9 @@ option{color:#111a0e;background:#ffffff;}
       </div>
     </div>
     <div class="restock-bar">
-      <button class="btn btn-green restock-bar-primary" onclick="generateShoppingList()">↻ refresh</button>
+      <button class="btn btn-green restock-bar-primary" onclick="generateShoppingList()">↻ from station</button>
       <button class="btn btn-outline" onclick="openQuickAddSheet()">+ add item</button>
-      <button class="btn btn-outline" onclick="openListCheck()">⊘ check list</button>
+      <button class="btn btn-outline" onclick="openListCheck()">⊘ list check</button>
       <button class="btn btn-outline" onclick="clearChecked()">✕ clear done</button>
     </div>
     <div class="content-pad" id="shopping-list"></div>
@@ -599,7 +590,30 @@ option{color:#111a0e;background:#ffffff;}
   <div class="screen" id="screen-settings">
     <div class="page-header">
       <div class="page-title">Settings</div>
-      <div class="page-sub">locations · categories · sync</div>
+      <div class="page-sub">sync · organize · backup</div>
+    </div>
+    <div class="settings-section">
+      <div class="settings-heading">Firebase sync</div>
+      <div class="fb-status-row">
+        <div class="fb-dot" id="fb-dot"></div>
+        <div id="fb-status-text" style="font-size:11px;color:#5a6e52;">Not configured</div>
+      </div>
+      <div class="settings-card">
+        <div class="settings-row" style="flex-direction:column;align-items:flex-start;gap:6px">
+          <div class="settings-row-label">Database URL</div>
+          <input type="url" id="fb-url-input" placeholder="https://mise-xxxxx-default-rtdb.firebaseio.com" autocomplete="off" style="width:100%;padding:10px 12px;border:1.5px solid #e4e8e2;border-radius:8px;background:#f8f9f7;font-family:'Geist Mono',monospace;font-size:11px;color:#111a0e;box-sizing:border-box;">
+        </div>
+        <div class="settings-row" style="flex-direction:column;align-items:flex-start;gap:6px;margin-top:8px;">
+          <div class="settings-row-label">Sync key <span style="font-weight:400;color:#9aab92">(same on both phones)</span></div>
+          <input type="text" id="fb-key-input" placeholder="e.g. brianandjane-mise" autocomplete="off" autocorrect="off" autocapitalize="off" style="width:100%;padding:10px 12px;border:1.5px solid #e4e8e2;border-radius:8px;background:#f8f9f7;font-family:'Geist Mono',monospace;font-size:11px;color:#111a0e;box-sizing:border-box;">
+        </div>
+        <div style="display:flex;gap:8px;margin-top:12px;">
+          <button class="btn btn-green" onclick="saveFbConfig()" style="flex:1;padding:12px;">Save</button>
+          <button class="btn btn-outline" onclick="fbPull()" style="flex:1;padding:12px;">Pull ↓</button>
+          <button class="btn btn-outline" onclick="fbPush()" style="flex:1;padding:12px;">Push ↑</button>
+        </div>
+        <div style="font-size:10px;color:#9aab92;margin-top:10px;line-height:1.6;">Syncs inventory, shopping list, locations, categories, and recipes between devices. Auto-pulls on open, auto-pushes after every change.</div>
+      </div>
     </div>
     <div class="settings-section">
       <div class="settings-heading">Locations</div>
@@ -618,32 +632,8 @@ option{color:#111a0e;background:#ffffff;}
       </div>
     </div>
     <div class="settings-section">
-      <div class="settings-heading">Google Sheets Sync</div>
-      <div id="sheets-status-display" class="sheets-status-row">
-        <div class="sheets-dot off" id="sheets-dot"></div>
-        <div class="sheets-status-text" id="sheets-status-text">Not connected</div>
-      </div>
-      <div class="settings-card">
-        <div class="settings-row" style="flex-direction:column;align-items:flex-start;gap:8px">
-          <div><div class="settings-row-label">Script URL</div><div class="settings-row-sub">Paste your Google Apps Script web app URL</div></div>
-          <div class="add-row" style="margin-top:0;width:100%">
-            <input type="url" id="sheets-url-input" placeholder="https://script.google.com/macros/s/..." autocomplete="off" style="flex:1;font-size:11px;">
-            <button class="btn btn-green" onclick="saveSheetUrl()" style="padding:12px 20px">Save</button>
-          </div>
-        </div>
-        <div class="settings-row">
-          <div style="flex:1"><div class="settings-row-label">Sync now</div><div class="settings-row-sub">Push inventory to your sheet</div></div>
-          <button class="s-btn s-btn-rename" onclick="syncToSheets()" id="sync-now-btn">sync ↑</button>
-        </div>
-        <div class="settings-row">
-          <div style="flex:1"><div class="settings-row-label">Set up guide</div><div class="settings-row-sub">Step-by-step Google Sheets setup</div></div>
-          <button class="s-btn s-btn-rename" onclick="openGuideSheet()">view →</button>
-        </div>
-      </div>
-    </div>
-    <div class="settings-section">
       <div class="settings-heading">Staples</div>
-      <div style="font-size:11px;color:#9aab92;margin-bottom:10px;line-height:1.5;">Staples are assumed always present — never checked against your pantry.</div>
+      <div style="font-size:11px;color:#9aab92;margin-bottom:10px;line-height:1.5;">Always assumed present — never checked against your pantry.</div>
       <div class="settings-card" id="staples-list"></div>
       <div class="add-row">
         <input type="text" id="new-staple-input" placeholder="e.g. flour, sugar..." autocomplete="off" onkeydown="if(event.key==='Enter')addStaple()">
@@ -652,54 +642,10 @@ option{color:#111a0e;background:#ffffff;}
       <button onclick="resetStaples()" style="background:none;border:none;font-size:11px;color:#9aab92;cursor:pointer;padding:4px 0;font-family:'Geist Mono',monospace;margin-top:4px;">reset to defaults</button>
     </div>
     <div class="settings-section">
-      <div class="settings-heading">Notion sync</div>
-      <div style="font-size:11px;color:#9aab92;margin-bottom:10px;line-height:1.5;" id="notion-status">Not connected</div>
-      <div class="settings-card">
-        <div class="settings-row" style="flex-direction:column;align-items:flex-start;gap:6px">
-          <div class="settings-row-label">Integration secret</div>
-          <input type="password" id="notion-token-input" placeholder="secret_..." autocomplete="off" style="width:100%;padding:10px 12px;border:1.5px solid #e4e8e2;border-radius:8px;background:#f8f9f7;font-family:'Geist Mono',monospace;font-size:11px;color:#111a0e;box-sizing:border-box;">
-        </div>
-        <div class="settings-row" style="flex-direction:column;align-items:flex-start;gap:6px;margin-top:8px;">
-          <div class="settings-row-label">Database ID</div>
-          <input type="text" id="notion-db-input" placeholder="paste database ID..." autocomplete="off" style="width:100%;padding:10px 12px;border:1.5px solid #e4e8e2;border-radius:8px;background:#f8f9f7;font-family:'Geist Mono',monospace;font-size:11px;color:#111a0e;box-sizing:border-box;">
-        </div>
-        <div style="margin-top:10px;">
-          <button class="btn btn-green" onclick="saveNotionToken()" style="width:100%;padding:12px;">Save Notion settings</button>
-        </div>
-      </div>
-    </div>
-    <div class="settings-section">
-      <div class="settings-heading">Firebase sync</div>
-      <div class="fb-status-row">
-        <div class="fb-dot" id="fb-dot"></div>
-        <div id="fb-status-text" style="font-size:11px;color:#5a6e52;">Not configured</div>
-      </div>
-      <div class="settings-card">
-        <div class="settings-row" style="flex-direction:column;align-items:flex-start;gap:6px">
-          <div class="settings-row-label">Database URL</div>
-          <input type="url" id="fb-url-input" placeholder="https://mise-xxxxx-default-rtdb.firebaseio.com" autocomplete="off" style="width:100%;padding:10px 12px;border:1.5px solid #e4e8e2;border-radius:8px;background:#f8f9f7;font-family:'Geist Mono',monospace;font-size:11px;color:#111a0e;box-sizing:border-box;">
-        </div>
-        <div class="settings-row" style="flex-direction:column;align-items:flex-start;gap:6px;margin-top:8px;">
-          <div class="settings-row-label">Sync key <span style="font-weight:400;color:#9aab92">(shared passphrase — same on both phones)</span></div>
-          <input type="text" id="fb-key-input" placeholder="e.g. brianandjane-mise" autocomplete="off" autocorrect="off" autocapitalize="off" style="width:100%;padding:10px 12px;border:1.5px solid #e4e8e2;border-radius:8px;background:#f8f9f7;font-family:'Geist Mono',monospace;font-size:11px;color:#111a0e;box-sizing:border-box;">
-        </div>
-        <div style="display:flex;gap:8px;margin-top:12px;">
-          <button class="btn btn-green" onclick="saveFbConfig()" style="flex:1;padding:12px;">Save</button>
-          <button class="btn btn-outline" onclick="fbPull()" style="flex:1;padding:12px;">Pull ↓</button>
-          <button class="btn btn-outline" onclick="fbPush()" style="flex:1;padding:12px;">Push ↑</button>
-        </div>
-        <div style="font-size:10px;color:#9aab92;margin-top:10px;line-height:1.6;">Syncs inventory, shopping list, locations, categories, and recipes. Auto-pulls on open. Auto-pushes after every change.</div>
-      </div>
-    </div>
-    <div class="settings-section">
       <div class="settings-heading">Data</div>
       <div class="settings-card">
         <div class="settings-row">
-          <div style="flex:1"><div class="settings-row-label">Haul import</div><div class="settings-row-sub">Snap a photo of your haul via Claude</div></div>
-          <button class="s-btn s-btn-rename" onclick="openAddSheet();setTimeout(()=>setMethod('haul'),120)">open →</button>
-        </div>
-        <div class="settings-row">
-          <div style="flex:1"><div class="settings-row-label">Export backup</div><div class="settings-row-sub">Download inventory as JSON</div></div>
+          <div style="flex:1"><div class="settings-row-label">Export backup</div><div class="settings-row-sub">Download everything as JSON — inventory, recipes, lists</div></div>
           <button class="s-btn s-btn-rename" onclick="exportData()">export</button>
         </div>
         <div class="settings-row">
@@ -709,7 +655,24 @@ option{color:#111a0e;background:#ffffff;}
         </div>
       </div>
     </div>
-    <div class="settings-section" style="padding-bottom:32px">
+    <div class="settings-section">
+      <div class="settings-heading">NFC Tags</div>
+      <div class="settings-card">
+        <div class="settings-row">
+          <div style="flex:1"><div class="settings-row-label">Location tag URLs</div><div class="settings-row-sub">Tap a location to copy its NFC tag URL</div></div>
+        </div>
+        <div id="nfc-urls-list"></div>
+        <details style="margin-top:4px;">
+          <summary class="settings-row-label" style="cursor:pointer;list-style:none;padding:10px 0;color:#5a6e52;">iOS setup ▾</summary>
+          <div class="settings-row-sub" style="line-height:1.7;padding-bottom:8px;">1. Write the tag URL to an NFC tag using <strong>NFC Tools</strong> (free, App Store)<br>2. In <strong>Shortcuts</strong>, create a new automation → trigger: NFC → scan your tag<br>3. Add action: <em>Open URL</em> with the tag URL<br>4. Tap the tag → Mise opens to that location's import screen</div>
+        </details>
+        <details>
+          <summary class="settings-row-label" style="cursor:pointer;list-style:none;padding:10px 0;color:#5a6e52;">Android setup ▾</summary>
+          <div class="settings-row-sub" style="line-height:1.7;padding-bottom:8px;">1. Install <strong>NFC Tools</strong> (free, Play Store)<br>2. Write a <em>URL record</em> with the tag URL to your NFC tag<br>3. Tapping the tag opens mise directly in your default browser</div>
+        </details>
+      </div>
+    </div>
+    <div class="settings-section" style="padding-bottom:48px">
       <div class="settings-heading">About</div>
       <div class="settings-card">
         <div class="settings-row">
@@ -717,29 +680,12 @@ option{color:#111a0e;background:#ffffff;}
         </div>
         <div class="settings-row" style="flex-direction:column;align-items:flex-start;gap:6px">
           <div class="settings-row-label">Install as app</div>
-          <div class="settings-row-sub" style="line-height:1.7"><strong>iOS:</strong> Safari → Share → Add to Home Screen<br><strong>Android:</strong> Chrome menu → Add to Home Screen<br>On Android, mise. also appears in the share sheet once installed.</div>
+          <div class="settings-row-sub" style="line-height:1.7"><strong>iOS:</strong> Safari → Share → Add to Home Screen<br><strong>Android:</strong> Chrome menu → Add to Home Screen</div>
         </div>
-        <div class="settings-row" style="flex-direction:column;align-items:flex-start;gap:6px">
-          <div class="settings-row-label">AnyList → mise. (iOS)</div>
-          <div class="settings-row-sub" style="line-height:1.7">iOS doesn't support web app share targets. Use a Shortcut instead — it appears in any app's share sheet:<br><br>1. Open <strong>Shortcuts</strong> → tap <strong>+</strong><br>2. Tap the name at top → rename to <strong>mise.</strong><br>3. Add action → search <strong>URL</strong> → type your mise URL then add <code>?cl=</code> at the end<br>4. Tap the cursor after <code>cl=</code> → tap the token picker → choose <strong>Shortcut Input</strong> (Shortcuts auto-encodes it)<br>5. Add action → <strong>Open URLs</strong><br>6. Tap the shortcut name → <strong>Add to Share Sheet</strong> → set input type to <strong>Text</strong><br><br>Your mise URL: <span id="mise-url-display" style="font-family:monospace;word-break:break-all"></span> <button id="copy-mise-url" style="margin-left:6px;padding:2px 8px;font-size:11px;border-radius:4px;border:1px solid var(--text-secondary);background:transparent;color:var(--text-secondary);cursor:pointer">Copy</button></div>
-        </div>
-      </div>
-    </div>
-    <div class="settings-section" style="padding-bottom:48px">
-      <div class="settings-heading">NFC Tags</div>
-      <div class="settings-card">
-        <div class="settings-row">
-          <div style="flex:1"><div class="settings-row-label">Location tag URLs</div><div class="settings-row-sub">Tap a location to copy its NFC tag URL</div></div>
-        </div>
-        <div id="nfc-urls-list"></div>
-        <div class="settings-row" style="flex-direction:column;align-items:flex-start;gap:6px;padding-top:12px">
-          <div class="settings-row-label">iOS setup</div>
-          <div class="settings-row-sub" style="line-height:1.7">1. Write the tag URL to an NFC tag using <strong>NFC Tools</strong> (free, App Store)<br>2. In <strong>Shortcuts</strong>, create a new automation → trigger: NFC → scan your tag<br>3. Add action: <em>Open URL</em> with the tag URL<br>4. Add action: <em>Get Clipboard</em> → <em>Open App</em>: Claude (optional — share Claude's response back via copy)<br>5. Tap the tag → Mise opens to that location's import screen</div>
-        </div>
-        <div class="settings-row" style="flex-direction:column;align-items:flex-start;gap:6px">
-          <div class="settings-row-label">Android setup</div>
-          <div class="settings-row-sub" style="line-height:1.7">1. Install <strong>NFC Tools</strong> (free, Play Store)<br>2. Write a <em>URL record</em> with the tag URL to your NFC tag<br>3. On Android, tapping the tag opens the URL directly in your default browser — no extra app needed<br>4. For a photo-to-Claude shortcut use <strong>Tasker</strong> + <em>HTTP Request</em> or the Claude app's share sheet</div>
-        </div>
+        <details>
+          <summary class="settings-row-label" style="cursor:pointer;list-style:none;padding:10px 0;color:#5a6e52;">AnyList → mise. shortcut (iOS) ▾</summary>
+          <div class="settings-row-sub" style="line-height:1.7;padding-bottom:8px;">iOS doesn't support web app share targets. Use a Shortcut instead:<br><br>1. Open <strong>Shortcuts</strong> → tap <strong>+</strong><br>2. Rename to <strong>mise.</strong><br>3. Add action → <strong>URL</strong> → type your mise URL + <code>?cl=</code><br>4. Tap after <code>cl=</code> → token picker → <strong>Shortcut Input</strong><br>5. Add action → <strong>Open URLs</strong><br>6. Tap shortcut name → <strong>Add to Share Sheet</strong> → input type: Text<br><br>Your mise URL: <span id="mise-url-display" style="font-family:monospace;word-break:break-all"></span> <button id="copy-mise-url" style="margin-left:6px;padding:2px 8px;font-size:11px;border-radius:4px;border:1px solid #9aab92;background:transparent;color:#9aab92;cursor:pointer">Copy</button></div>
+        </details>
       </div>
     </div>
   </div>
@@ -941,98 +887,6 @@ option{color:#111a0e;background:#ffffff;}
   </div>
 </div>
 
-<!-- GUIDE SHEET -->
-
-<div id="guide-sheet" style="display:none">
-  <div class="modal-overlay" onclick="closeGuideSheet()">
-    <div class="guide-sheet" onclick="event.stopPropagation()">
-      <div class="sheet-handle"></div>
-      <div class="lemon-bar"></div>
-      <h2>Google Sheets setup</h2>
-      <div style="font-size:11px;color:#5a6e52;margin-bottom:20px;line-height:1.6">Connect mise. to a Google Sheet so your inventory syncs to a spreadsheet you and your household can view from any device.</div>
-
-      <div class="guide-step">
-        <div class="step-num">1</div>
-        <div class="step-body">
-          <div class="step-title">Create a new Google Sheet</div>
-          <div class="step-sub">Open a blank spreadsheet. The sheet will be populated automatically when you sync.</div>
-          <a class="step-link" href="https://sheets.new" target="_blank" rel="noopener">↗ Open sheets.new</a>
-        </div>
-      </div>
-
-      <div class="guide-step">
-        <div class="step-num">2</div>
-        <div class="step-body">
-          <div class="step-title">Open the Apps Script editor</div>
-          <div class="step-sub">In your new sheet, click <strong>Extensions → Apps Script</strong>. Delete any existing code in the editor.</div>
-        </div>
-      </div>
-
-      <div class="guide-step">
-        <div class="step-num">3</div>
-        <div class="step-body">
-          <div class="step-title">Paste the mise. sync script</div>
-          <div class="step-sub">Copy the code below and paste it into the Apps Script editor.</div>
-          <div class="code-block" id="apps-script-code">function doPost(e) {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var sheet = ss.getSheetByName('Inventory');
-  if (!sheet) sheet = ss.insertSheet('Inventory');
-  sheet.clearContents();
-  var data = JSON.parse(e.postData.contents);
-  sheet.appendRow([
-    'Name','Category','Location',
-    'Qty','Restock Below','Notes','Expiry','Synced'
-  ]);
-  (data.items || []).forEach(function(item) {
-    sheet.appendRow([
-      item.name, item.category, item.location,
-      item.qty, item.threshold,
-      item.notes || '', item.expiry || '',
-      new Date().toLocaleString()
-    ]);
-  });
-  return ContentService
-    .createTextOutput(JSON.stringify({ok:true,count:(data.items||[]).length}))
-    .setMimeType(ContentService.MimeType.JSON);
-}</div>
-          <button class="copy-code-btn" onclick="copyScriptCode()">⎘ copy script code</button>
-        </div>
-      </div>
-
-      <div class="guide-step">
-        <div class="step-num">4</div>
-        <div class="step-body">
-          <div class="step-title">Deploy as a Web App</div>
-          <div class="step-sub">In Apps Script, click <strong>Deploy → New deployment</strong>.<br>
-          Set <strong>Execute as:</strong> Me &nbsp;·&nbsp; <strong>Who has access:</strong> Anyone.<br>
-          Click Deploy and authorise when prompted.</div>
-        </div>
-      </div>
-
-      <div class="guide-step">
-        <div class="step-num">5</div>
-        <div class="step-body">
-          <div class="step-title">Copy the Web App URL</div>
-          <div class="step-sub">After deploying, copy the URL shown (starts with <code style="font-size:10px;background:#f0f0ec;padding:1px 5px;border-radius:4px">https://script.google.com/macros/s/</code>).</div>
-        </div>
-      </div>
-
-      <div class="guide-step">
-        <div class="step-num">6</div>
-        <div class="step-body">
-          <div class="step-title">Paste the URL in Settings</div>
-          <div class="step-sub">Go back to Settings → Google Sheets Sync, paste the URL in the Script URL field, and tap Save. Then tap Sync ↑ to push your inventory.</div>
-        </div>
-      </div>
-
-      <div class="sheet-actions" style="margin-top:8px">
-        <button class="btn btn-green btn-full" onclick="closeGuideSheet();setTimeout(()=>document.getElementById('sheets-url-input').focus(),300)">got it — go to settings</button>
-        <button class="btn btn-ghost btn-full" onclick="closeGuideSheet()">close</button>
-      </div>
-    </div>
-  </div>
-</div>
-
 <!-- RECIPE DETAIL SHEET -->
 
 <div id="recipe-detail-sheet" style="display:none">
@@ -1043,7 +897,7 @@ option{color:#111a0e;background:#ffffff;}
         <h2 id="rd-title" style="margin-bottom:0;flex:1;padding-right:12px;"></h2>
         <div style="display:flex;gap:8px;flex-shrink:0;margin-top:4px;">
           <button onclick="printRecipe()" style="border:none;background:none;font-family:'Geist Mono',monospace;font-size:11px;color:#9aab92;cursor:pointer;padding:6px 0;">PDF</button>
-          <button onclick="editCurrentRecipe()" style="border:none;background:none;font-family:'Geist Mono',monospace;font-size:11px;color:#5a6e52;cursor:pointer;padding:6px 0;white-space:nowrap;">edit →</button>
+          <button onclick="editCurrentRecipe()" style="border:1.5px solid #e4e8e2;background:#f8f9f7;border-radius:8px;font-family:'Geist Mono',monospace;font-size:11px;color:#5a6e52;cursor:pointer;padding:8px 14px;white-space:nowrap;min-height:38px;">edit →</button>
         </div>
       </div>
       <div id="rd-tags" style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px;"></div>
@@ -1065,7 +919,7 @@ option{color:#111a0e;background:#ffffff;}
       <div id="rd-steps"></div>
       <div class="sheet-actions" style="margin-top:20px;">
         <button class="btn btn-green btn-full" id="rd-cook-mode-btn" onclick="openCookMode()">▶ Start Cooking</button>
-        <button class="btn btn-outline btn-full" onclick="cookRecipe()">✓ cook it — update my station</button>
+        <button class="btn btn-outline btn-full" onclick="cookRecipe()">✓ cooked — update pantry</button>
         <button class="btn btn-ghost btn-full" onclick="closeRecipeDetail()">close</button>
       </div>
     </div>
@@ -1212,8 +1066,8 @@ option{color:#111a0e;background:#ffffff;}
 </div>
 
 <script>
-const ITEMS_KEY='mise_items_v5',SHOP_KEY='mise_shop_v5',LOCS_KEY='mise_locs_v3',CATS_KEY='mise_cats_v3',SHEETS_KEY='mise_sheets_v1',SHEETS_SYNC_KEY='mise_sheets_sync_v1';
-let items=[],shoppingList=[],locations=[],categories=[],sheetsUrl='',sheetsLastSync='';
+const ITEMS_KEY='mise_items_v5',SHOP_KEY='mise_shop_v5',LOCS_KEY='mise_locs_v3',CATS_KEY='mise_cats_v3';
+let items=[],shoppingList=[],locations=[],categories=[];
 let editingId=null,currentView='category',currentSort='name',scanStream=null;
 let renameType=null,renameIdx=null,confirmCallback=null,reviewItems=[],haulReplaceLoc=null;
 
@@ -1229,10 +1083,6 @@ function init(){
     locations=JSON.parse(localStorage.getItem(LOCS_KEY))||DEFAULT_LOCS.slice();
     categories=JSON.parse(localStorage.getItem(CATS_KEY))||DEFAULT_CATS.slice();
   }catch(e){items=seed();shoppingList=[];locations=DEFAULT_LOCS.slice();categories=DEFAULT_CATS.slice();}
-  const DEFAULT_SHEETS_URL='https://script.google.com/macros/s/AKfycbxyrG_XWfQAEDPdtzyq9NypIu5TC-QejSFlW_lB6slfjXcOjGSftHu4A56sWs-i_UOl/exec';
-  sheetsUrl=localStorage.getItem(SHEETS_KEY)||DEFAULT_SHEETS_URL;
-  if(!localStorage.getItem(SHEETS_KEY))localStorage.setItem(SHEETS_KEY,DEFAULT_SHEETS_URL);
-  sheetsLastSync=localStorage.getItem(SHEETS_SYNC_KEY)||'';
   // Explicitly set category view active — Chrome iOS doesn't always apply CSS class styles on first paint
   currentView='category';
   const catBtn=document.getElementById('view-cat-btn');
@@ -1624,7 +1474,7 @@ function generateShoppingList(){
 function renderShopping(){
   const el=document.getElementById('shopping-list');
   if(!shoppingList.length){
-    el.innerHTML=`<div class="empty"><h3>the list is bare.</h3><p>Refresh from low stock or add manually.</p></div>`;
+    el.innerHTML=`<div class="empty"><h3>the list is bare.</h3><p>Tap <strong>from station</strong> to pull low-stock items, or add manually.</p></div>`;
     return;
   }
   el.innerHTML=shoppingList.map(s=>`
@@ -1820,10 +1670,7 @@ function closeReviewSheet(){document.getElementById('review-sheet').style.displa
 // ── SETTINGS ──────────────────────────────────────────────────────────────────
 function renderSettings(){
   renderLocationsList();renderCategoriesList();renderNfcUrls();renderMiseUrl();
-  const u=document.getElementById('sheets-url-input');
-  if(u)u.value=sheetsUrl;
-  updateSheetsSyncStatus();
-  renderStaplesList();renderNotionStatus();renderFbStatus();
+  renderStaplesList();renderFbStatus();
 }
 
 function renderMiseUrl(){
@@ -1868,22 +1715,13 @@ function copyNfcUrl(loc,el){
   }).catch(()=>showToast('copy manually: '+url));
 }
 
-function updateSheetsSyncStatus(){
-  const dot=document.getElementById('sheets-dot');
-  const txt=document.getElementById('sheets-status-text');
-  if(!dot||!txt)return;
-  if(!sheetsUrl){dot.className='sheets-dot off';txt.textContent='Not connected — tap "view →" for setup guide';}
-  else if(sheetsLastSync){dot.className='sheets-dot ok';txt.textContent='Connected · last synced '+sheetsLastSync;}
-  else{dot.className='sheets-dot ok';txt.textContent='URL saved — tap Sync ↑ to push data';}
-}
-
 function exportData(){
-  const payload={items,shoppingList,locations,categories,exportedAt:new Date().toISOString()};
+  const payload={items,shoppingList,locations,categories,recipes,exportedAt:new Date().toISOString()};
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
   const url=URL.createObjectURL(blob);
   const a=document.createElement('a');a.href=url;a.download='mise-backup-'+new Date().toISOString().slice(0,10)+'.json';
   document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
-  showToast('data exported.');
+  showToast('backup exported.');
 }
 
 function importData(input){
@@ -1893,64 +1731,17 @@ function importData(input){
     try{
       const d=JSON.parse(e.target.result);
       if(!Array.isArray(d.items))throw new Error('invalid format');
-      showConfirm('Replace all data?','This will overwrite your current inventory with the imported data.','Import',()=>{
+      showConfirm('Replace all data?','This will overwrite your current inventory and recipes.','Import',()=>{
         items=d.items||[];shoppingList=d.shoppingList||[];
         locations=d.locations||DEFAULT_LOCS.slice();categories=d.categories||DEFAULT_CATS.slice();
-        save();renderInventory();renderSettings();showToast(`imported ${items.length} items.`);
+        if(Array.isArray(d.recipes))recipes=d.recipes.map(migrateRecipe);
+        save();saveRecipes();renderInventory();renderSettings();renderRecipes();
+        showToast(`imported ${items.length} items, ${recipes.length} recipes.`);
       });
     }catch(err){showToast('invalid backup file');}
   };
   reader.readAsText(file);
   input.value='';
-}
-
-// ── GOOGLE SHEETS SYNC ────────────────────────────────────────────────────────
-function saveSheetUrl(){
-  const val=document.getElementById('sheets-url-input').value.trim();
-  if(val&&!val.startsWith('https://script.google.com')){showToast('URL must start with script.google.com');return;}
-  sheetsUrl=val;sheetsLastSync='';
-  localStorage.setItem(SHEETS_KEY,val);
-  localStorage.removeItem(SHEETS_SYNC_KEY);
-  sheetsLastSync='';
-  updateSheetsSyncStatus();
-  showToast(val?'URL saved. Tap Sync ↑ to push data.':'URL cleared.');
-}
-
-async function syncToSheets(){
-  if(!sheetsUrl){showToast('Add a Script URL first');openGuideSheet();return;}
-  const btn=document.getElementById('sync-now-btn');
-  if(btn){btn.textContent='syncing…';btn.disabled=true;}
-  try{
-    const res=await fetch(sheetsUrl,{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({items,exportedAt:new Date().toISOString()})
-    });
-    const data=await res.json();
-    if(data.ok){
-      const ts=new Date().toLocaleString();
-      sheetsLastSync=ts;
-      localStorage.setItem(SHEETS_SYNC_KEY,ts);
-      updateSheetsSyncStatus();
-      showToast(`Synced ${data.count} items to Sheets ✓`);
-    }else{
-      showToast('Sync failed — check your script URL');
-    }
-  }catch(e){
-    showToast('Sync failed — check URL and permissions');
-    const dot=document.getElementById('sheets-dot');
-    if(dot)dot.className='sheets-dot err';
-  }finally{
-    if(btn){btn.textContent='sync ↑';btn.disabled=false;}
-  }
-}
-
-function openGuideSheet(){document.getElementById('guide-sheet').style.display='';}
-function closeGuideSheet(){document.getElementById('guide-sheet').style.display='none';}
-
-function copyScriptCode(){
-  const code=document.getElementById('apps-script-code').textContent;
-  navigator.clipboard?.writeText(code).then(()=>showToast('script code copied.')).catch(()=>showToast('copy the code manually'));
 }
 
 function renderLocationsList(){
@@ -2141,8 +1932,6 @@ function copyFilteredList(){
 // ── RECIPES v2 ────────────────────────────────────────────────────────────────
 const RECIPES_KEY='mise_recipes_v1';
 const STAPLES_KEY='mise_staples_v1';
-const NOTION_TOKEN_KEY='mise_notion_token';
-const NOTION_DB_KEY='mise_notion_recipe_db';
 const DEFAULT_STAPLES=['salt','kosher salt','black pepper','pepper','baking powder','baking soda','sugar','granulated sugar','vanilla extract','vanilla','olive oil','vegetable oil','neutral oil','water'];
 let recipes=[],staples=[];
 let editingRecipeId=null,viewingRecipeId=null,cookModeRecipeId=null,cookModeStep=0;
@@ -2537,7 +2326,6 @@ function confirmRecipeImport(){
   if(idx!==-1)recipes[idx]=r;else recipes.push(r);
   saveRecipes();renderRecipes();closeRecipeImport();
   showToast(`"${r.title}" imported ✓`);
-  notionSyncRecipe(r).catch(()=>{});
 }
 // ── WHAT CAN I COOK ──────────────────────────────────────────────────────────
 function openWhatCanCook(){renderWhatCanCook();document.getElementById('what-can-cook-sheet').style.display='';}
@@ -2574,37 +2362,6 @@ function addStaple(){
 }
 function removeStaple(i){staples.splice(i,1);saveStaples();renderStaplesList();}
 function resetStaples(){staples=DEFAULT_STAPLES.slice();saveStaples();renderStaplesList();}
-// ── NOTION SYNC ──────────────────────────────────────────────────────────────
-async function notionSyncRecipe(r){
-  const token=localStorage.getItem(NOTION_TOKEN_KEY),dbId=localStorage.getItem(NOTION_DB_KEY);
-  if(!token||!dbId)return;
-  const h={'Authorization':'Bearer '+token,'Content-Type':'application/json','Notion-Version':'2022-06-28'};
-  const body={parent:{database_id:dbId},properties:{
-    Title:{title:[{text:{content:r.title}}]},
-    Tags:{multi_select:(r.tags||[]).map(t=>({name:t}))},
-    Servings:{number:r.servings||1},
-    Notes:{rich_text:[{text:{content:(r.notes||'').slice(0,2000)}}]},
-    Ingredients:{rich_text:[{text:{content:JSON.stringify(r.ingredients).slice(0,2000)}}]},
-    Steps:{rich_text:[{text:{content:JSON.stringify(r.steps||[]).slice(0,2000)}}]},
-    CreatedAt:{date:{start:r.createdAt||new Date().toISOString()}},
-  }};
-  try{await fetch('https://api.notion.com/v1/pages',{method:'POST',headers:h,body:JSON.stringify(body)});}catch(e){}
-}
-function saveNotionToken(){
-  const t=(document.getElementById('notion-token-input').value||'').trim();
-  if(!t){showToast('Paste your Notion secret first');return;}
-  localStorage.setItem(NOTION_TOKEN_KEY,t);
-  const db=(document.getElementById('notion-db-input').value||'').trim();
-  if(db)localStorage.setItem(NOTION_DB_KEY,db);
-  renderNotionStatus();showToast('Notion settings saved ✓');
-}
-function renderNotionStatus(){
-  const token=localStorage.getItem(NOTION_TOKEN_KEY),db=localStorage.getItem(NOTION_DB_KEY);
-  const el=document.getElementById('notion-status');
-  if(el)el.textContent=token?(db?'Connected — new recipes sync to Notion automatically':'Token saved — add database ID to enable sync'):'Not connected';
-  const ti=document.getElementById('notion-token-input'),di=document.getElementById('notion-db-input');
-  if(ti&&token)ti.value=token;if(di&&db)di.value=db;
-}
 // ── RECIPE EDIT ──────────────────────────────────────────────────────────────
 function openRecipeEdit(id){
   editingRecipeId=id;
