@@ -287,6 +287,10 @@ option{color:#111a0e;background:#ffffff;}
 .review-loc-hint{font-size:10px;color:var(–ink-3);display:inline-block;margin-left:6px;}
 .review-loc-sel{font-size:11px;padding:5px 8px;border:1.5px solid var(–border);border-radius:8px;background:var(–off);font-family:'Geist Mono',monospace;color:var(–ink-2);-webkit-appearance:none;appearance:none;max-width:96px;cursor:pointer;}
 .review-loc-sel:focus{border-color:#2d6a2d;outline:none;}
+.review-name-input{border:none;background:transparent;font-family:'Instrument Serif',serif;font-size:15px;letter-spacing:-0.2px;color:#111a0e;width:100%;outline:none;padding:2px 0;min-width:0;}
+.review-name-input:focus{background:#f8f9f7;border-radius:4px;padding:2px 5px;margin:-2px -5px;width:calc(100% + 10px);}
+.review-loc-inp{font-size:11px;padding:5px 8px;border:1.5px solid var(–border);border-radius:8px;background:var(–off);font-family:'Geist Mono',monospace;color:var(–ink-2);max-width:96px;outline:none;-webkit-appearance:none;width:96px;}
+.review-loc-inp:focus{border-color:#2d6a2d;}
 .tag-restock{background:var(–green-light);color:var(–green);}
 .tag-new{background:var(–lemon-2);color:#7a6a00;}
 .review-qty{display:flex;align-items:center;gap:8px;}
@@ -731,8 +735,9 @@ option{color:#111a0e;background:#ffffff;}
       </div>
       <div id="haul-panel" style="display:none">
         <div class="form-row" style="margin-top:4px">
-          <label>Location</label>
-          <select id="haul-loc-select" style="width:100%;padding:12px 14px;border:1.5px solid #e4e8e2;border-radius:10px;background:#f8f9f7;font-family:'Geist Mono',monospace;font-size:13px;color:#111a0e;appearance:auto;"></select>
+          <label>Location <span style="color:#9aab92;font-weight:400">(pick or type new)</span></label>
+          <input type="text" id="haul-loc-input" list="haul-loc-list" placeholder="e.g. Pantry — Top" autocomplete="off" autocorrect="off" style="width:100%;padding:12px 14px;border:1.5px solid #e4e8e2;border-radius:10px;background:#f8f9f7;font-family:'Geist Mono',monospace;font-size:13px;color:#111a0e;box-sizing:border-box;outline:none;-webkit-appearance:none;">
+          <datalist id="haul-loc-list"></datalist>
         </div>
         <div class="form-row" style="margin-top:8px">
           <label>Box / area label <span style="color:#9aab92;font-weight:400">(optional)</span></label>
@@ -793,15 +798,13 @@ option{color:#111a0e;background:#ffffff;}
             </div>
           </div>
         </div>
-        <div class="form-grid">
-          <div class="form-row">
-            <label>Expiry (optional)</label>
-            <input type="date" id="f-expiry" style="font-size:13px;padding:13px 10px;">
-          </div>
-          <div class="form-row">
-            <label>Notes</label>
-            <input type="text" id="f-notes" placeholder="brand, size...">
-          </div>
+        <div class="form-row">
+          <label>Notes</label>
+          <input type="text" id="f-notes" placeholder="brand, size, source...">
+        </div>
+        <div class="form-row">
+          <label>Expiry <span style="color:#9aab92;font-weight:400">(optional)</span></label>
+          <input type="date" id="f-expiry" style="font-size:13px;padding:13px 10px;">
         </div>
         <div class="form-row" style="display:flex;align-items:center;justify-content:space-between;border:1.5px solid #e4e8e2;border-radius:12px;padding:13px 14px;background:#f8f9f7;">
           <div>
@@ -1065,11 +1068,30 @@ option{color:#111a0e;background:#ffffff;}
   </div>
 </div>
 
+<!-- ONBOARDING MODAL -->
+<div id="onboard-modal" style="display:none">
+  <div class="modal-overlay" style="align-items:flex-end;">
+    <div class="sheet" onclick="event.stopPropagation()" style="padding-bottom:calc(env(safe-area-inset-bottom,0px) + 28px)">
+      <div class="sheet-handle"></div>
+      <h2 style="font-size:26px;letter-spacing:-0.6px;margin-bottom:8px;">Set up your stations.</h2>
+      <p style="font-size:13px;color:#5a6e52;line-height:1.65;margin-bottom:20px;">Where do you store food? Add your spots — pantry shelves, fridge, freezer, basement. You can always change these in Settings.</p>
+      <div id="onboard-locs-list" style="margin-bottom:10px;"></div>
+      <div style="display:flex;gap:8px;margin-bottom:20px;">
+        <input type="text" id="onboard-loc-input" placeholder="e.g. Pantry — Top" autocomplete="off" autocorrect="off" onkeydown="if(event.key==='Enter')addOnboardLoc()" style="flex:1;padding:13px 14px;border:1.5px solid #e4e8e2;border-radius:12px;background:#f8f9f7;font-family:'Geist Mono',monospace;font-size:14px;color:#111a0e;outline:none;min-height:50px;box-sizing:border-box;">
+        <button class="btn btn-green" onclick="addOnboardLoc()" style="padding:13px 18px;min-height:50px;font-size:13px;">add</button>
+      </div>
+      <button class="btn btn-green btn-full" onclick="finishOnboard()" style="margin-bottom:10px;">Done →</button>
+      <button onclick="finishOnboard()" style="width:100%;text-align:center;background:none;border:none;font-family:'Geist Mono',monospace;font-size:11px;color:#9aab92;cursor:pointer;padding:10px;letter-spacing:0.03em;">skip for now</button>
+    </div>
+  </div>
+</div>
+
 <script>
-const ITEMS_KEY='mise_items_v5',SHOP_KEY='mise_shop_v5',LOCS_KEY='mise_locs_v3',CATS_KEY='mise_cats_v3';
+const ITEMS_KEY='mise_items_v5',SHOP_KEY='mise_shop_v5',LOCS_KEY='mise_locs_v3',CATS_KEY='mise_cats_v3',ONBOARD_KEY='mise_onboarded';
 let items=[],shoppingList=[],locations=[],categories=[];
 let editingId=null,currentView='category',currentSort='name',scanStream=null;
 let renameType=null,renameIdx=null,confirmCallback=null,reviewItems=[],haulReplaceLoc=null;
+let onboardLocs=[];
 
 const DEFAULT_LOCS=['Pantry — Top','Pantry — Middle','Pantry — Bottom','Basement — Shelf A','Basement — Shelf B','Basement — Box','Fridge','Freezer'];
 const DEFAULT_CATS=['Grains & Pasta','Canned Goods','Snacks','Baking','Condiments','Beverages','Spices','Frozen','Other'];
@@ -1094,6 +1116,45 @@ function init(){
   setTimeout(()=>fbPull(),800);
   renderInventory();
   handleUrlParams();
+  maybeShowOnboarding();
+}
+
+// ── ONBOARDING ────────────────────────────────────────────────────────────────
+function maybeShowOnboarding(){
+  if(localStorage.getItem(ONBOARD_KEY)) return;
+  if(localStorage.getItem(ITEMS_KEY)) return; // returning user — has data already
+  onboardLocs=[];
+  renderOnboardLocs();
+  document.getElementById('onboard-modal').style.display='';
+}
+function renderOnboardLocs(){
+  const el=document.getElementById('onboard-locs-list');
+  if(!el) return;
+  el.innerHTML=onboardLocs.map((l,i)=>`
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:11px 14px;background:#fff;border:1.5px solid #e4e8e2;border-radius:10px;margin-bottom:6px;">
+      <span style="font-family:'Instrument Serif',serif;font-size:15px;letter-spacing:-0.2px;">${esc(l)}</span>
+      <button onclick="removeOnboardLoc(${i})" style="background:none;border:none;color:#9aab92;font-size:20px;cursor:pointer;padding:2px 6px;line-height:1;">×</button>
+    </div>`).join('')||'<p style="font-size:12px;color:#9aab92;padding:4px 0 6px;">No locations yet — add your first spot above.</p>';
+}
+function addOnboardLoc(){
+  const inp=document.getElementById('onboard-loc-input');
+  const val=(inp.value||'').trim();
+  if(!val||onboardLocs.includes(val)){if(val)showToast('already added');return;}
+  onboardLocs.push(val);
+  inp.value='';
+  renderOnboardLocs();
+  inp.focus();
+}
+function removeOnboardLoc(i){onboardLocs.splice(i,1);renderOnboardLocs();}
+function finishOnboard(){
+  if(onboardLocs.length){
+    // Prepend user's custom locations, keeping any defaults that don't conflict
+    locations=[...onboardLocs,...locations.filter(l=>!onboardLocs.includes(l))];
+    save();
+  }
+  localStorage.setItem(ONBOARD_KEY,'1');
+  document.getElementById('onboard-modal').style.display='none';
+  renderInventory();
 }
 
 function save(){
@@ -1392,7 +1453,7 @@ function setMethod(m){
   document.getElementById('item-form').style.display=m==='manual'?'':'none';
   document.querySelector('#item-sheet .sheet-actions').style.display=m==='haul'?'none':'';
   if(m==='scan') startScan();
-  else if(m==='haul'){stopScan();const sel=document.getElementById('haul-loc-select');sel.innerHTML=locations.map(l=>`<option value="${esc(l)}">${esc(l)}</option>`).join('');document.getElementById('haul-box-input').value='';}
+  else if(m==='haul'){stopScan();const dl=document.getElementById('haul-loc-list');if(dl)dl.innerHTML=locations.map(l=>`<option value="${esc(l)}">`).join('');const inp=document.getElementById('haul-loc-input');if(inp&&!inp.value)inp.value=locations[0]||'';document.getElementById('haul-box-input').value='';}
   else{stopScan();setTimeout(()=>document.getElementById('f-name').focus(),200);}
 }
 
@@ -1532,7 +1593,7 @@ function copyPrompt(){
   navigator.clipboard?.writeText(p).then(()=>showToast('prompt copied.')).catch(()=>showToast('copy prompt manually'));
 }
 function haulEffectiveLoc(){
-  const loc=document.getElementById('haul-loc-select')?.value||(locations[0]||'');
+  const loc=(document.getElementById('haul-loc-input')?.value||'').trim()||(locations[0]||'');
   const box=(document.getElementById('haul-box-input')?.value||'').trim();
   return box?`${loc} — ${box}`:loc;
 }
@@ -1596,7 +1657,9 @@ function openReviewSheet(parsed,forceLoc){
     const nn=s=>s.toLowerCase().replace(/[^a-z0-9 ]/g,'').trim();
     const pn=nn(p.name);
     const match=items.find(i=>nn(i.name)===pn||nn(i.name).includes(pn)||pn.includes(nn(i.name)));
-    return{...p,matched:match||null,include:true,expanded:false,
+    return{...p,
+      name:match?match.name:p.name,  // use canonical name from inventory when matched
+      matched:match||null,include:true,expanded:false,
       category:match?match.category:defCat,
       // In replace mode every item goes to the exact box location; otherwise guess from inventory
       location:haulReplaceLoc?defLoc:guessItemLoc(p.name,defLoc),
@@ -1613,17 +1676,15 @@ function renderReviewSheet(){
   document.getElementById('review-summary').innerHTML=haulReplaceLoc
     ?`${total} items · replaces ${existing} at <strong>${esc(haulReplaceLoc)}</strong>`
     :`${total} items · ${restocks} restocks · ${total-restocks} new`;
-  document.getElementById('review-list').innerHTML=reviewItems.map((r,idx)=>`
+  document.getElementById('review-list').innerHTML=`<datalist id="rl-locs">${locations.map(l=>`<option value="${esc(l)}">`).join('')}</datalist>`+reviewItems.map((r,idx)=>`
     <div class="review-item ${r.include?'':'excluded'}" id="ri-${idx}">
       <div class="review-item-row" onclick="toggleReviewExpand(${idx})">
         <input type="checkbox" class="review-cb" ${r.include?'checked':''} onchange="toggleReviewInclude(${idx},this.checked)" onclick="event.stopPropagation()">
         <div class="review-info">
-          <div class="review-name">${esc(r.matched?r.matched.name:r.name)}</div>
+          <input class="review-name-input" type="text" value="${esc(r.name)}" oninput="updateReviewName(${idx},this.value)" onclick="event.stopPropagation()">
           <span class="review-tag ${r.matched?'tag-restock':'tag-new'}">${r.matched?`restock +${r.qty}`:'new'}</span>
         </div>
-        <select class="review-loc-sel" onchange="updateReviewField(${idx},'location',this.value)" onclick="event.stopPropagation()">
-          ${locations.map(l=>`<option value="${esc(l)}" ${l===r.location?'selected':''}>${esc(l)}</option>`).join('')}
-        </select>
+        <input class="review-loc-inp" list="rl-locs" value="${esc(r.location)}" oninput="updateReviewField(${idx},'location',this.value)" onclick="event.stopPropagation()">
         <div class="review-qty" onclick="event.stopPropagation()">
           <button class="review-qty-btn" onclick="adjReview(${idx},-1)">−</button>
           <span class="review-qty-val" id="rqty-${idx}">${r.qty}</span>
@@ -1650,13 +1711,19 @@ function toggleReviewExpand(idx){reviewItems[idx].expanded=!reviewItems[idx].exp
 function toggleReviewInclude(idx,v){reviewItems[idx].include=v;document.getElementById('ri-'+idx).className=`review-item ${v?'':'excluded'}`;}
 function adjReview(idx,d){reviewItems[idx].qty=Math.max(1,reviewItems[idx].qty+d);const el=document.getElementById('rqty-'+idx);if(el)el.textContent=reviewItems[idx].qty;}
 function updateReviewField(idx,field,val){reviewItems[idx][field]=val;}
+function updateReviewName(idx,val){reviewItems[idx].name=val;if(reviewItems[idx].matched)reviewItems[idx].matched.name=val;}
 
 function applyImport(){
   const replacing=haulReplaceLoc;
   if(replacing) items=items.filter(i=>i.location!==replacing);
+  // Create any new locations typed inline in the review sheet
+  reviewItems.filter(r=>r.include).forEach(r=>{
+    const loc=(r.location||'').trim();
+    if(loc&&!locations.includes(loc)) locations.push(loc);
+  });
   let restocked=0,added=0;
   reviewItems.filter(r=>r.include).forEach(r=>{
-    if(r.matched&&!replacing){r.matched.qty+=r.qty;r.matched.category=r.category;r.matched.location=r.location;if(r.notes)r.matched.notes=r.notes;restocked++;}
+    if(r.matched&&!replacing){r.matched.qty+=r.qty;r.matched.name=r.name;r.matched.category=r.category;r.matched.location=r.location;if(r.notes)r.matched.notes=r.notes;restocked++;}
     else{items.push({id:uid(),name:r.name,category:r.category,location:r.location,qty:r.qty,threshold:1,notes:r.notes||'',expiry:''});added++;}
   });
   haulReplaceLoc=null;
