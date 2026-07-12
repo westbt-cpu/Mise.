@@ -1446,27 +1446,527 @@ option{color:var(--ink);background:var(--bg-card);}
 
 <script>
 const ITEMS_KEY='mise_items_v5',SHOP_KEY='mise_shop_v5',LOCS_KEY='mise_locs_v3',CATS_KEY='mise_cats_v3',ONBOARD_KEY='mise_onboarded',THEME_KEY='mise_theme',SWIPE_HINT_KEY='mise_swipe_hint_seen';
-let items=[],shoppingList=[],locations=[],categories=[];
-let editingId=null,currentView='category',currentSort='name',scanStream=null;
-let renameType=null,renameIdx=null,confirmCallback=null,reviewItems=[],haulReplaceLoc=null;
-let onboardLocs=[];
-
+const RECIPES_KEY='mise_recipes_v1';
+const STAPLES_KEY='mise_staples_v1';
+const DEFAULT_STAPLES=['salt','kosher salt','black pepper','pepper','baking powder','baking soda','sugar','granulated sugar','vanilla extract','vanilla','olive oil','vegetable oil','neutral oil','water'];
 const DEFAULT_LOCS=['Pantry — Top','Pantry — Middle','Pantry — Bottom','Basement — Shelf A','Basement — Shelf B','Basement — Box','Fridge','Freezer'];
 const DEFAULT_CATS=['Grains & Pasta','Canned Goods','Snacks','Baking','Condiments','Beverages','Spices','Frozen','Other'];
 const SORTS=['name','qty-low','qty-high'];
 const SORT_LABELS={'name':'A–Z','qty-low':'Qty ↑','qty-high':'Qty ↓'};
 
+// ── INTERPRET (one inventory interpretation) ─────────────────────────────────
+// Canonical normalize / parse / fuzzy-match. Prefer recipe-matcher behavior.
+const Interpret = {
+  normalize(n){
+    return String(n||'').toLowerCase()
+      .replace(/\bunsalted\b|\bsalted\b/g,'')
+      .replace(/\ball[-\s]purpose\b|\bplain\b/g,'ap')
+      .replace(/,.*$/,'')
+      .replace(/\s+/g,' ')
+      .trim();
+  },
+  parseLine(line){
+    const clean=String(line||'').replace(/^[\s\-•·–*]+/,'').trim();
+    if(!clean) return null;
+    let name='',qty=1;
+    const m1=clean.match(/^(.+?)[,\-–]\s*(\d+)\s*$/);
+    const m2=clean.match(/^(\d+)\s*[x×]\s*(.+)$/i);
+    const m3=clean.match(/^(.+?)\s*\((\d+)\)\s*$/);
+    const m4=clean.match(/^(.+?)\s+(\d+)$/);
+    if(m1){name=m1[1].trim();qty=parseInt(m1[2],10);}
+    else if(m2){qty=parseInt(m2[1],10);name=m2[2].trim();}
+    else if(m3){name=m3[1].trim();qty=parseInt(m3[2],10);}
+    else if(m4){name=m4[1].trim();qty=parseInt(m4[2],10);}
+    else{name=clean;qty=1;}
+    return name?{name,qty:qty||1}:null;
+  },
+  match(name, itemList){
+    const list=itemList||items;
+    const n=Interpret.normalize(name);
+    return list.find(i=>{
+      const m=Interpret.normalize(i.name);
+      return m===n||m.includes(n)||n.includes(m);
+    });
+  }
+};
+
+// ── PLANNER (recipe quantity semantics, stated once) ─────────────────────────
+// Semantics:
+// - item.qty is a PACKAGE COUNT (how many packages you have on the shelf).
+// - ing.amount is an informational measure in recipe units (g, ml, cups, …).
+// - The two are NEVER compared arithmetically.
+// - Availability = a matched, unmuted item with qty>0 (or a staple).
+// - Consumption = 1 package per cooked non-staple matched ingredient.
+const Planner = {
+  _isStaple(ingName, stapleList){
+    const n=String(ingName||'').toLowerCase().trim();
+    return (stapleList||[]).some(s=>n===s||n.includes(s)||s.includes(n));
+  },
+  readiness(recipe, itemList, stapleList){
+    itemList=itemList||items;
+    stapleList=stapleList||staples;
+    const ings=recipe.ingredients||[];
+    if(!ings.length) return'ready';
+    let ok=0;
+    for(const ing of ings){
+      if(Planner._isStaple(ing.name, stapleList)){ok++;continue;}
+      const item=Interpret.match(ing.name, itemList);
+      if(item&&(item.noAlert||item.qty>0)) ok++;
+    }
+    if(ok===ings.length) return'ready';
+    if(ok>=Math.ceil(ings.length/2)) return'mostly';
+    return'missing';
+  },
+  detail(recipe, scale, itemList, stapleList){
+    scale=scale||1;
+    itemList=itemList||items;
+    stapleList=stapleList||staples;
+    const details=(recipe.ingredients||[]).map(ing=>{
+      if(Planner._isStaple(ing.name, stapleList)) return{...ing,status:'staple'};
+      const item=Interpret.match(ing.name, itemList);
+      if(!item) return{...ing,status:'missing'};
+      // qty is package count — never compared to ing.amount*scale
+      if(item.noAlert||item.qty>0) return{...ing,status:'ok',haveQty:item.qty,haveUnit:item.unit||''};
+      return{...ing,status:'out',haveQty:0,haveUnit:item.unit||''};
+    });
+    return{details};
+  },
+  consumption(recipe, scale, itemList, stapleList){
+    itemList=itemList||items;
+    stapleList=stapleList||staples;
+    const used=[],skipped=[],plan=[];
+    // Simulate package decrements so multi-ingredient hits on one item match original cook loop
+    const sim={};
+    itemList.forEach(i=>{sim[i.id]=i.qty;});
+    for(const ing of(recipe.ingredients||[])){
+      if(Planner._isStaple(ing.name, stapleList)){skipped.push({name:ing.name,reason:'staple'});continue;}
+      const item=Interpret.match(ing.name, itemList);
+      if(!item){skipped.push({name:ing.name,reason:'not in station'});continue;}
+      if(item.noAlert){skipped.push({name:ing.name,reason:'muted'});continue;}
+      if((sim[item.id]||0)<=0){skipped.push({name:ing.name,reason:'already out'});continue;}
+      plan.push({id:item.id,name:item.name});
+      sim[item.id]=(sim[item.id]||0)-1;
+    }
+    return{plan,used,skipped};
+  }
+};
+
+// ── KITCHEN (deep domain module) ─────────────────────────────────────────────
+// Owns station state. Mutations: validate → change → persist → notify.
+// Global aliases (items, shoppingList, …) share the same live array objects.
+const Kitchen = (() => {
+  const _items=[];
+  const _shoppingList=[];
+  const _locations=[];
+  const _categories=[];
+  const _recipes=[];
+  const _staples=[];
+  const _subs=[];
+  let _silent=false;
+
+  function onChange(fn){ _subs.push(fn); return ()=>{const i=_subs.indexOf(fn);if(i>=0)_subs.splice(i,1);}; }
+  function notify(){ if(_silent) return; for(const fn of _subs){ try{fn();}catch(e){} } }
+  function withSilent(fn){ _silent=true; try{return fn();}finally{ _silent=false; notify(); } }
+  function replace(arr, next){ arr.length=0; if(next&&next.length) for(const x of next) arr.push(x); return arr; }
+  function ensureNonNegInt(n){ const v=parseInt(n,10); return isNaN(v)?0:Math.max(0,v); }
+  function trimName(n){ return String(n==null?'':n).trim(); }
+  function ensureLoc(name){ const loc=trimName(name); if(loc&&!_locations.includes(loc)) _locations.push(loc); return loc||(_locations[0]||''); }
+  function ensureCat(name){ const cat=trimName(name); if(cat&&!_categories.includes(cat)) _categories.push(cat); return cat||(_categories[0]||'Other'); }
+  function persist(){ save(); }
+  function persistRecipes(){ saveRecipes(); }
+  function persistStaples(){ saveStaples(); }
+
+  return {
+    items:()=>_items,
+    shoppingList:()=>_shoppingList,
+    locations:()=>_locations,
+    categories:()=>_categories,
+    recipes:()=>_recipes,
+    staples:()=>_staples,
+    onChange, notify, withSilent,
+
+    replaceItems(next){ replace(_items, next||[]); },
+    replaceShoppingList(next){ replace(_shoppingList, next||[]); },
+    replaceLocations(next){ replace(_locations, next||[]); },
+    replaceCategories(next){ replace(_categories, next||[]); },
+    replaceRecipes(next){ replace(_recipes, next||[]); },
+    replaceStaples(next){ replace(_staples, next||[]); },
+
+    bootstrap(data){
+      if(data.items) replace(_items, data.items);
+      if(data.shoppingList) replace(_shoppingList, data.shoppingList);
+      if(data.locations) replace(_locations, data.locations);
+      if(data.categories) replace(_categories, data.categories);
+      if(data.recipes) replace(_recipes, data.recipes);
+      if(data.staples) replace(_staples, data.staples);
+    },
+
+    stats(){
+      const low=_items.filter(i=>!i.noAlert&&i.qty>0&&i.qty<=i.threshold).length;
+      const out=_items.filter(i=>!i.noAlert&&i.qty===0).length;
+      const expiring=_items.filter(i=>!i.noAlert&&(()=>{const d=daysUntilExpiry(i.expiry);return d!==null&&d<=30&&d>0;})()).length;
+      return{total:_items.length,low,out,expiring};
+    },
+    lowItems(){ return _items.filter(i=>!i.noAlert&&i.qty<=i.threshold); },
+    expiringItems(){ return _items.filter(i=>!i.noAlert&&(()=>{const d=daysUntilExpiry(i.expiry);return d!==null&&d<=30;})()); },
+
+    addItem(fields){
+      const name=trimName(fields&&fields.name);
+      if(!name) return null;
+      const item={
+        id:(fields&&fields.id)||uid(),
+        name,
+        category:ensureCat(fields.category),
+        location:ensureLoc(fields.location),
+        qty:ensureNonNegInt(fields.qty),
+        threshold:ensureNonNegInt(fields.threshold!=null?fields.threshold:1)||1,
+        notes:fields.notes||'',
+        expiry:fields.expiry||'',
+        noAlert:!!fields.noAlert,
+        lastConfirmed:fields.lastConfirmed||Date.now(),
+      };
+      if(fields.demo) item.demo=true;
+      _items.push(item);
+      persist(); notify();
+      return item;
+    },
+    updateItem(id, fields){
+      const idx=_items.findIndex(i=>i.id===id);
+      if(idx===-1) return null;
+      const cur=_items[idx];
+      const next={...cur,...fields};
+      if(fields.name!=null){
+        const name=trimName(fields.name);
+        if(!name) return null;
+        next.name=name;
+      }
+      if(fields.qty!=null) next.qty=ensureNonNegInt(fields.qty);
+      if(fields.threshold!=null) next.threshold=ensureNonNegInt(fields.threshold)||1;
+      if(fields.location!=null) next.location=ensureLoc(fields.location);
+      if(fields.category!=null) next.category=ensureCat(fields.category);
+      if(fields.lastConfirmed==null) next.lastConfirmed=Date.now();
+      _items[idx]=next;
+      clearDemo(_items[idx]);
+      persist(); notify();
+      return _items[idx];
+    },
+    adjustQty(id, delta, opts){
+      const item=_items.find(i=>i.id===id);
+      if(!item) return null;
+      item.qty=Math.max(0, ensureNonNegInt(item.qty)+(parseInt(delta,10)||0));
+      item.lastConfirmed=Date.now();
+      clearDemo(item);
+      persist();
+      if(!(opts&&opts.soft)) notify();
+      return item;
+    },
+    removeItem(id){
+      const idx=_items.findIndex(i=>i.id===id);
+      if(idx===-1) return false;
+      _items.splice(idx,1);
+      persist(); notify();
+      return true;
+    },
+    confirmItem(id){
+      const item=_items.find(i=>i.id===id);
+      if(!item) return null;
+      item.lastConfirmed=Date.now();
+      persist(); notify();
+      return item;
+    },
+    removeDemoItems(){
+      const before=_items.length;
+      replace(_items, _items.filter(i=>!i.demo));
+      const n=before-_items.length;
+      if(n){ persist(); notify(); }
+      return n;
+    },
+    loadSample(sampleItems){
+      replace(_items, sampleItems||[]);
+      persist(); notify();
+    },
+    restoreQtys(snapshot){
+      if(!snapshot) return;
+      Object.keys(snapshot).forEach(id=>{
+        const it=_items.find(i=>i.id===id);
+        if(it) it.qty=snapshot[id];
+      });
+      persist(); notify();
+    },
+
+    addShopItem(fields){
+      const name=trimName(fields&&fields.name);
+      if(!name) return null;
+      const s={id:(fields&&fields.id)||uid(), name, note:(fields&&fields.note)||'', checked:!!(fields&&fields.checked)};
+      _shoppingList.push(s);
+      persist(); notify();
+      return s;
+    },
+    toggleShop(id, v){
+      const s=_shoppingList.find(i=>i.id===id);
+      if(!s) return;
+      s.checked=v;
+      persist(); notify();
+    },
+    removeShop(id){
+      const idx=_shoppingList.findIndex(i=>i.id===id);
+      if(idx===-1) return null;
+      const prev=_shoppingList.slice();
+      _shoppingList.splice(idx,1);
+      persist(); notify();
+      return prev;
+    },
+    clearChecked(){
+      const prev=_shoppingList.slice();
+      const next=_shoppingList.filter(i=>!i.checked);
+      if(next.length===prev.length) return null;
+      replace(_shoppingList, next);
+      persist(); notify();
+      return prev;
+    },
+    restoreShoppingList(prev){
+      replace(_shoppingList, prev||[]);
+      persist(); notify();
+    },
+    generateFromLow(){
+      const low=_items.filter(i=>!i.noAlert&&i.qty<=i.threshold);
+      const existing=new Set(_shoppingList.map(s=>s.name));
+      let added=0;
+      low.forEach(item=>{
+        if(!existing.has(item.name)){
+          _shoppingList.push({id:uid(),name:item.name,note:item.notes||item.category,checked:false});
+          existing.add(item.name);
+          added++;
+        }
+      });
+      if(added){ persist(); notify(); }
+      return added;
+    },
+
+    applyHaul(entries, loc, replaceLoc){
+      const list=entries||[];
+      if(replaceLoc){
+        for(let i=_items.length-1;i>=0;i--){
+          if(_items[i].location===replaceLoc) _items.splice(i,1);
+        }
+      }
+      let restocked=0, added=0;
+      list.filter(r=>r.include).forEach(r=>{
+        const location=ensureLoc(r.location||loc||'');
+        const category=ensureCat(r.category||'');
+        if(r.matched&&!replaceLoc){
+          r.matched.qty=ensureNonNegInt(r.matched.qty)+ensureNonNegInt(r.qty);
+          r.matched.name=trimName(r.name)||r.matched.name;
+          r.matched.category=category;
+          r.matched.location=location;
+          if(r.notes) r.matched.notes=r.notes;
+          restocked++;
+        }else{
+          _items.push({
+            id:uid(),
+            name:trimName(r.name),
+            category,
+            location,
+            qty:ensureNonNegInt(r.qty)||1,
+            threshold:1,
+            notes:r.notes||'',
+            expiry:'',
+            lastConfirmed:Date.now(),
+          });
+          added++;
+        }
+      });
+      persist(); notify();
+      return{restocked,added};
+    },
+
+    applyCook(recipeId, scale){
+      const r=_recipes.find(x=>x.id===recipeId);
+      if(!r) return null;
+      const{plan,skipped}=Planner.consumption(r, scale, _items, _staples);
+      const used=[], prevQty={};
+      for(const step of plan){
+        const item=_items.find(i=>i.id===step.id);
+        if(!item||item.qty<=0) continue;
+        if(prevQty[item.id]==null) prevQty[item.id]=item.qty;
+        item.qty=Math.max(0, item.qty-1);
+        clearDemo(item);
+        used.push({name:item.name, qty:item.qty});
+      }
+      persist(); notify();
+      return{used, skipped, prevQty};
+    },
+
+    addLocation(name){
+      const n=trimName(name);
+      if(!n) return{ok:false,reason:'empty'};
+      if(_locations.includes(n)) return{ok:false,reason:'exists'};
+      _locations.push(n);
+      persist(); notify();
+      return{ok:true};
+    },
+    renameLocation(idx, newName){
+      const n=trimName(newName);
+      if(!n) return{ok:false,reason:'empty'};
+      if(idx<0||idx>=_locations.length) return{ok:false,reason:'missing'};
+      const old=_locations[idx];
+      if(n===old) return{ok:true,unchanged:true};
+      _items.forEach(i=>{if(i.location===old) i.location=n;});
+      _locations[idx]=n;
+      persist(); notify();
+      return{ok:true};
+    },
+    removeLocation(idx){
+      if(idx<0||idx>=_locations.length) return false;
+      _locations.splice(idx,1);
+      persist(); notify();
+      return true;
+    },
+    prependLocations(locs){
+      if(!locs||!locs.length) return;
+      const next=[...locs, ..._locations.filter(l=>!locs.includes(l))];
+      replace(_locations, next);
+      persist(); notify();
+    },
+
+    addCategory(name){
+      const n=trimName(name);
+      if(!n) return{ok:false,reason:'empty'};
+      if(_categories.includes(n)) return{ok:false,reason:'exists'};
+      _categories.push(n);
+      persist(); notify();
+      return{ok:true};
+    },
+    renameCategory(idx, newName){
+      const n=trimName(newName);
+      if(!n) return{ok:false,reason:'empty'};
+      if(idx<0||idx>=_categories.length) return{ok:false,reason:'missing'};
+      const old=_categories[idx];
+      if(n===old) return{ok:true,unchanged:true};
+      _items.forEach(i=>{if(i.category===old) i.category=n;});
+      _categories[idx]=n;
+      persist(); notify();
+      return{ok:true};
+    },
+    removeCategory(idx){
+      if(idx<0||idx>=_categories.length) return false;
+      _categories.splice(idx,1);
+      persist(); notify();
+      return true;
+    },
+
+    addStaple(name){
+      const v=trimName(name).toLowerCase();
+      if(!v) return{ok:false,reason:'empty'};
+      if(_staples.includes(v)) return{ok:false,reason:'exists'};
+      _staples.push(v);
+      persistStaples(); notify();
+      return{ok:true};
+    },
+    removeStaple(i){
+      if(i<0||i>=_staples.length) return false;
+      _staples.splice(i,1);
+      persistStaples(); notify();
+      return true;
+    },
+    resetStaples(){
+      replace(_staples, DEFAULT_STAPLES.slice());
+      persistStaples(); notify();
+    },
+
+    upsertRecipe(r){
+      if(!r||!r.id) return null;
+      const idx=_recipes.findIndex(x=>x.id===r.id);
+      if(idx!==-1) _recipes[idx]=r; else _recipes.push(r);
+      persistRecipes(); notify();
+      return r;
+    },
+    saveRecipeData(id, data){
+      const title=trimName(data&&data.title);
+      if(!title) return null;
+      if(id){
+        const idx=_recipes.findIndex(x=>x.id===id);
+        if(idx===-1) return null;
+        _recipes[idx]={..._recipes[idx],...data,title};
+        persistRecipes(); notify();
+        return _recipes[idx];
+      }
+      const r={id:uid(),servings:1,tags:[],steps:[],createdAt:new Date().toISOString(),...data,title};
+      _recipes.push(r);
+      persistRecipes(); notify();
+      return r;
+    },
+    removeRecipe(id){
+      const idx=_recipes.findIndex(x=>x.id===id);
+      if(idx===-1) return false;
+      _recipes.splice(idx,1);
+      persistRecipes(); notify();
+      return true;
+    },
+
+    importAll(d){
+      replace(_items, d.items||[]);
+      replace(_shoppingList, d.shoppingList||[]);
+      replace(_locations, d.locations||DEFAULT_LOCS.slice());
+      replace(_categories, d.categories||DEFAULT_CATS.slice());
+      if(Array.isArray(d.recipes)) replace(_recipes, d.recipes.map(migrateRecipe));
+      persist();
+      persistRecipes();
+      notify();
+    },
+
+    /** Mechanical remote merge write (keeps array identity for aliases). */
+    applyRemoteMerge({items:it, shoppingList:sl, recipes:re, locations:lo, categories:ca}){
+      if(it) replace(_items, it);
+      if(sl) replace(_shoppingList, sl);
+      if(re) replace(_recipes, re);
+      if(lo) replace(_locations, lo);
+      if(ca) replace(_categories, ca);
+      persist();
+      persistRecipes();
+      notify();
+    },
+  };
+})();
+
+// Transition aliases — same array object identity as Kitchen internals
+let items=Kitchen.items();
+let shoppingList=Kitchen.shoppingList();
+let locations=Kitchen.locations();
+let categories=Kitchen.categories();
+// recipes/staples declared with their keys below; rebound after Kitchen owns them
+
+let recipes=Kitchen.recipes();
+let staples=Kitchen.staples();
+let editingId=null,currentView='category',currentSort='name',scanStream=null;
+let renameType=null,renameIdx=null,confirmCallback=null,reviewItems=[],haulReplaceLoc=null;
+let onboardLocs=[];
+
 function init(){
   try{
     const rawItems=localStorage.getItem(ITEMS_KEY);
-    items=rawItems?JSON.parse(rawItems):[];
-    shoppingList=JSON.parse(localStorage.getItem(SHOP_KEY))||[];
-    locations=JSON.parse(localStorage.getItem(LOCS_KEY))||DEFAULT_LOCS.slice();
-    categories=JSON.parse(localStorage.getItem(CATS_KEY))||DEFAULT_CATS.slice();
-  }catch(e){items=[];shoppingList=[];locations=DEFAULT_LOCS.slice();categories=DEFAULT_CATS.slice();}
+    Kitchen.bootstrap({
+      items: rawItems?JSON.parse(rawItems):[],
+      shoppingList: JSON.parse(localStorage.getItem(SHOP_KEY))||[],
+      locations: JSON.parse(localStorage.getItem(LOCS_KEY))||DEFAULT_LOCS.slice(),
+      categories: JSON.parse(localStorage.getItem(CATS_KEY))||DEFAULT_CATS.slice(),
+    });
+  }catch(e){
+    Kitchen.bootstrap({items:[],shoppingList:[],locations:DEFAULT_LOCS.slice(),categories:DEFAULT_CATS.slice()});
+  }
   // Seed lastConfirmed for any items missing it
   const now=Date.now();
   items.forEach(i=>{if(!i.lastConfirmed)i.lastConfirmed=now;});
+  // Domain change → re-render the active screen (mutations no longer call renderers)
+  Kitchen.onChange(()=>{
+    const active=document.querySelector('.screen.active');
+    const name=active?(active.id||'').replace(/^screen-/,''):'';
+    if(name==='home') renderHome();
+    else if(name==='station') renderInventory();
+    else if(name==='restock') renderShopping();
+    else if(name==='settings') renderSettings();
+    else if(name==='recipes') renderRecipes();
+  });
   currentView='category';
   const catBtn=document.getElementById('view-cat-btn');
   const locBtn=document.getElementById('view-loc-btn');
@@ -1529,8 +2029,7 @@ function addOnboardLoc(){
 function removeOnboardLoc(i){onboardLocs.splice(i,1);renderOnboardLocs();}
 function commitOnboardLocs(){
   if(onboardLocs.length){
-    locations=[...onboardLocs,...locations.filter(l=>!onboardLocs.includes(l))];
-    save();
+    Kitchen.prependLocations(onboardLocs);
   }
 }
 function onboardNextFromLocs(){
@@ -1570,18 +2069,14 @@ function skipOnboard(){
   renderHome();
 }
 function loadSampleKitchen(){
-  items=seed().map(i=>({...i,demo:true,lastConfirmed:Date.now()}));
-  save();
-  renderInventory();
-  renderHome();
+  Kitchen.loadSample(seed().map(i=>({...i,demo:true,lastConfirmed:Date.now()})));
   showToast('sample kitchen loaded.');
 }
 function removeSampleItems(){
   const n=items.filter(i=>i.demo).length;
   if(!n){showToast('no sample items');return;}
   showConfirm('remove sample items?',`${n} sample item${n!==1?'s':''} will be deleted.`,'remove',()=>{
-    items=items.filter(i=>!i.demo);
-    save();renderInventory();renderHome();renderSettings();
+    Kitchen.removeDemoItems();
     showToast('sample items removed.');
   });
 }
@@ -1654,6 +2149,7 @@ function switchScreen(name,el){
   if(el) el.classList.add('active');
   haptic(8);
   if(name==='home') renderHome();
+  if(name==='station') renderInventory();
   if(name==='restock') renderShopping();
   if(name==='settings') renderSettings();
   if(name==='recipes') renderRecipes();
@@ -1708,14 +2204,12 @@ function expiryPill(item){
 
 // ── STATS ─────────────────────────────────────────────────────────────────────
 function renderStats(){
-  const low=items.filter(i=>!i.noAlert&&i.qty>0&&i.qty<=i.threshold).length;
-  const out=items.filter(i=>!i.noAlert&&i.qty===0).length;
-  const exp=items.filter(i=>!i.noAlert&&(()=>{const d=daysUntilExpiry(i.expiry);return d!==null&&d<=30&&d>0;})()).length;
+  const s=Kitchen.stats();
   document.getElementById('stats-strip').innerHTML=`
-    <div class="stat"><strong>${items.length}</strong> items</div>
-    <div class="stat low"><span class="stat-dot dot-low"></span><strong>${low}</strong> low</div>
-    <div class="stat warn"><span class="stat-dot dot-out"></span><strong>${out}</strong> out</div>
-    ${exp?`<div class="stat warn"><span class="stat-dot dot-exp"></span><strong>${exp}</strong> expiring</div>`:''}`;
+    <div class="stat"><strong>${s.total}</strong> items</div>
+    <div class="stat low"><span class="stat-dot dot-low"></span><strong>${s.low}</strong> low</div>
+    <div class="stat warn"><span class="stat-dot dot-out"></span><strong>${s.out}</strong> out</div>
+    ${s.expiring?`<div class="stat warn"><span class="stat-dot dot-exp"></span><strong>${s.expiring}</strong> expiring</div>`:''}`;
   renderHome();
 }
 
@@ -1852,29 +2346,25 @@ function attachSwipe(wrapEl){
 }
 
 function handleConfirm(id){
-  const item=items.find(i=>i.id===id);
+  const item=Kitchen.confirmItem(id);
   if(!item)return;
-  item.lastConfirmed=Date.now();
-  save();haptic(15);showToast(`${item.name} confirmed.`);renderInventory();
+  haptic(15);showToast(`${item.name} confirmed.`);
 }
 
 function handleAddToList(id){
   const item=items.find(i=>i.id===id);
   if(!item)return;
   if(!shoppingList.find(s=>s.name===item.name)){
-    shoppingList.push({id:uid(),name:item.name,note:item.notes||item.category,checked:false});
-    save();haptic(15);showToast(`${item.name} → list`);
+    Kitchen.addShopItem({name:item.name,note:item.notes||item.category});
+    haptic(15);showToast(`${item.name} → list`);
   }else{
     showToast('already on list');
   }
 }
 
 function adj(id,d,opts){
-  const item=items.find(i=>i.id===id);
+  const item=Kitchen.adjustQty(id,d,opts);
   if(!item)return;
-  item.qty=Math.max(0,item.qty+d);
-  item.lastConfirmed=Date.now();
-  clearDemo(item);
   haptic(8);
   if(opts&&opts.soft){
     document.querySelectorAll('.qty-btn[data-adj="'+id+'"]').forEach(btn=>{
@@ -1882,10 +2372,7 @@ function adj(id,d,opts){
       const val=wrap&&wrap.querySelector('.qty-value');
       if(val)val.textContent=item.qty;
     });
-    save();
-    return;
   }
-  save();renderInventory();renderHome();
 }
 
 function setView(v){
@@ -1995,23 +2482,21 @@ function saveItem(){
     lastConfirmed:Date.now(),
   };
   if(editingId){
-    const idx=items.findIndex(i=>i.id===editingId);
-    items[idx]={...items[idx],...data};
-    clearDemo(items[idx]);
+    Kitchen.updateItem(editingId, data);
     showToast('updated.');
   }else{
-    items.push({id:uid(),...data});
+    Kitchen.addItem(data);
     showToast('placed.');
   }
-  save();renderInventory();closeItemSheet();
+  closeItemSheet();
 }
 
 function confirmDelete(){
   const item=items.find(i=>i.id===editingId);
   if(!item)return;
   showConfirm(`remove ${item.name}?`,'this will remove it from your station.','remove',()=>{
-    items=items.filter(i=>i.id!==editingId);
-    save();renderInventory();closeItemSheet();showToast('removed.');
+    Kitchen.removeItem(editingId);
+    closeItemSheet();showToast('removed.');
   });
 }
 
@@ -2035,21 +2520,14 @@ function openQuickAddSheet(){
 function saveQuickAdd(){
   const name=document.getElementById('qa-name').value.trim();
   if(!name){showToast('name is required');return;}
-  shoppingList.push({id:uid(),name,note:document.getElementById('qa-note').value.trim(),checked:false});
-  save();renderShopping();
+  Kitchen.addShopItem({name,note:document.getElementById('qa-note').value.trim()});
   closeDialog('quick-add-sheet');
   showToast('added to list.');
 }
 
 // ── SHOPPING ──────────────────────────────────────────────────────────────────
 function generateShoppingList(){
-  const low=items.filter(i=>!i.noAlert&&i.qty<=i.threshold);
-  const existing=shoppingList.map(s=>s.name);
-  let added=0;
-  low.forEach(item=>{
-    if(!existing.includes(item.name)){shoppingList.push({id:uid(),name:item.name,note:item.notes||item.category,checked:false});added++;}
-  });
-  save();renderShopping();
+  const added=Kitchen.generateFromLow();
   showToast(added?`${added} items added`:'list is up to date');
 }
 
@@ -2074,21 +2552,16 @@ function renderShopping(){
     </div>`).join('');
 }
 
-function toggleShop(id,v){const s=shoppingList.find(i=>i.id===id);if(s)s.checked=v;haptic(8);save();renderShopping();}
+function toggleShop(id,v){Kitchen.toggleShop(id,v);haptic(8);}
 function removeShop(id){
-  const prev=shoppingList.slice();
-  if(!shoppingList.some(i=>i.id===id))return;
-  shoppingList=shoppingList.filter(i=>i.id!==id);
-  save();renderShopping();
-  showToast('removed.',{label:'undo',fn:()=>{shoppingList=prev;save();renderShopping();}});
+  const prev=Kitchen.removeShop(id);
+  if(!prev)return;
+  showToast('removed.',{label:'undo',fn:()=>{Kitchen.restoreShoppingList(prev);}});
 }
 function clearChecked(){
-  const prev=shoppingList.slice();
-  const next=shoppingList.filter(i=>!i.checked);
-  if(next.length===prev.length){showToast('nothing to clear');return;}
-  shoppingList=next;
-  save();renderShopping();
-  showToast('cleared.',{label:'undo',fn:()=>{shoppingList=prev;save();renderShopping();}});
+  const prev=Kitchen.clearChecked();
+  if(!prev){showToast('nothing to clear');return;}
+  showToast('cleared.',{label:'undo',fn:()=>{Kitchen.restoreShoppingList(prev);}});
 }
 
 // ── IDEAS ─────────────────────────────────────────────────────────────────────
@@ -2147,7 +2620,7 @@ function openHaulInClaude(){
 function goToHaulPaste(){
   const effectiveLoc=haulEffectiveLoc();
   const replace=document.getElementById('haul-replace')?.checked;
-  if(!locations.includes(effectiveLoc)){locations.push(effectiveLoc);save();}
+  if(!locations.includes(effectiveLoc)) Kitchen.addLocation(effectiveLoc);
   haulReplaceLoc=replace?effectiveLoc:null;
   closeItemSheet();
   switchScreen('import',null);
@@ -2159,42 +2632,19 @@ function clearImport(){document.getElementById('import-paste').value='';showToas
 function parseImport(){
   const raw=document.getElementById('import-paste').value.trim();
   if(!raw){showToast('paste a list first');return;}
-  const parsed=[];
-  for(const line of raw.split('\n').map(l=>l.trim()).filter(Boolean)){
-    let name='',qty=1;
-    const m1=line.match(/^(.+?)[,\-–]\s*(\d+)\s*$/);
-    const m2=line.match(/^(\d+)\s*[x×]\s*(.+)$/i);
-    const m3=line.match(/^(.+?)\s*\((\d+)\)\s*$/);
-    if(m1){name=m1[1].trim();qty=parseInt(m1[2]);}
-    else if(m2){qty=parseInt(m2[1]);name=m2[2].trim();}
-    else if(m3){name=m3[1].trim();qty=parseInt(m3[2]);}
-    else{name=line.trim();qty=1;}
-    if(name) parsed.push({name,qty:qty||1});
-  }
+  const parsed=raw.split('\n').map(Interpret.parseLine).filter(Boolean);
   if(!parsed.length){showToast("couldn't parse any items");return;}
   openReviewSheet(parsed,getImportLoc());
 }
 
 function guessItemLoc(name,defLoc){
-  const n=s=>s.toLowerCase().replace(/[^a-z0-9 ]/g,'').trim();
-  const nn=n(name);
-  let m=items.find(i=>n(i.name)===nn);
-  if(!m) m=items.find(i=>n(i.name).includes(nn)||nn.includes(n(i.name)));
-  if(!m){
-    const words=nn.split(' ').filter(w=>w.length>2);
-    if(words.length) m=items.find(i=>{
-      const iw=n(i.name).split(' ').filter(w=>w.length>2);
-      return words.filter(w=>iw.includes(w)).length>=Math.min(2,words.length,iw.length);
-    });
-  }
+  const m=Interpret.match(name, items);
   return m?m.location:defLoc;
 }
 function openReviewSheet(parsed,forceLoc){
   const defCat=categories[0]||'Other',defLoc=forceLoc||(locations[0]||'Pantry');
   reviewItems=parsed.map(p=>{
-    const nn=s=>s.toLowerCase().replace(/[^a-z0-9 ]/g,'').trim();
-    const pn=nn(p.name);
-    const match=items.find(i=>nn(i.name)===pn||nn(i.name).includes(pn)||pn.includes(nn(i.name)));
+    const match=Interpret.match(p.name, items);
     return{...p,
       name:match?match.name:p.name,  // use canonical name from inventory when matched
       matched:match||null,include:true,expanded:false,
@@ -2249,23 +2699,13 @@ function toggleReviewExpand(idx){reviewItems[idx].expanded=!reviewItems[idx].exp
 function toggleReviewInclude(idx,v){reviewItems[idx].include=v;document.getElementById('ri-'+idx).className=`review-item ${v?'':'excluded'}`;}
 function adjReview(idx,d){reviewItems[idx].qty=Math.max(1,reviewItems[idx].qty+d);const el=document.getElementById('rqty-'+idx);if(el)el.textContent=reviewItems[idx].qty;}
 function updateReviewField(idx,field,val){reviewItems[idx][field]=val;}
-function updateReviewName(idx,val){reviewItems[idx].name=val;if(reviewItems[idx].matched)reviewItems[idx].matched.name=val;}
+function updateReviewName(idx,val){reviewItems[idx].name=val;/* inventory write deferred to Kitchen.applyHaul */}
 
 function applyImport(){
   const replacing=haulReplaceLoc;
-  if(replacing) items=items.filter(i=>i.location!==replacing);
-  // Create any new locations typed inline in the review sheet
-  reviewItems.filter(r=>r.include).forEach(r=>{
-    const loc=(r.location||'').trim();
-    if(loc&&!locations.includes(loc)) locations.push(loc);
-  });
-  let restocked=0,added=0;
-  reviewItems.filter(r=>r.include).forEach(r=>{
-    if(r.matched&&!replacing){r.matched.qty+=r.qty;r.matched.name=r.name;r.matched.category=r.category;r.matched.location=r.location;if(r.notes)r.matched.notes=r.notes;restocked++;}
-    else{items.push({id:uid(),name:r.name,category:r.category,location:r.location,qty:r.qty,threshold:1,notes:r.notes||'',expiry:''});added++;}
-  });
+  const{restocked,added}=Kitchen.applyHaul(reviewItems, getImportLoc(), replacing);
   haulReplaceLoc=null;
-  save();renderInventory();closeReviewSheet();
+  closeReviewSheet();
   document.getElementById('import-paste').value='';
   showToast(replacing?`${added} items placed at ${replacing}`:`↑${restocked} restocked · +${added} new`);
   switchScreen('station',document.getElementById('nav-station'));
@@ -2338,10 +2778,7 @@ function importData(input){
       const d=JSON.parse(e.target.result);
       if(!Array.isArray(d.items))throw new Error('invalid format');
       showConfirm('replace all data?','this will overwrite your current inventory and recipes.','import',()=>{
-        items=d.items||[];shoppingList=d.shoppingList||[];
-        locations=d.locations||DEFAULT_LOCS.slice();categories=d.categories||DEFAULT_CATS.slice();
-        if(Array.isArray(d.recipes))recipes=d.recipes.map(migrateRecipe);
-        save();saveRecipes();renderInventory();renderSettings();renderRecipes();
+        Kitchen.importAll(d);
         showToast(`imported ${items.length} items, ${recipes.length} recipes.`);
       });
     }catch(err){showToast('invalid backup file');}
@@ -2370,8 +2807,8 @@ function renderCategoriesList(){
       </div>`).join('')||`<div class="settings-row"><div class="settings-row-label" style="color:var(--ink-3);font-style:italic;font-family:var(--font-serif)">no categories yet</div></div>`;
 }
 
-function addLocation(){const input=document.getElementById('new-loc-input');const name=input.value.trim();if(!name)return;if(locations.includes(name)){showToast('already exists');return;}locations.push(name);input.value='';save();renderLocationsList();showToast('location added.');}
-function addCategory(){const input=document.getElementById('new-cat-input');const name=input.value.trim();if(!name)return;if(categories.includes(name)){showToast('already exists');return;}categories.push(name);input.value='';save();renderCategoriesList();showToast('category added.');}
+function addLocation(){const input=document.getElementById('new-loc-input');const name=input.value.trim();if(!name)return;const r=Kitchen.addLocation(name);if(!r.ok){showToast(r.reason==='exists'?'already exists':'');return;}input.value='';showToast('location added.');}
+function addCategory(){const input=document.getElementById('new-cat-input');const name=input.value.trim();if(!name)return;const r=Kitchen.addCategory(name);if(!r.ok){showToast(r.reason==='exists'?'already exists':'');return;}input.value='';showToast('category added.');}
 
 function openRenameSheet(type,idx){
   renameType=type;renameIdx=idx;
@@ -2386,13 +2823,15 @@ function saveRename(){
   const newName=document.getElementById('rename-input').value.trim();
   if(!newName){showToast('name cannot be empty');return;}
   if(renameType==='location'){
-    const old=locations[renameIdx];if(newName===old){closeDialog('rename-sheet');return;}
-    items.forEach(i=>{if(i.location===old)i.location=newName;});locations[renameIdx]=newName;
-    save();renderLocationsList();renderInventory();showToast('location renamed.');
+    const r=Kitchen.renameLocation(renameIdx, newName);
+    if(r.unchanged){closeDialog('rename-sheet');return;}
+    if(!r.ok){showToast('name cannot be empty');return;}
+    showToast('location renamed.');
   }else{
-    const old=categories[renameIdx];if(newName===old){closeDialog('rename-sheet');return;}
-    items.forEach(i=>{if(i.category===old)i.category=newName;});categories[renameIdx]=newName;
-    save();renderCategoriesList();renderInventory();showToast('category renamed.');
+    const r=Kitchen.renameCategory(renameIdx, newName);
+    if(r.unchanged){closeDialog('rename-sheet');return;}
+    if(!r.ok){showToast('name cannot be empty');return;}
+    showToast('category renamed.');
   }
   closeDialog('rename-sheet');
 }
@@ -2400,12 +2839,12 @@ function saveRename(){
 function confirmDeleteLocation(idx){
   const name=locations[idx],count=items.filter(i=>i.location===name).length;
   showConfirm(`remove "${name}"?`,count>0?`${count} item${count>1?'s':''} use this location.`:'this location has no items.','remove',
-    ()=>{locations.splice(idx,1);save();renderLocationsList();showToast('removed.');});
+    ()=>{Kitchen.removeLocation(idx);showToast('removed.');});
 }
 function confirmDeleteCategory(idx){
   const name=categories[idx],count=items.filter(i=>i.category===name).length;
   showConfirm(`remove "${name}"?`,count>0?`${count} item${count>1?'s':''} use this category.`:'this category has no items.','remove',
-    ()=>{categories.splice(idx,1);save();renderCategoriesList();showToast('removed.');});
+    ()=>{Kitchen.removeCategory(idx);showToast('removed.');});
 }
 
 // ── SCANNER ───────────────────────────────────────────────────────────────────
@@ -2732,8 +3171,8 @@ function renderHome(){
   const now=Date.now();
   const STALE_MS=21*24*60*60*1000;
   const staleItems=items.filter(i=>!i.noAlert&&(now-(i.lastConfirmed||now))>=STALE_MS);
-  const lowItems=items.filter(i=>!i.noAlert&&i.qty<=i.threshold);
-  const expItems=items.filter(i=>!i.noAlert&&(()=>{const d=daysUntilExpiry(i.expiry);return d!==null&&d<=30;})());
+  const lowItems=Kitchen.lowItems();
+  const expItems=Kitchen.expiringItems();
   const countStale=document.getElementById('count-stale');
   const countLow=document.getElementById('count-low');
   const countList=document.getElementById('count-list');
@@ -2791,34 +3230,17 @@ function resetListCheck(){
   lcCheckedItems=[];
 }
 
-function parseListLine(line){
-  const clean=line.replace(/^[\s\-•·–*]+/,'').trim();
-  if(!clean) return null;
-  let name='',qty=1;
-  const m1=clean.match(/^(.+?)[,\-–]\s*(\d+)\s*$/);
-  const m2=clean.match(/^(\d+)\s*[x×]\s*(.+)$/i);
-  const m3=clean.match(/^(.+?)\s*\((\d+)\)\s*$/);
-  const m4=clean.match(/^(.+?)\s+(\d+)$/);
-  if(m1){name=m1[1].trim();qty=parseInt(m1[2]);}
-  else if(m2){qty=parseInt(m2[1]);name=m2[2].trim();}
-  else if(m3){name=m3[1].trim();qty=parseInt(m3[2]);}
-  else if(m4){name=m4[1].trim();qty=parseInt(m4[2]);}
-  else{name=clean;qty=1;}
-  return name?{name,qty:qty||1}:null;
-}
+// thin deprecated alias
+function parseListLine(line){ return Interpret.parseLine(line); }
 
 function runListCheck(){
   const raw=document.getElementById('lc-paste').value.trim();
   if(!raw){showToast('paste a list first');return;}
-  const parsed=raw.split('\n').map(parseListLine).filter(Boolean);
+  const parsed=raw.split('\n').map(Interpret.parseLine).filter(Boolean);
   if(!parsed.length){showToast("couldn't read any items");return;}
 
   lcCheckedItems=parsed.map(p=>{
-    const item=items.find(i=>
-      i.name.toLowerCase()===p.name.toLowerCase()||
-      i.name.toLowerCase().includes(p.name.toLowerCase())||
-      p.name.toLowerCase().includes(i.name.toLowerCase())
-    );
+    const item=Interpret.match(p.name, items);
     let status='unknown';
     if(item){
       if(item.noAlert) status='ok';
@@ -2892,10 +3314,7 @@ function copyFilteredList(){
 }
 
 // ── RECIPES v2 ────────────────────────────────────────────────────────────────
-const RECIPES_KEY='mise_recipes_v1';
-const STAPLES_KEY='mise_staples_v1';
-const DEFAULT_STAPLES=['salt','kosher salt','black pepper','pepper','baking powder','baking soda','sugar','granulated sugar','vanilla extract','vanilla','olive oil','vegetable oil','neutral oil','water'];
-let recipes=[],staples=[];
+// RECIPES_KEY / STAPLES_KEY / DEFAULT_STAPLES / recipes / staples owned by Kitchen (declared above)
 let editingRecipeId=null,viewingRecipeId=null,cookModeRecipeId=null,cookModeStep=0;
 let recipeDetailScale=1;
 let timerInterval=null,timerRunning=false,timerStartTime=null,timerDuration=0;
@@ -2904,13 +3323,13 @@ let noSleep=null;
 function getNoSleep(){if(!noSleep&&window.NoSleep)noSleep=new window.NoSleep();return noSleep;}
 
 function loadRecipes(){
-  try{recipes=(JSON.parse(localStorage.getItem(RECIPES_KEY))||defaultRecipes()).map(migrateRecipe);}
-  catch(e){recipes=defaultRecipes();}
+  try{Kitchen.replaceRecipes((JSON.parse(localStorage.getItem(RECIPES_KEY))||defaultRecipes()).map(migrateRecipe));}
+  catch(e){Kitchen.replaceRecipes(defaultRecipes());}
 }
 function saveRecipes(){localStorage.setItem(RECIPES_KEY,JSON.stringify(recipes));scheduleFbPush();}
 function loadStaples(){
-  try{staples=JSON.parse(localStorage.getItem(STAPLES_KEY))||DEFAULT_STAPLES.slice();}
-  catch(e){staples=DEFAULT_STAPLES.slice();}
+  try{Kitchen.replaceStaples(JSON.parse(localStorage.getItem(STAPLES_KEY))||DEFAULT_STAPLES.slice());}
+  catch(e){Kitchen.replaceStaples(DEFAULT_STAPLES.slice());}
 }
 function saveStaples(){localStorage.setItem(STAPLES_KEY,JSON.stringify(staples));}
 
@@ -2956,42 +3375,12 @@ function fmtAmt(ing,scale){
   if(ing.unit==='g'&&a<5)return`${parseFloat(a.toFixed(1))}g (${gramsToSpoon(a,ing.name)})`;
   return`${parseFloat(a.toFixed(1))}${ing.unit?' '+ing.unit:''}`.trimEnd();
 }
-function isStaple(ingName){
-  const n=ingName.toLowerCase().trim();
-  return staples.some(s=>n===s||n.includes(s)||s.includes(n));
-}
-function normIng(n){
-  return n.toLowerCase().replace(/\bunsalted\b|\bsalted\b/g,'').replace(/\ball[-\s]purpose\b|\bplain\b/g,'ap').replace(/,.*$/,'').replace(/\s+/g,' ').trim();
-}
-function matchItem(ingName){
-  const n=normIng(ingName);
-  return items.find(i=>{const m=normIng(i.name);return m===n||m.includes(n)||n.includes(m);});
-}
-function recipeReadiness(recipe){
-  const ings=recipe.ingredients||[];
-  if(!ings.length)return'ready';
-  let ok=0;
-  for(const ing of ings){
-    if(isStaple(ing.name)){ok++;continue;}
-    const item=matchItem(ing.name);
-    if(item&&(item.noAlert||item.qty>0))ok++;
-  }
-  if(ok===ings.length)return'ready';
-  if(ok>=Math.ceil(ings.length/2))return'mostly';
-  return'missing';
-}
-function recipeReadinessDetail(recipe,scale){
-  scale=scale||1;
-  const details=(recipe.ingredients||[]).map(ing=>{
-    if(isStaple(ing.name))return{...ing,status:'staple'};
-    const item=matchItem(ing.name);
-    if(!item)return{...ing,status:'missing'};
-    const needed=ing.amount*scale;
-    if(item.noAlert||item.qty>=(needed>0?needed:1))return{...ing,status:'ok',haveQty:item.qty,haveUnit:item.unit||''};
-    return{...ing,status:'low',haveQty:item.qty,haveUnit:item.unit||''};
-  });
-  return{details};
-}
+function isStaple(ingName){ return Planner._isStaple(ingName, staples); }
+// thin deprecated aliases — canonical logic lives in Interpret / Planner
+function normIng(n){ return Interpret.normalize(n); }
+function matchItem(ingName){ return Interpret.match(ingName, items); }
+function recipeReadiness(recipe){ return Planner.readiness(recipe, items, staples); }
+function recipeReadinessDetail(recipe,scale){ return Planner.detail(recipe, scale, items, staples); }
 function formatDuration(s){
   if(!s)return'';
   const m=Math.floor(s/60),r=s%60;
@@ -3104,6 +3493,7 @@ function renderRecipeDetail(r){
     let dc,sl;
     if(d.status==='staple'){dc='staple';sl='staple ✓';}
     else if(d.status==='ok'){dc='ok';sl=d.haveQty!=null?`have ${d.haveQty}${d.haveUnit?' '+d.haveUnit:''}`:'in stock';}
+    else if(d.status==='out'){dc='out';sl='out of stock';}
     else if(d.status==='low'){dc='low';sl=`low: ${d.haveQty}${d.haveUnit?' '+d.haveUnit:''}`;}
     else{dc='out';sl='not in pantry';}
     const amt=fmtAmt(d,sc);
@@ -3133,30 +3523,15 @@ function cookRecipe(){
 function performCook(recipeId,scale,afterOk){
   const r=recipes.find(x=>x.id===recipeId);if(!r)return;
   showConfirm('mark as cooked?','pantry counts will be reduced.','cook',()=>{
-    const used=[],skipped=[],prevQty={};
-    for(const ing of(r.ingredients||[])){
-      if(isStaple(ing.name)){skipped.push({name:ing.name,reason:'staple'});continue;}
-      const item=matchItem(ing.name);
-      if(!item){skipped.push({name:ing.name,reason:'not in station'});continue;}
-      if(item.noAlert){skipped.push({name:ing.name,reason:'muted'});continue;}
-      if(item.qty<=0){skipped.push({name:ing.name,reason:'already out'});continue;}
-      if(prevQty[item.id]==null)prevQty[item.id]=item.qty;
-      item.qty=Math.max(0,item.qty-1);
-      clearDemo(item);
-      used.push({name:item.name,qty:item.qty});
-    }
-    save();renderInventory();renderStats();renderHome();
+    const result=Kitchen.applyCook(recipeId, scale);
+    if(!result)return;
     if(afterOk)afterOk();
-    showCookSummary(used,skipped);
-    const snapshot=prevQty;
-    showToast(used.length?`cooked. ${used.length} ingredient${used.length!==1?'s':''} used.`:'nothing used.',{
+    showCookSummary(result.used, result.skipped);
+    const snapshot=result.prevQty;
+    showToast(result.used.length?`cooked. ${result.used.length} ingredient${result.used.length!==1?'s':''} used.`:'nothing used.',{
       label:'undo',
       fn:()=>{
-        Object.keys(snapshot).forEach(id=>{
-          const it=items.find(i=>i.id===id);
-          if(it)it.qty=snapshot[id];
-        });
-        save();renderInventory();renderStats();renderHome();
+        Kitchen.restoreQtys(snapshot);
         showToast('cook undone.');
       }
     });
@@ -3344,9 +3719,8 @@ function confirmRecipeImport(){
   const preEl=document.getElementById('recipe-import-preview');
   if(!preEl.dataset.parsed)return;
   const r=JSON.parse(preEl.dataset.parsed);
-  const idx=recipes.findIndex(x=>x.id===r.id);
-  if(idx!==-1)recipes[idx]=r;else recipes.push(r);
-  saveRecipes();renderRecipes();closeRecipeImport();
+  Kitchen.upsertRecipe(r);
+  closeRecipeImport();
   showToast(`"${r.title}" imported ✓`);
 }
 // ── WHAT CAN I COOK ──────────────────────────────────────────────────────────
@@ -3379,11 +3753,13 @@ function renderStaplesList(){
 }
 function addStaple(){
   const input=document.getElementById('new-staple-input'),v=(input.value||'').trim().toLowerCase();
-  if(!v)return;if(staples.includes(v)){showToast('already a staple.');return;}
-  staples.push(v);saveStaples();renderStaplesList();input.value='';
+  if(!v)return;
+  const r=Kitchen.addStaple(v);
+  if(!r.ok){showToast(r.reason==='exists'?'already a staple.':'');return;}
+  input.value='';
 }
-function removeStaple(i){staples.splice(i,1);saveStaples();renderStaplesList();}
-function resetStaples(){staples=DEFAULT_STAPLES.slice();saveStaples();renderStaplesList();}
+function removeStaple(i){Kitchen.removeStaple(i);}
+function resetStaples(){Kitchen.resetStaples();}
 // ── RECIPE EDIT ──────────────────────────────────────────────────────────────
 function openRecipeEdit(id){
   editingRecipeId=id;
@@ -3423,19 +3799,15 @@ function saveRecipe(){
   const title=document.getElementById('re-name').value.trim();
   if(!title){showToast('recipe needs a name.');return;}
   const data={title,notes:document.getElementById('re-notes').value.trim(),ingredients:collectIngredients()};
-  if(editingRecipeId){
-    const idx=recipes.findIndex(x=>x.id===editingRecipeId);
-    if(idx!==-1){recipes[idx]={...recipes[idx],...data};showToast('recipe updated.');}
-  }else{
-    recipes.push({id:uid(),servings:1,tags:[],steps:[],createdAt:new Date().toISOString(),...data});
-    showToast('recipe saved.');
-  }
-  saveRecipes();closeRecipeEdit();renderRecipes();
+  const r=Kitchen.saveRecipeData(editingRecipeId, data);
+  if(!r){showToast('recipe needs a name.');return;}
+  showToast(editingRecipeId?'recipe updated.':'recipe saved.');
+  closeRecipeEdit();
 }
 function confirmDeleteRecipe(){
   showConfirm('delete recipe?','this cannot be undone.','delete',()=>{
-    recipes=recipes.filter(x=>x.id!==editingRecipeId);
-    saveRecipes();closeRecipeEdit();renderRecipes();showToast('recipe deleted.');
+    Kitchen.removeRecipe(editingRecipeId);
+    closeRecipeEdit();showToast('recipe deleted.');
   });
 }
 
@@ -3505,19 +3877,14 @@ async function fbPull() {
     if (!remote) { fbSetStatus('ok', 'no remote data yet — send first'); return; }
 
     // Merge by ID so simultaneous edits on both phones don't wipe each other
-    items        = mergeById(items,        remote.items        || []);
-    shoppingList = mergeById(shoppingList, remote.shoppingList || []);
-    recipes      = mergeById(recipes,      (remote.recipes     || []).map(migrateRecipe));
-    // Locations + categories: union, preserve local order
-    locations  = unionArr(locations,  remote.locations  || []);
-    categories = unionArr(categories, remote.categories || []);
-
-    save();
-    saveRecipes();
-    renderInventory();
-    renderStats();
-    renderShopping();
-    renderRecipes();
+    // Mechanical write through Kitchen (array identity preserved for aliases)
+    Kitchen.applyRemoteMerge({
+      items:        mergeById(items,        remote.items        || []),
+      shoppingList: mergeById(shoppingList, remote.shoppingList || []),
+      recipes:      mergeById(recipes,      (remote.recipes     || []).map(migrateRecipe)),
+      locations:    unionArr(locations,  remote.locations  || []),
+      categories:   unionArr(categories, remote.categories || []),
+    });
 
     const ts = new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
     localStorage.setItem(FB_SYNCED_AT, new Date().toISOString());
