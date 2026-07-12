@@ -857,7 +857,7 @@ option{color:var(--ink);background:var(--bg-card);}
         <div class="import-prompt-box" id="import-prompt-preview" style="min-height:56px;transition:opacity 0.2s;"></div>
         <div style="display:flex;gap:8px">
           <button class="btn btn-green" onclick="copyPrompt()" style="flex:1;border-radius:12px;min-height:50px">⎘ copy prompt</button>
-          <button class="btn btn-outline" onclick="openAiTool()" id="import-open-ai" style="flex:1;border-radius:12px;min-height:50px">open Claude ↗</button>
+          <button class="btn btn-outline" onclick="handoffImportPrompt()" id="import-open-ai" style="flex:1;border-radius:12px;min-height:50px">open Claude ↗</button>
         </div>
       </div>
       <div class="form-row">
@@ -943,6 +943,29 @@ option{color:var(--ink);background:var(--bg-card);}
             <button type="button" id="ai-btn-custom" onclick="setAiTool('custom')">custom</button>
           </div>
           <input type="text" id="ai-custom-url" placeholder="https://your-assistant.example" autocomplete="off" autocapitalize="off" spellcheck="false" onchange="saveAiCustomUrl(this.value)" style="display:none;width:100%;padding:12px 14px;border:1px solid var(--rule);border-radius:var(--radius-sm);background:var(--bg);font-family:var(--font-mono);font-size:13px;color:var(--ink);outline:none;box-sizing:border-box;">
+        </div>
+      </div>
+      <div class="settings-card" id="shortcut-setup-card" style="display:none">
+        <div class="settings-row" style="flex-direction:column;align-items:stretch;gap:10px">
+          <div>
+            <div class="settings-row-label">iPhone handoff</div>
+            <div class="settings-row-sub" id="shortcut-setup-sub">
+              install a Shortcut so haul and recipe prompts open your assistant in one tap. copies the prompt, then opens Shortcuts — not Siri.
+            </div>
+          </div>
+          <div id="shortcut-status-chip" style="font-size:11px;font-weight:600;letter-spacing:0.04em;text-transform:uppercase;color:var(--ink-soft)">not set up</div>
+          <div id="shortcut-actions" style="display:flex;flex-wrap:wrap;gap:8px"></div>
+          <details>
+            <summary class="settings-row-label" style="cursor:pointer;list-style:none;padding:4px 0;color:var(--ink-soft);font-size:13px">what this Shortcut does ▾</summary>
+            <div class="settings-row-sub" style="line-height:1.7;padding-bottom:4px">
+              1. Receives the mise prompt as text<br>
+              2. Copies it to the clipboard<br>
+              3. Opens your AI app/site (chosen at install)<br>
+              4. You paste once in the chat<br><br>
+              Name must stay <strong>mise. ask</strong> — renaming breaks the link.<br><br>
+              <strong>Build once:</strong> Shortcuts → New → name <strong>mise. ask</strong> → Receive Text Input → Copy to Clipboard → URL (your assistant) → Open URLs → optional notification. Share → Copy iCloud Link → paste into the app constant <code>SHORTCUT_INSTALL_URL</code> (or use Install when that URL is set).
+            </div>
+          </details>
         </div>
       </div>
     </div>
@@ -1113,7 +1136,7 @@ option{color:var(--ink);background:var(--bg-card);}
         <div style="margin-top:12px;display:flex;flex-direction:column;gap:8px">
           <div style="display:flex;gap:8px">
             <button class="btn btn-green" style="flex:1" onclick="copyHaulPrompt()">⎘ copy prompt</button>
-            <button class="btn btn-outline" style="flex:1" id="haul-open-ai" onclick="openAiTool()">open Claude ↗</button>
+            <button class="btn btn-outline" style="flex:1" id="haul-open-ai" onclick="handoffHaulPrompt()">open Claude ↗</button>
           </div>
           <button class="btn btn-outline btn-full" onclick="goToHaulPaste()">paste result →</button>
           <button class="btn btn-ghost btn-full" onclick="closeItemSheet()">cancel</button>
@@ -1328,7 +1351,7 @@ option{color:var(--ink);background:var(--bg-card);}
       <div style="font-size:12px;color:var(--ink-soft);line-height:1.6;margin-bottom:14px;">Develop a recipe in <span class="ai-tool-name">Claude</span>, then copy the JSON and paste it here.</div>
       <div style="display:flex;gap:8px;margin-bottom:12px;">
         <button class="btn btn-green" style="flex:1" onclick="copyRecipePrompt()">⎘ copy recipe prompt</button>
-        <button class="btn btn-outline" style="flex:1" id="recipe-open-ai" onclick="openAiTool()">open Claude ↗</button>
+        <button class="btn btn-outline" style="flex:1" id="recipe-open-ai" onclick="handoffRecipePrompt()">open Claude ↗</button>
       </div>
       <textarea id="recipe-import-textarea" rows="7" placeholder='Paste recipe JSON here...' oninput="previewRecipeImport()" style="width:100%;padding:12px;border:1.5px solid var(--rule);border-radius:10px;background:var(--bg);font-family:var(--font-mono);font-size:11px;color:var(--ink);resize:none;box-sizing:border-box;outline:none;line-height:1.6;"></textarea>
       <div id="recipe-import-error" style="display:none;margin-top:8px;padding:10px 12px;background:var(--out-light);border:1.5px solid var(--out-light);border-radius:8px;font-size:11px;color:var(--out);font-family:var(--font-mono);"></div>
@@ -2931,6 +2954,11 @@ const AI_TOOLS={
   gemini:{name:'Gemini',url:'https://gemini.google.com/app'},
   grok:{name:'Grok',url:'https://grok.com/'}
 };
+// Optional iOS Shortcuts handoff — publish "mise. ask" and paste the iCloud share URL.
+const SHORTCUT_NAME='mise. ask';
+const SHORTCUT_PREF_KEY='mise_shortcut_v1';
+const SHORTCUT_VERSION=1;
+const SHORTCUT_INSTALL_URL=''; // e.g. https://www.icloud.com/shortcuts/…
 function aiToolConfig(){
   try{return JSON.parse(localStorage.getItem(AI_TOOL_KEY))||{};}catch(e){return{};}
 }
@@ -2969,13 +2997,182 @@ function updateAiToolUI(){
   document.querySelectorAll('.ai-tool-name').forEach(el=>{el.textContent=t.name;});
   // open-buttons get plain textContent — .btn is inline-flex, which swallows the
   // whitespace around a nested span, so a live span there renders "openGrok↗"
+  // The Shortcut's destination is fixed at build time, not by the picker —
+  // don't name a tool the handoff may not open.
+  const openLabel=shortcutReady()?'send via Shortcut':`open ${t.name} ↗`;
   ['haul-open-ai','import-open-ai','recipe-open-ai'].forEach(id=>{
     const b=document.getElementById(id);
-    if(b)b.textContent=`open ${t.name} ↗`;
+    if(b)b.textContent=openLabel;
   });
+  renderShortcutSettings();
 }
-function copyRecipePrompt(){
-  const prompt=`Help me develop a recipe. When we're done, give me the final recipe as JSON in exactly this shape:
+
+// ── IPHONE SHORTCUT HANDOFF ───────────────────────────────────────────────────
+function isIosDevice(){
+  const ua=navigator.userAgent||'';
+  if(/iPad|iPhone|iPod/.test(ua))return true;
+  // iPadOS desktop UA
+  return navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1;
+}
+function loadShortcutPref(){
+  try{return JSON.parse(localStorage.getItem(SHORTCUT_PREF_KEY))||{};}catch(e){return{};}
+}
+function saveShortcutPref(p){
+  localStorage.setItem(SHORTCUT_PREF_KEY,JSON.stringify(p));
+}
+function shortcutState(){
+  if(!isIosDevice())return 'not_ios';
+  const p=loadShortcutPref();
+  const status=p.status||'not_installed';
+  if(status==='installed'&&(p.version||0)<SHORTCUT_VERSION)return 'needs_update';
+  if(status==='installed'||status==='disabled'||status==='not_installed')return status;
+  return 'not_installed';
+}
+function shortcutReady(){
+  return shortcutState()==='installed';
+}
+function runMiseShortcut(prompt,useClipboard){
+  const name=encodeURIComponent(SHORTCUT_NAME);
+  // Prefer clipboard for long haul/recipe prompts (URL length limits).
+  if(useClipboard){
+    window.location.href=`shortcuts://run-shortcut?name=${name}&input=clipboard`;
+    return;
+  }
+  const text=encodeURIComponent(String(prompt||''));
+  window.location.href=`shortcuts://run-shortcut?name=${name}&input=text&text=${text}`;
+}
+function handoffPrompt(prompt){
+  const text=String(prompt||'');
+  haptic(8);
+  if(!shortcutReady()){
+    // window.open must fire inside the tap gesture — in a clipboard .then it
+    // gets popup-blocked (the exact bug the split buttons fixed). Scheme
+    // navigation below doesn't have that constraint.
+    navigator.clipboard?.writeText(text).then(()=>showToast('prompt copied.')).catch(()=>{});
+    openAiTool();
+    return;
+  }
+  const copy=navigator.clipboard?.writeText(text);
+  const go=(ok)=>{
+    // Clipboard path when copy worked; text= fallback if clipboard failed.
+    showToast(ok?'prompt copied · opening Shortcuts…':'opening Shortcuts…');
+    runMiseShortcut(text,ok);
+  };
+  if(copy&&typeof copy.then==='function'){
+    copy.then(()=>go(true)).catch(()=>go(false));
+  }else{
+    go(false);
+  }
+}
+function handoffImportPrompt(){handoffPrompt(locationPromptText(getImportLoc()));}
+function handoffHaulPrompt(){handoffPrompt(locationPromptText(haulEffectiveLoc()));}
+function handoffRecipePrompt(){handoffPrompt(recipePromptText());}
+function installShortcut(){
+  if(!SHORTCUT_INSTALL_URL){
+    showToast('set SHORTCUT_INSTALL_URL after publishing mise. ask');
+    return;
+  }
+  window.location.href=SHORTCUT_INSTALL_URL;
+  showToast('add “mise. ask”, then tap I’ve installed it.');
+}
+function confirmShortcutInstalled(){
+  saveShortcutPref({status:'installed',version:SHORTCUT_VERSION,confirmedAt:new Date().toISOString()});
+  updateAiToolUI();
+  showToast('handoff ready. try test.');
+  haptic(8);
+}
+function testShortcut(){
+  const sample='This is a mise. test prompt. If you can paste this, handoff works.';
+  const p=navigator.clipboard?.writeText(sample);
+  const go=(ok)=>runMiseShortcut(sample,ok);
+  if(p&&typeof p.then==='function')p.then(()=>go(true)).catch(()=>go(false));
+  else go(false);
+  showToast('if Shortcuts opens, you’re set.');
+  haptic(8);
+}
+function disableShortcut(){
+  saveShortcutPref({...loadShortcutPref(),status:'disabled'});
+  updateAiToolUI();
+  showToast('handoff off.');
+}
+function enableShortcut(){
+  const p=loadShortcutPref();
+  if((p.version||0)>=SHORTCUT_VERSION){
+    saveShortcutPref({...p,status:'installed'});
+  }else{
+    saveShortcutPref({...p,status:'not_installed'});
+  }
+  updateAiToolUI();
+  showToast((p.version||0)>=SHORTCUT_VERSION?'handoff on.':'install the Shortcut first.');
+}
+function renderShortcutSettings(){
+  const card=document.getElementById('shortcut-setup-card');
+  if(!card)return;
+  const state=shortcutState();
+  if(state==='not_ios'){
+    card.style.display='none';
+    return;
+  }
+  card.style.display='';
+  const chip=document.getElementById('shortcut-status-chip');
+  const sub=document.getElementById('shortcut-setup-sub');
+  const actions=document.getElementById('shortcut-actions');
+  const hasInstallUrl=!!SHORTCUT_INSTALL_URL;
+  const copy={
+    not_installed:{
+      chip:'not set up',
+      chipColor:'var(--ink-soft)',
+      sub:hasInstallUrl
+        ?'install a Shortcut so haul and recipe prompts open your assistant in one tap. copies the prompt, then opens Shortcuts — not Siri.'
+        :'build the “mise. ask” Shortcut once (steps under “what this Shortcut does”), then tap “I’ve installed it”. copies the prompt, then opens Shortcuts — not Siri.',
+      buttons:[
+        ['install shortcut','installShortcut()'],
+        ["I've installed it",'confirmShortcutInstalled()']
+      ]
+    },
+    installed:{
+      chip:'ready',
+      chipColor:'var(--accent)',
+      sub:'haul and recipe buttons hand the prompt to “mise. ask”.',
+      buttons:[
+        ['test','testShortcut()'],
+        ['disable','disableShortcut()'],
+        ['reinstall','installShortcut()']
+      ]
+    },
+    needs_update:{
+      chip:'update available',
+      chipColor:'var(--low)',
+      sub:'a newer Shortcut is available. reinstall to keep one-tap handoff working.',
+      buttons:[
+        ['update shortcut','installShortcut()'],
+        ["I've updated",'confirmShortcutInstalled()']
+      ]
+    },
+    disabled:{
+      chip:'off',
+      chipColor:'var(--ink-soft)',
+      sub:'handoff is off. mise only copies the prompt and opens your assistant in the browser.',
+      buttons:[
+        ['enable','enableShortcut()'],
+        ['install again','installShortcut()']
+      ]
+    }
+  }[state];
+  if(!copy)return;
+  if(chip){chip.textContent=copy.chip;chip.style.color=copy.chipColor;}
+  if(sub)sub.textContent=copy.sub;
+  if(actions){
+    // No published install link yet → the install/reinstall buttons would
+    // dead-end in a developer toast; users build the Shortcut manually instead.
+    const buttons=copy.buttons.filter(([,fn])=>hasInstallUrl||fn!=='installShortcut()');
+    actions.innerHTML=buttons.map(([label,fn])=>
+      `<button type="button" class="btn btn-outline" style="flex:1;min-width:120px;padding:12px" onclick="${fn}">${label}</button>`
+    ).join('');
+  }
+}
+function recipePromptText(){
+  return `Help me develop a recipe. When we're done, give me the final recipe as JSON in exactly this shape:
 {
   "title": "Recipe Name",
   "servings": 2,
@@ -2995,7 +3192,9 @@ Rules:
 - steps: short imperative title + one clear paragraph; timer_seconds only when a step has a real timed wait or cook
 - tags: 1-3 short lowercase tags
 - return ONLY the JSON — no markdown fences, no commentary`;
-  navigator.clipboard?.writeText(prompt)
+}
+function copyRecipePrompt(){
+  navigator.clipboard?.writeText(recipePromptText())
     .then(()=>showToast('recipe prompt copied.'))
     .catch(()=>showToast("couldn't copy — try again."));
   haptic(8);
