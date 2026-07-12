@@ -18,10 +18,7 @@ Then open `http://localhost:8080`.
 Zero dependencies — Node's built-in test runner:
 
 ```bash
-node --test tests/
-# Node 24+: if a bare directory path fails to expand, use:
-#   node --test "tests/**/*.mjs"
-# or simply: node --test
+node --test tests/*.mjs
 ```
 
 ## Deploy

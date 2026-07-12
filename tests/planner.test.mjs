@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { readiness, detail, consumption } from '../js/planner.js';
+import { readiness, detail, consumption, isStaple } from '../js/planner.js';
 
 function recipe(ings) {
   return { id: 'r1', name: 'Test', ingredients: ings };
@@ -104,5 +104,17 @@ describe('consumption', () => {
     assert.equal(reasons['Saffron'], 'not in station');
     assert.equal(reasons['Vanilla'], 'muted');
     assert.equal(reasons['Eggs'], 'already out');
+  });
+});
+
+describe('isStaple — substring false-positive guards', () => {
+  it('"basalt" is not the staple "salt"', () => {
+    assert.equal(isStaple('basalt', ['salt']), false);
+  });
+  it('"kosher salt" matches the staple "salt"', () => {
+    assert.equal(isStaple('kosher salt', ['salt']), true);
+  });
+  it('"extra virgin olive oil" matches the staple "olive oil"', () => {
+    assert.equal(isStaple('extra virgin olive oil', ['olive oil']), true);
   });
 });

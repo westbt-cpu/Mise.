@@ -8,6 +8,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="mise.">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
 <meta name="theme-color" content="#F5F1EA">
 <script>
 (function(){
@@ -496,7 +497,7 @@ option{color:var(--ink);background:var(--bg-card);}
 .review-qty-val{font-family:var(--font-serif);font-size:19px;font-style:italic;min-width:22px;text-align:center;}
 
 /* confirm */
-.confirm-overlay{position:fixed;inset:0;background:rgba(26,26,26,0.55);z-index:400;display:flex;align-items:center;justify-content:center;padding:24px;animation:fadeIn 0.15s ease;}
+.confirm-overlay{position:fixed;inset:0;background:rgba(26,26,26,0.55);z-index:2100;display:flex;align-items:center;justify-content:center;padding:24px;animation:fadeIn 0.15s ease;}
 .confirm-box{background:var(--bg-card);border-radius:var(--radius);padding:26px 22px 22px;width:100%;max-width:320px;text-align:center;}
 .confirm-box h3{font-size:20px;font-weight:700;letter-spacing:-0.02em;margin-bottom:8px;color:var(--ink);}
 .confirm-box p{font-size:14px;color:var(--ink-soft);line-height:1.55;margin-bottom:22px;}
@@ -508,7 +509,7 @@ option{color:var(--ink);background:var(--bg-card);}
 .confirm-ok:active{opacity:0.85;}
 
 /* toast — S8 */
-.toast{position:fixed;bottom:calc(var(--nav-height) + var(--sab, env(safe-area-inset-bottom)) + 12px);left:50%;transform:translateX(-50%) translateY(20px);background:var(--ink);color:var(--bg);padding:12px 16px;border-radius:var(--radius-sm);font-size:14px;font-weight:500;z-index:600;opacity:0;transition:all 0.25s ease;white-space:nowrap;pointer-events:none;display:flex;align-items:center;gap:12px;max-width:calc(100% - 32px);}
+.toast{position:fixed;bottom:calc(var(--nav-height) + var(--sab, env(safe-area-inset-bottom)) + 12px);left:50%;transform:translateX(-50%) translateY(20px);background:var(--ink);color:var(--bg);padding:12px 16px;border-radius:var(--radius-sm);font-size:14px;font-weight:500;z-index:2200;opacity:0;transition:all 0.25s ease;white-space:nowrap;pointer-events:none;display:flex;align-items:center;gap:12px;max-width:calc(100% - 32px);}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:auto;}
 .toast-msg{min-width:0;overflow:hidden;text-overflow:ellipsis;}
 .toast-action{background:none;border:none;color:var(--accent-light);font-family:inherit;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;cursor:pointer;padding:4px 2px;flex-shrink:0;}
@@ -857,7 +858,7 @@ option{color:var(--ink);background:var(--bg-card);}
         <textarea class="import-paste-area" id="import-paste" placeholder="Rolled Oats, 2&#10;Coconut Milk, 3&#10;Black Beans, 4&#10;..."></textarea>
       </div>
       <div class="import-actions">
-        <button class="btn btn-green btn-full" onclick="parseImport()">Preview import →</button>
+        <button class="btn btn-green btn-full" onclick="parseImport()">preview import →</button>
         <button class="btn btn-ghost btn-full" onclick="clearImport()">clear</button>
       </div>
     </div>
@@ -953,7 +954,7 @@ option{color:var(--ink);background:var(--bg-card);}
       <div class="settings-card" id="locations-list"></div>
       <div class="add-row">
         <input type="text" id="new-loc-input" placeholder="New location..." autocomplete="off">
-        <button class="btn btn-green" onclick="addLocation()" style="padding:12px 20px">Add</button>
+        <button class="btn btn-green" onclick="addLocation()" style="padding:12px 20px">add</button>
       </div>
     </div>
     <div class="settings-section">
@@ -961,7 +962,7 @@ option{color:var(--ink);background:var(--bg-card);}
       <div class="settings-card" id="categories-list"></div>
       <div class="add-row">
         <input type="text" id="new-cat-input" placeholder="New category..." autocomplete="off">
-        <button class="btn btn-green" onclick="addCategory()" style="padding:12px 20px">Add</button>
+        <button class="btn btn-green" onclick="addCategory()" style="padding:12px 20px">add</button>
       </div>
     </div>
     <div class="settings-section" id="settings-staples">
@@ -970,7 +971,7 @@ option{color:var(--ink);background:var(--bg-card);}
       <div class="settings-card" id="staples-list"></div>
       <div class="add-row">
         <input type="text" id="new-staple-input" placeholder="e.g. flour, sugar..." autocomplete="off" onkeydown="if(event.key==='Enter')addStaple()">
-        <button class="btn btn-green" onclick="addStaple()" style="padding:12px 20px">Add</button>
+        <button class="btn btn-green" onclick="addStaple()" style="padding:12px 20px">add</button>
       </div>
       <button onclick="resetStaples()" style="background:none;border:none;font-size:11px;color:var(--ink-faint);cursor:pointer;padding:4px 0;font-family:var(--font-mono);margin-top:4px;">reset to defaults</button>
     </div>
@@ -1021,7 +1022,7 @@ option{color:var(--ink);background:var(--bg-card);}
         </div>
         <details id="anylist-setup-details">
           <summary class="settings-row-label" style="cursor:pointer;list-style:none;padding:10px 0;color:var(--ink-soft);">AnyList → mise. shortcut (iOS) ▾</summary>
-          <div class="settings-row-sub" style="line-height:1.7;padding-bottom:8px;">iOS doesn't support web app share targets. Use a Shortcut instead:<br><br>1. Open <strong>Shortcuts</strong> → tap <strong>+</strong><br>2. Rename to <strong>mise.</strong><br>3. Add action → <strong>URL</strong> → type your mise URL + <code>?cl=</code><br>4. Tap after <code>cl=</code> → token picker → <strong>Shortcut Input</strong><br>5. Add action → <strong>Open URLs</strong><br>6. Tap shortcut name → <strong>Add to Share Sheet</strong> → input type: Text<br><br>Your mise URL: <span id="mise-url-display" style="font-family:monospace;word-break:break-all"></span> <button id="copy-mise-url" style="margin-left:6px;padding:2px 8px;font-size:11px;border-radius:4px;border:1px solid var(--ink-faint);background:transparent;color:var(--ink-faint);cursor:pointer">Copy</button></div>
+          <div class="settings-row-sub" style="line-height:1.7;padding-bottom:8px;">iOS doesn't support web app share targets. Use a Shortcut instead:<br><br>1. Open <strong>Shortcuts</strong> → tap <strong>+</strong><br>2. Rename to <strong>mise.</strong><br>3. Add action → <strong>URL</strong> → type your mise URL + <code>?cl=</code><br>4. Tap after <code>cl=</code> → token picker → <strong>Shortcut Input</strong><br>5. Add action → <strong>Open URLs</strong><br>6. Tap shortcut name → <strong>Add to Share Sheet</strong> → input type: Text<br><br>Your mise URL: <span id="mise-url-display" style="font-family:monospace;word-break:break-all"></span> <button id="copy-mise-url" style="margin-left:6px;padding:2px 8px;font-size:11px;border-radius:4px;border:1px solid var(--ink-faint);background:transparent;color:var(--ink-faint);cursor:pointer">copy</button></div>
         </details>
       </div>
     </div>
@@ -1085,7 +1086,7 @@ option{color:var(--ink);background:var(--bg-card);}
         </div>
         <div style="margin-top:12px;display:flex;flex-direction:column;gap:8px">
           <button class="btn btn-green btn-full" onclick="openHaulInClaude()">Open Claude →</button>
-          <button class="btn btn-outline btn-full" onclick="goToHaulPaste()">Paste result →</button>
+          <button class="btn btn-outline btn-full" onclick="goToHaulPaste()">paste result →</button>
           <button class="btn btn-ghost btn-full" onclick="closeItemSheet()">cancel</button>
         </div>
       </div>
@@ -1230,7 +1231,7 @@ option{color:var(--ink);background:var(--bg-card);}
       <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:6px;">
         <h2 id="rd-title" style="margin-bottom:0;flex:1;padding-right:12px;"></h2>
         <div style="display:flex;gap:8px;flex-shrink:0;margin-top:4px;">
-          <button onclick="printRecipe()" style="border:none;background:none;font-family:var(--font-mono);font-size:11px;color:var(--ink-faint);cursor:pointer;padding:6px 0;">PDF</button>
+          <button onclick="printRecipe()" style="border:none;background:none;font-family:var(--font-mono);font-size:11px;color:var(--ink-faint);cursor:pointer;padding:6px 0;">pdf</button>
           <button onclick="editCurrentRecipe()" style="border:1.5px solid var(--rule);background:var(--bg);border-radius:8px;font-family:var(--font-mono);font-size:11px;color:var(--ink-soft);cursor:pointer;padding:8px 14px;white-space:nowrap;min-height:38px;">edit →</button>
         </div>
       </div>
@@ -1252,7 +1253,7 @@ option{color:var(--ink);background:var(--bg-card);}
       <div id="rd-ingredients"></div>
       <div id="rd-steps"></div>
       <div class="sheet-actions" style="margin-top:20px;">
-        <button class="btn btn-green btn-full" id="rd-cook-mode-btn" onclick="openCookMode()">▶ Start Cooking</button>
+        <button class="btn btn-green btn-full" id="rd-cook-mode-btn" onclick="openCookMode()">▶ start cooking</button>
         <button class="btn btn-outline btn-full" onclick="cookRecipe()">✓ cooked — update pantry</button>
         <button class="btn btn-ghost btn-full" onclick="closeRecipeDetail()">close</button>
       </div>
@@ -1340,9 +1341,10 @@ option{color:var(--ink);background:var(--bg-card);}
       </div>
     </div>
   </div>
-  <div style="padding:10px 16px;display:grid;grid-template-columns:1fr 1fr;gap:10px;flex-shrink:0;padding-bottom:calc(10px + env(safe-area-inset-bottom,0px));">
-    <button id="cook-prev-btn" onclick="cookPrev()" style="height:58px;background:var(--cook-btn);border:none;border-radius:12px;font-family:var(--font-mono);font-size:13px;color:var(--cook-fg);cursor:pointer;letter-spacing:0.03em;">← Prev</button>
-    <button id="cook-next-btn" onclick="cookNext()" style="height:58px;background:var(--have);border:none;border-radius:12px;font-family:var(--font-mono);font-size:13px;color:var(--cook-fg);cursor:pointer;letter-spacing:0.03em;">Next →</button>
+  <!-- bottom padding clears the 50px collapsed ingredient-drawer peek so it never overlaps the tap targets -->
+  <div style="padding:10px 16px;display:grid;grid-template-columns:1fr 1fr;gap:10px;flex-shrink:0;padding-bottom:calc(58px + env(safe-area-inset-bottom,0px));">
+    <button id="cook-prev-btn" onclick="cookPrev()" style="height:58px;background:var(--cook-btn);border:none;border-radius:12px;font-family:var(--font-mono);font-size:13px;color:var(--cook-fg);cursor:pointer;letter-spacing:0.03em;">← prev</button>
+    <button id="cook-next-btn" onclick="cookNext()" style="height:58px;background:var(--have);border:none;border-radius:12px;font-family:var(--font-mono);font-size:13px;color:var(--cook-fg);cursor:pointer;letter-spacing:0.03em;">next →</button>
   </div>
   <!-- Ingredient drawer -->
   <div id="cook-ing-drawer">
@@ -1406,13 +1408,13 @@ option{color:var(--ink);background:var(--bg-card);}
       <div class="sheet-handle"></div>
       <div id="onboard-step-locs">
         <h2 style="font-size:26px;letter-spacing:-0.6px;margin-bottom:8px;">where do you keep food?</h2>
-        <p style="font-size:13px;color:var(--ink-soft);line-height:1.65;margin-bottom:20px;">Add your spots — pantry shelves, fridge, freezer. You can always change these in Settings.</p>
+        <p style="font-size:13px;color:var(--ink-soft);line-height:1.65;margin-bottom:20px;">add your spots — pantry shelves, fridge, freezer. you can change these in settings anytime.</p>
         <div id="onboard-locs-list" style="margin-bottom:10px;"></div>
         <div style="display:flex;gap:8px;margin-bottom:20px;">
           <input type="text" id="onboard-loc-input" placeholder="e.g. Pantry — Top" autocomplete="off" autocorrect="off" onkeydown="if(event.key==='Enter')addOnboardLoc()" style="flex:1;padding:13px 14px;border:1.5px solid var(--rule);border-radius:12px;background:var(--bg);font-family:var(--font-mono);font-size:14px;color:var(--ink);outline:none;min-height:50px;box-sizing:border-box;">
           <button class="btn btn-green" onclick="addOnboardLoc()" style="padding:13px 18px;min-height:50px;font-size:13px;">add</button>
         </div>
-        <button class="btn btn-green btn-full" onclick="onboardNextFromLocs()" style="margin-bottom:10px;">Done →</button>
+        <button class="btn btn-green btn-full" onclick="onboardNextFromLocs()" style="margin-bottom:10px;">done →</button>
         <button type="button" onclick="skipOnboard()" style="width:100%;text-align:center;background:none;border:none;font-family:var(--font-mono);font-size:11px;color:var(--ink-faint);cursor:pointer;padding:10px;letter-spacing:0.03em;">skip for now</button>
         <button type="button" onclick="loadSampleKitchen()" style="width:100%;text-align:center;background:none;border:none;font-family:var(--font-mono);font-size:11px;color:var(--ink-faint);cursor:pointer;padding:6px 10px 4px;letter-spacing:0.03em;">try a sample kitchen</button>
       </div>
@@ -3146,7 +3148,6 @@ function resetListCheck(){
 }
 
 // thin deprecated alias
-function parseListLine(line){ return Interpret.parseLine(line); }
 
 function runListCheck(){
   const raw=document.getElementById('lc-paste').value.trim();
@@ -3290,10 +3291,6 @@ function fmtAmt(ing,scale){
   if(ing.unit==='g'&&a<5)return`${parseFloat(a.toFixed(1))}g (${gramsToSpoon(a,ing.name)})`;
   return`${parseFloat(a.toFixed(1))}${ing.unit?' '+ing.unit:''}`.trimEnd();
 }
-function isStaple(ingName){ return Planner._isStaple(ingName, staples); }
-// thin deprecated aliases — canonical logic lives in Interpret / Planner
-function normIng(n){ return Interpret.normalize(n); }
-function matchItem(ingName){ return Interpret.match(ingName, items); }
 function recipeReadiness(recipe){ return Planner.readiness(recipe, items, staples); }
 function recipeReadinessDetail(recipe,scale){ return Planner.detail(recipe, scale, items, staples); }
 function formatDuration(s){
@@ -3421,7 +3418,7 @@ function renderRecipeDetail(r){
       r.steps.map((s,i)=>`<div class="step-row"><div class="step-num">${i+1}</div><div class="step-body"><div class="step-title">${esc(s.title)}</div><div class="step-content">${esc(s.content)}</div>${s.timer_seconds?`<div class="step-timer-badge">⏱ ${formatDuration(s.timer_seconds)}</div>`:''}</div></div>`).join('');
   }else{stepsEl.style.display='none';}
   const cb=document.getElementById('rd-cook-mode-btn');
-  if(r.steps&&r.steps.length){cb.style.display='';cb.textContent=`▶ Start Cooking (${r.steps.length} steps)`;}
+  if(r.steps&&r.steps.length){cb.style.display='';cb.textContent=`▶ start cooking (${r.steps.length} step${r.steps.length!==1?"s":""})`;}
   else cb.style.display='none';
 }
 function adjRecipeScale(d){
@@ -3508,7 +3505,7 @@ function renderCookStep(){
   document.getElementById('cook-step-title').textContent=s.title;
   document.getElementById('cook-step-content').textContent=s.content;
   document.getElementById('cook-prev-btn').style.visibility=cookModeStep===0?'hidden':'visible';
-  document.getElementById('cook-next-btn').textContent=cookModeStep===total-1?'Done ✓':'Next →';
+  document.getElementById('cook-next-btn').textContent=cookModeStep===total-1?'done ✓':'next →';
   clearTimerState();
   const tw=document.getElementById('cook-timer-wrap');
   if(s.timer_seconds){timerDuration=s.timer_seconds;tw.style.display='';updateTimerDisplay(timerDuration);document.getElementById('cook-timer-start').textContent='START';document.getElementById('cook-timer-display').style.color='var(--low)';}

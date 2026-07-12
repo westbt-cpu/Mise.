@@ -41,11 +41,23 @@ export function parseLine(line) {
   return name ? { name, qty: qty || 1 } : null;
 }
 
+// Whole-word tokens (3+ chars) — raw substring matching gave false positives
+// like foil→oil, steak→tea, basalt→salt.
+function tokens(s) {
+  return s.split(' ').filter((t) => t.length >= 3);
+}
+
+export function sharesToken(a, b) {
+  const ta = tokens(a);
+  const tb = tokens(b);
+  return ta.some((t) => tb.includes(t));
+}
+
 export function match(name, itemList) {
   const list = itemList || [];
   const n = normalize(name);
-  return list.find((i) => {
-    const m = normalize(i.name);
-    return m === n || m.includes(n) || n.includes(m);
-  });
+  if (!n) return undefined;
+  const exact = list.find((i) => normalize(i.name) === n);
+  if (exact) return exact;
+  return list.find((i) => sharesToken(normalize(i.name), n));
 }

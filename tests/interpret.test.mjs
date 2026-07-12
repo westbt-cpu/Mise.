@@ -75,3 +75,27 @@ describe('normalize / match', () => {
     assert.equal(normalize('all-purpose flour'), 'ap flour');
   });
 });
+
+describe('match — substring false-positive guards', () => {
+  // Regression guards: raw includes() matching wrongly paired these.
+  const station = [
+    { id: 'i1', name: 'Olive Oil', qty: 1 },
+    { id: 'i2', name: 'tea', qty: 1 },
+    { id: 'i3', name: 'salt', qty: 1 },
+  ];
+  it('"foil" does not match "Olive Oil"', () => {
+    assert.equal(match('foil', station), undefined);
+  });
+  it('"steak" does not match "tea"', () => {
+    assert.equal(match('steak', station), undefined);
+  });
+  it('"basalt" does not match "salt"', () => {
+    assert.equal(match('basalt', station), undefined);
+  });
+  it('whole-word overlap still matches: "oil" → "Olive Oil"', () => {
+    assert.equal(match('oil', station)?.id, 'i1');
+  });
+  it('"Rolled Oats" still matches item "oats"', () => {
+    assert.equal(match('Rolled Oats', [{ id: 'i4', name: 'oats', qty: 1 }])?.id, 'i4');
+  });
+});

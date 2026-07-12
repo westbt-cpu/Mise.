@@ -7,13 +7,15 @@
 // - Consumption = 1 package per cooked non-staple matched ingredient.
 // Pure: no DOM, no localStorage, no globals. Explicit args only.
 
-import { match } from './interpret.js';
+import { match, normalize, sharesToken } from './interpret.js';
 
-export function _isStaple(ingName, stapleList) {
-  const n = String(ingName || '')
-    .toLowerCase()
-    .trim();
-  return (stapleList || []).some((s) => n === s || n.includes(s) || s.includes(n));
+export function isStaple(ingName, stapleList) {
+  const n = normalize(ingName);
+  if (!n) return false;
+  return (stapleList || []).some((s) => {
+    const m = normalize(s);
+    return n === m || sharesToken(n, m);
+  });
 }
 
 export function readiness(recipe, itemList, stapleList) {
@@ -23,7 +25,7 @@ export function readiness(recipe, itemList, stapleList) {
   if (!ings.length) return 'ready';
   let ok = 0;
   for (const ing of ings) {
-    if (_isStaple(ing.name, stapleList)) {
+    if (isStaple(ing.name, stapleList)) {
       ok++;
       continue;
     }
@@ -40,7 +42,7 @@ export function detail(recipe, scale, itemList, stapleList) {
   itemList = itemList || [];
   stapleList = stapleList || [];
   const details = (recipe.ingredients || []).map((ing) => {
-    if (_isStaple(ing.name, stapleList)) return { ...ing, status: 'staple' };
+    if (isStaple(ing.name, stapleList)) return { ...ing, status: 'staple' };
     const item = match(ing.name, itemList);
     if (!item) return { ...ing, status: 'missing' };
     // qty is package count — never compared to ing.amount*scale
@@ -54,8 +56,7 @@ export function detail(recipe, scale, itemList, stapleList) {
 export function consumption(recipe, scale, itemList, stapleList) {
   itemList = itemList || [];
   stapleList = stapleList || [];
-  const used = [],
-    skipped = [],
+  const skipped = [],
     plan = [];
   // Simulate package decrements so multi-ingredient hits on one item match original cook loop
   const sim = {};
@@ -63,7 +64,7 @@ export function consumption(recipe, scale, itemList, stapleList) {
     sim[i.id] = i.qty;
   });
   for (const ing of recipe.ingredients || []) {
-    if (_isStaple(ing.name, stapleList)) {
+    if (isStaple(ing.name, stapleList)) {
       skipped.push({ name: ing.name, reason: 'staple' });
       continue;
     }
@@ -83,5 +84,5 @@ export function consumption(recipe, scale, itemList, stapleList) {
     plan.push({ id: item.id, name: item.name });
     sim[item.id] = (sim[item.id] || 0) - 1;
   }
-  return { plan, used, skipped };
+  return { plan, skipped };
 }
