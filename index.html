@@ -9,6 +9,14 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="mise.">
 <meta name="theme-color" content="#F5F1EA">
+<script>
+(function(){
+  try{
+    var t=localStorage.getItem('mise_theme');
+    if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t);
+  }catch(e){}
+})();
+</script>
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon.svg">
 <title>mise.</title>
@@ -69,6 +77,156 @@
      reds → --out / --out-light; ambers → --low / --low-light / --stale;
      dark cook surfaces → --accent; whites as surfaces → --bg-card
   */
+  /* cook mode (always deep olive, works in light + dark app chrome) */
+  --cook-bg: #2F3A28;
+  --cook-fg: #FBF8F2;
+  --cook-muted: rgba(251,248,242,0.55);
+  --cook-faint: rgba(251,248,242,0.35);
+  --cook-panel: rgba(0,0,0,0.22);
+  --cook-btn: rgba(255,255,255,0.12);
+}
+
+/* Dark theme tokens
+   AA contrast (approx) on --bg #1C1A17:
+   --ink #F0EBE3 ≈ 15.2:1 · --ink-soft #B8AFA4 ≈ 8.4:1 · --ink-faint #9A9186 ≈ 5.6:1
+   --accent #A3B892 on --bg ≈ 8.1:1 · status text --low/#D4A86A ≈ 7.5:1 · --out/#D48484 ≈ 6.2:1
+*/
+:root[data-theme="dark"] {
+  --bg: #1C1A17;
+  --bg-card: #262320;
+  --ink: #F0EBE3;
+  --ink-soft: #B8AFA4;
+  --ink-faint: #9A9186;
+  --rule: #3D3832;
+  --accent: #A3B892;
+  --accent-light: #3A4A32;
+  --accent-pale: #2A3226;
+  --accent-ink: #1C1A17;
+  --stale: #C9A07A;
+  --low: #D4A86A;
+  --low-light: #3A3020;
+  --exp: #C98A9A;
+  --exp-light: #3A2830;
+  --out: #D48484;
+  --out-light: #3A2525;
+  --have: #7A9A6A;
+  --lemon-pale: #3A3620;
+  --cook-bg: #24301F;
+  --cook-fg: #F0EBE3;
+  --cook-muted: rgba(240,235,227,0.55);
+  --cook-faint: rgba(240,235,227,0.35);
+  --cook-panel: rgba(0,0,0,0.28);
+  --cook-btn: rgba(255,255,255,0.10);
+  --white: var(--bg-card);
+  --off: var(--bg);
+  --ink-2: var(--ink-soft);
+  --ink-3: var(--ink-soft);
+  --ink-4: var(--ink-faint);
+  --green: var(--accent);
+  --green-2: var(--accent);
+  --green-light: var(--accent-light);
+  --green-pale: var(--accent-pale);
+  --red: var(--out);
+  --red-light: var(--out-light);
+  --amber: var(--low);
+  --amber-light: var(--low-light);
+  --lemon: var(--low);
+  --lemon-2: var(--low-light);
+  --lemon-dark: var(--stale);
+  --border: var(--rule);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    --bg: #1C1A17;
+    --bg-card: #262320;
+    --ink: #F0EBE3;
+    --ink-soft: #B8AFA4;
+    --ink-faint: #9A9186;
+    --rule: #3D3832;
+    --accent: #A3B892;
+    --accent-light: #3A4A32;
+    --accent-pale: #2A3226;
+    --accent-ink: #1C1A17;
+    --stale: #C9A07A;
+    --low: #D4A86A;
+    --low-light: #3A3020;
+    --exp: #C98A9A;
+    --exp-light: #3A2830;
+    --out: #D48484;
+    --out-light: #3A2525;
+    --have: #7A9A6A;
+    --lemon-pale: #3A3620;
+    --cook-bg: #24301F;
+    --cook-fg: #F0EBE3;
+    --cook-muted: rgba(240,235,227,0.55);
+    --cook-faint: rgba(240,235,227,0.35);
+    --cook-panel: rgba(0,0,0,0.28);
+    --cook-btn: rgba(255,255,255,0.10);
+    --white: var(--bg-card);
+    --off: var(--bg);
+    --ink-2: var(--ink-soft);
+    --ink-3: var(--ink-soft);
+    --ink-4: var(--ink-faint);
+    --green: var(--accent);
+    --green-2: var(--accent);
+    --green-light: var(--accent-light);
+    --green-pale: var(--accent-pale);
+    --red: var(--out);
+    --red-light: var(--out-light);
+    --amber: var(--low);
+    --amber-light: var(--low-light);
+    --lemon: var(--low);
+    --lemon-2: var(--low-light);
+    --lemon-dark: var(--stale);
+    --border: var(--rule);
+  }
+}
+
+/* explicit light lock (same as base :root; wins over media query) */
+:root[data-theme="light"] {
+  --bg: #F5F1EA;
+  --bg-card: #FBF8F2;
+  --ink: #1A1A1A;
+  --ink-soft: #5C5651;
+  --ink-faint: #9A938B;
+  --rule: #E5DFD4;
+  --accent: #4A5D3A;
+  --accent-light: #C4D4B8;
+  --accent-pale: #E8EEE2;
+  --accent-ink: #FBF8F2;
+  --stale: #8B5E3C;
+  --low: #7A5520;
+  --low-light: #F2E4C8;
+  --exp: #8B4A5C;
+  --exp-light: #F0E0E6;
+  --out: #8B3A3A;
+  --out-light: #F5D4D4;
+  --have: #6B7D5A;
+  --lemon-pale: #FDFAE8;
+  --cook-bg: #2F3A28;
+  --cook-fg: #FBF8F2;
+  --cook-muted: rgba(251,248,242,0.55);
+  --cook-faint: rgba(251,248,242,0.35);
+  --cook-panel: rgba(0,0,0,0.22);
+  --cook-btn: rgba(255,255,255,0.12);
+  --white: var(--bg-card);
+  --off: var(--bg);
+  --ink-2: var(--ink-soft);
+  --ink-3: var(--ink-soft);
+  --ink-4: var(--ink-faint);
+  --green: var(--accent);
+  --green-2: var(--accent);
+  --green-light: var(--accent-light);
+  --green-pale: var(--accent-pale);
+  --red: var(--out);
+  --red-light: var(--out-light);
+  --amber: var(--low);
+  --amber-light: var(--low-light);
+  --lemon: var(--low);
+  --lemon-2: var(--low-light);
+  --lemon-dark: var(--stale);
+  --border: var(--rule);
 }
 
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
@@ -253,7 +411,23 @@ header{background:var(--bg);border-bottom:1px solid var(--rule);padding:max(var(
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
 .sheet{background:var(--bg-card);width:100%;max-width:540px;border-radius:18px 18px 0 0;padding:16px 20px calc(env(safe-area-inset-bottom,0px) + 32px);animation:slideUp 0.22s cubic-bezier(0.32,0.72,0,1);max-height:92dvh;overflow-y:auto;-webkit-overflow-scrolling:touch;}
 @keyframes slideUp{from{transform:translateY(40px);opacity:0}to{transform:translateY(0);opacity:1}}
-.sheet-handle{width:36px;height:4px;background:var(--rule);border-radius:2px;margin:0 auto 20px;}
+.sheet-handle{width:36px;height:4px;background:var(--rule);border-radius:2px;margin:0 auto 12px;cursor:grab;touch-action:none;position:relative;}
+.sheet-handle::before{content:'';position:absolute;left:-24px;right:-24px;top:-14px;bottom:-14px;}
+.sheet-handle:active{cursor:grabbing;}
+.sheet.dragging{transition:none!important;animation:none!important;}
+.sheet-kb-pad{/* keyboard avoidance bottom pad applied inline */}
+.header-sync-btn{width:36px;height:36px;display:none;align-items:center;justify-content:center;border:1px solid var(--rule);border-radius:var(--radius-sm);background:var(--bg-card);cursor:pointer;color:var(--ink-soft);font-size:16px;flex-shrink:0;line-height:1;}
+.header-sync-btn:active{background:var(--accent-pale);color:var(--accent);}
+.header-sync-btn.visible{display:flex;}
+.theme-seg{display:flex;border:1px solid var(--rule);border-radius:var(--radius-sm);overflow:hidden;background:var(--bg);}
+.theme-seg button{flex:1;padding:8px 12px;border:none;background:transparent;font-size:12px;font-weight:600;color:var(--ink-soft);cursor:pointer;font-family:inherit;min-height:36px;}
+.theme-seg button.active{background:var(--accent);color:var(--accent-ink);}
+.swipe-hint-line{font-size:11px;color:var(--ink-faint);text-align:center;padding:6px 12px 2px;letter-spacing:0.04em;}
+.items-grid .swipe-item{margin-bottom:0;border-radius:var(--radius);border:1px solid var(--rule);overflow:hidden;}
+.items-grid .swipe-item .swipe-inner.item-card{border-radius:0;margin-bottom:0;border:none;border-bottom:none;}
+.lc-manage-staples{display:block;margin-top:14px;font-size:12px;font-weight:600;color:var(--accent);text-decoration:none;cursor:pointer;background:none;border:none;font-family:inherit;padding:0;}
+.lc-manage-staples:active{opacity:0.7;}
+.cook-step-pane{will-change:transform;}
 .sheet h2{font-size:22px;font-weight:700;letter-spacing:-0.03em;margin-bottom:20px;color:var(--ink);}
 
 /* Form fields — warm white background, visible border */
@@ -350,7 +524,7 @@ option{color:var(--ink);background:var(--bg-card);}
 
 /* ── SCREEN PAGE HEADER ── */
 .page-header{padding:16px 20px 14px;border-bottom:1px solid var(--rule);background:var(--bg);}
-.page-header-row{display:flex;align-items:center;justify-content:space-between;}
+.page-header-row{display:flex;align-items:center;justify-content:space-between;gap:12px;}
 .page-title{font-size:22px;font-weight:700;color:var(--ink);letter-spacing:-0.03em;}
 .page-sub{font-size:12px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:0.05em;font-weight:500;margin-top:2px;}
 
@@ -453,13 +627,13 @@ option{color:var(--ink);background:var(--bg-card);}
 .step-timer-badge{display:inline-block;margin-top:6px;padding:3px 8px;background:var(--low-light);color:var(--low);border-radius:5px;font-family:var(--font-mono);font-size:10px;}
 .ing-dot.staple{background:var(--ink-faint);}
 /* ── COOK MODE ── */
-#cook-mode-overlay{display:none;position:fixed;inset:0;background:var(--accent);z-index:2000;flex-direction:column;overflow:hidden;}
+#cook-mode-overlay{display:none;position:fixed;inset:0;background:var(--cook-bg);z-index:2000;flex-direction:column;overflow:hidden;}
 #cook-mode-overlay.active{display:flex;}
-#cook-ing-drawer{position:absolute;bottom:0;left:0;right:0;background:var(--accent);border-radius:16px 16px 0 0;transform:translateY(calc(100% - 50px));transition:transform 0.3s ease;}
-.cook-ing-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.08);}
+#cook-ing-drawer{position:absolute;bottom:0;left:0;right:0;background:var(--cook-bg);border-radius:16px 16px 0 0;transform:translateY(calc(100% - 50px));transition:transform 0.3s ease;border-top:1px solid var(--cook-faint);}
+.cook-ing-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--cook-faint);}
 .cook-ing-row:last-child{border-bottom:none;}
-.cook-ing-name{font-family:var(--font-serif);font-size:15px;color:rgba(255,255,255,0.85);}
-.cook-ing-amt{font-family:var(--font-mono);font-size:11px;color:rgba(255,255,255,0.5);}
+.cook-ing-name{font-family:var(--font-serif);font-size:15px;color:var(--cook-fg);opacity:0.9;}
+.cook-ing-amt{font-family:var(--font-mono);font-size:11px;color:var(--cook-muted);}
 /* ── WHAT CAN I COOK ── */
 .wcc-section-head{font-size:12px;font-weight:600;color:var(--ink-soft);padding:12px 0 6px;margin-top:4px;letter-spacing:0.03em;}
 .wcc-section-head:first-child{padding-top:0;margin-top:0;}
@@ -610,6 +784,7 @@ option{color:var(--ink);background:var(--bg-card);}
           <div class="page-title">station.</div>
           <div class="page-sub">your kitchen, mapped.</div>
         </div>
+        <button type="button" class="header-sync-btn" id="station-sync-btn" onclick="fbPull()" aria-label="Refresh sync" title="Sync">↻</button>
       </div>
     </div>
     <div class="stats-strip" id="stats-strip"></div>
@@ -638,6 +813,7 @@ option{color:var(--ink);background:var(--bg-card);}
           <div class="page-title">list.</div>
           <div class="page-sub">what your kitchen needs.</div>
         </div>
+        <button type="button" class="header-sync-btn" id="list-sync-btn" onclick="fbPull()" aria-label="Refresh sync" title="Sync">↻</button>
       </div>
     </div>
     <div class="restock-bar">
@@ -728,6 +904,22 @@ option{color:var(--ink);background:var(--bg-card);}
       <div class="page-sub">sync · organize · backup.</div>
     </div>
     <div class="settings-section">
+      <div class="settings-heading">appearance</div>
+      <div class="settings-card">
+        <div class="settings-row" style="flex-direction:column;align-items:stretch;gap:10px">
+          <div>
+            <div class="settings-row-label">theme</div>
+            <div class="settings-row-sub">auto follows system · light and dark lock the palette</div>
+          </div>
+          <div class="theme-seg" role="group" aria-label="appearance">
+            <button type="button" id="theme-btn-auto" onclick="setAppearance('auto')">auto</button>
+            <button type="button" id="theme-btn-light" onclick="setAppearance('light')">light</button>
+            <button type="button" id="theme-btn-dark" onclick="setAppearance('dark')">dark</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="settings-section">
       <div class="settings-heading">share with household</div>
       <div style="font-size:12px;color:var(--ink-soft);margin:-4px 0 12px;line-height:1.5;">keep two phones on the same kitchen.</div>
       <div class="fb-status-row">
@@ -772,7 +964,7 @@ option{color:var(--ink);background:var(--bg-card);}
         <button class="btn btn-green" onclick="addCategory()" style="padding:12px 20px">Add</button>
       </div>
     </div>
-    <div class="settings-section">
+    <div class="settings-section" id="settings-staples">
       <div class="settings-heading">staples</div>
       <div style="font-size:11px;color:var(--ink-faint);margin-bottom:10px;line-height:1.5;">Always assumed present — never checked against your pantry.</div>
       <div class="settings-card" id="staples-list"></div>
@@ -827,7 +1019,7 @@ option{color:var(--ink);background:var(--bg-card);}
           <div class="settings-row-label">install as app</div>
           <div class="settings-row-sub" style="line-height:1.7"><strong>iOS:</strong> Safari → Share → Add to Home Screen<br><strong>Android:</strong> Chrome menu → Add to Home Screen</div>
         </div>
-        <details>
+        <details id="anylist-setup-details">
           <summary class="settings-row-label" style="cursor:pointer;list-style:none;padding:10px 0;color:var(--ink-soft);">AnyList → mise. shortcut (iOS) ▾</summary>
           <div class="settings-row-sub" style="line-height:1.7;padding-bottom:8px;">iOS doesn't support web app share targets. Use a Shortcut instead:<br><br>1. Open <strong>Shortcuts</strong> → tap <strong>+</strong><br>2. Rename to <strong>mise.</strong><br>3. Add action → <strong>URL</strong> → type your mise URL + <code>?cl=</code><br>4. Tap after <code>cl=</code> → token picker → <strong>Shortcut Input</strong><br>5. Add action → <strong>Open URLs</strong><br>6. Tap shortcut name → <strong>Add to Share Sheet</strong> → input type: Text<br><br>Your mise URL: <span id="mise-url-display" style="font-family:monospace;word-break:break-all"></span> <button id="copy-mise-url" style="margin-left:6px;padding:2px 8px;font-size:11px;border-radius:4px;border:1px solid var(--ink-faint);background:transparent;color:var(--ink-faint);cursor:pointer">Copy</button></div>
         </details>
@@ -923,17 +1115,17 @@ option{color:var(--ink);background:var(--bg-card);}
           <div class="form-row">
             <label>Quantity</label>
             <div class="qty-stepper">
-              <button class="qty-step-btn" onclick="stepQty('f-qty',-1)">−</button>
+              <button type="button" class="qty-step-btn" data-step="f-qty" data-d="-1">−</button>
               <input class="qty-step-input" type="number" id="f-qty" value="1" min="0" inputmode="numeric">
-              <button class="qty-step-btn" onclick="stepQty('f-qty',1)">+</button>
+              <button type="button" class="qty-step-btn" data-step="f-qty" data-d="1">+</button>
             </div>
           </div>
           <div class="form-row">
             <label>restock below</label>
             <div class="qty-stepper">
-              <button class="qty-step-btn" onclick="stepQty('f-thresh',-1)">−</button>
+              <button type="button" class="qty-step-btn" data-step="f-thresh" data-d="-1">−</button>
               <input class="qty-step-input" type="number" id="f-thresh" value="1" min="0" inputmode="numeric">
-              <button class="qty-step-btn" onclick="stepQty('f-thresh',1)">+</button>
+              <button type="button" class="qty-step-btn" data-step="f-thresh" data-d="1">+</button>
             </div>
           </div>
         </div>
@@ -1134,28 +1326,28 @@ option{color:var(--ink);background:var(--bg-card);}
 
 <div id="cook-mode-overlay">
   <div style="padding:env(safe-area-inset-top,16px) 20px 0;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
-    <div id="cook-progress" style="font-family:var(--font-mono);font-size:11px;color:rgba(255,255,255,0.5);letter-spacing:0.06em;">STEP 1 OF 1</div>
-    <button onclick="closeCookMode()" style="width:44px;height:44px;background:rgba(255,255,255,0.12);border:none;border-radius:50%;color:rgba(255,255,255,0.8);font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;">×</button>
+    <div id="cook-progress" style="font-family:var(--font-mono);font-size:11px;color:var(--cook-muted);letter-spacing:0.06em;">STEP 1 OF 1</div>
+    <button onclick="closeCookMode()" style="width:44px;height:44px;background:var(--cook-btn);border:none;border-radius:50%;color:var(--cook-fg);font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;">×</button>
   </div>
-  <div style="flex:1;overflow-y:auto;padding:24px 24px 12px;">
-    <div id="cook-step-title" style="font-family:var(--font-serif);font-size:30px;color:var(--bg-card);margin-bottom:16px;line-height:1.2;"></div>
-    <div id="cook-step-content" style="font-size:17px;color:rgba(255,255,255,0.85);line-height:1.75;"></div>
-    <div id="cook-timer-wrap" style="display:none;margin-top:28px;text-align:center;padding:20px;background:rgba(0,0,0,0.2);border-radius:16px;">
+  <div id="cook-step-pane" class="cook-step-pane" style="flex:1;overflow-y:auto;padding:24px 24px 12px;">
+    <div id="cook-step-title" style="font-family:var(--font-serif);font-size:30px;color:var(--cook-fg);margin-bottom:16px;line-height:1.2;"></div>
+    <div id="cook-step-content" style="font-size:17px;color:var(--cook-fg);opacity:0.88;line-height:1.75;"></div>
+    <div id="cook-timer-wrap" style="display:none;margin-top:28px;text-align:center;padding:20px;background:var(--cook-panel);border-radius:16px;">
       <div id="cook-timer-display" style="font-family:var(--font-serif);font-size:58px;color:var(--low);line-height:1;margin-bottom:18px;letter-spacing:0.02em;">00:00</div>
       <div style="display:flex;gap:10px;justify-content:center;">
-        <button id="cook-timer-start" onclick="toggleTimer()" style="padding:13px 32px;background:var(--low);border:none;border-radius:10px;font-family:var(--font-mono);font-size:12px;color:var(--accent);cursor:pointer;font-weight:500;letter-spacing:0.04em;">START</button>
-        <button onclick="resetTimer()" style="padding:13px 20px;background:rgba(255,255,255,0.12);border:none;border-radius:10px;font-family:var(--font-mono);font-size:12px;color:rgba(255,255,255,0.7);cursor:pointer;letter-spacing:0.04em;">RESET</button>
+        <button id="cook-timer-start" onclick="toggleTimer()" style="padding:13px 32px;background:var(--low);border:none;border-radius:10px;font-family:var(--font-mono);font-size:12px;color:var(--cook-bg);cursor:pointer;font-weight:500;letter-spacing:0.04em;">START</button>
+        <button onclick="resetTimer()" style="padding:13px 20px;background:var(--cook-btn);border:none;border-radius:10px;font-family:var(--font-mono);font-size:12px;color:var(--cook-muted);cursor:pointer;letter-spacing:0.04em;">RESET</button>
       </div>
     </div>
   </div>
   <div style="padding:10px 16px;display:grid;grid-template-columns:1fr 1fr;gap:10px;flex-shrink:0;padding-bottom:calc(10px + env(safe-area-inset-bottom,0px));">
-    <button id="cook-prev-btn" onclick="cookPrev()" style="height:58px;background:rgba(255,255,255,0.12);border:none;border-radius:12px;font-family:var(--font-mono);font-size:13px;color:rgba(255,255,255,0.8);cursor:pointer;letter-spacing:0.03em;">← Prev</button>
-    <button id="cook-next-btn" onclick="cookNext()" style="height:58px;background:var(--accent);border:none;border-radius:12px;font-family:var(--font-mono);font-size:13px;color:var(--bg-card);cursor:pointer;letter-spacing:0.03em;">Next →</button>
+    <button id="cook-prev-btn" onclick="cookPrev()" style="height:58px;background:var(--cook-btn);border:none;border-radius:12px;font-family:var(--font-mono);font-size:13px;color:var(--cook-fg);cursor:pointer;letter-spacing:0.03em;">← Prev</button>
+    <button id="cook-next-btn" onclick="cookNext()" style="height:58px;background:var(--have);border:none;border-radius:12px;font-family:var(--font-mono);font-size:13px;color:var(--cook-fg);cursor:pointer;letter-spacing:0.03em;">Next →</button>
   </div>
   <!-- Ingredient drawer -->
   <div id="cook-ing-drawer">
     <div onclick="toggleIngDrawer()" style="height:50px;display:flex;align-items:center;justify-content:center;cursor:pointer;border-radius:16px 16px 0 0;">
-      <span id="cook-ing-toggle" style="font-family:var(--font-mono);font-size:11px;color:rgba(255,255,255,0.5);letter-spacing:0.06em;">INGREDIENTS ▲</span>
+      <span id="cook-ing-toggle" style="font-family:var(--font-mono);font-size:11px;color:var(--cook-muted);letter-spacing:0.06em;">INGREDIENTS ▲</span>
     </div>
     <div id="cook-ing-list" style="max-height:45vh;overflow-y:auto;padding:0 20px 16px;"></div>
   </div>
@@ -1212,16 +1404,30 @@ option{color:var(--ink);background:var(--bg-card);}
   <div class="modal-overlay" style="align-items:flex-end;">
     <div class="sheet" onclick="event.stopPropagation()" style="padding-bottom:calc(env(safe-area-inset-bottom,0px) + 28px)">
       <div class="sheet-handle"></div>
-      <h2 style="font-size:26px;letter-spacing:-0.6px;margin-bottom:8px;">where do you keep food?</h2>
-      <p style="font-size:13px;color:var(--ink-soft);line-height:1.65;margin-bottom:20px;">Add your spots — pantry shelves, fridge, freezer. You can always change these in Settings.</p>
-      <div id="onboard-locs-list" style="margin-bottom:10px;"></div>
-      <div style="display:flex;gap:8px;margin-bottom:20px;">
-        <input type="text" id="onboard-loc-input" placeholder="e.g. Pantry — Top" autocomplete="off" autocorrect="off" onkeydown="if(event.key==='Enter')addOnboardLoc()" style="flex:1;padding:13px 14px;border:1.5px solid var(--rule);border-radius:12px;background:var(--bg);font-family:var(--font-mono);font-size:14px;color:var(--ink);outline:none;min-height:50px;box-sizing:border-box;">
-        <button class="btn btn-green" onclick="addOnboardLoc()" style="padding:13px 18px;min-height:50px;font-size:13px;">add</button>
+      <div id="onboard-step-locs">
+        <h2 style="font-size:26px;letter-spacing:-0.6px;margin-bottom:8px;">where do you keep food?</h2>
+        <p style="font-size:13px;color:var(--ink-soft);line-height:1.65;margin-bottom:20px;">Add your spots — pantry shelves, fridge, freezer. You can always change these in Settings.</p>
+        <div id="onboard-locs-list" style="margin-bottom:10px;"></div>
+        <div style="display:flex;gap:8px;margin-bottom:20px;">
+          <input type="text" id="onboard-loc-input" placeholder="e.g. Pantry — Top" autocomplete="off" autocorrect="off" onkeydown="if(event.key==='Enter')addOnboardLoc()" style="flex:1;padding:13px 14px;border:1.5px solid var(--rule);border-radius:12px;background:var(--bg);font-family:var(--font-mono);font-size:14px;color:var(--ink);outline:none;min-height:50px;box-sizing:border-box;">
+          <button class="btn btn-green" onclick="addOnboardLoc()" style="padding:13px 18px;min-height:50px;font-size:13px;">add</button>
+        </div>
+        <button class="btn btn-green btn-full" onclick="onboardNextFromLocs()" style="margin-bottom:10px;">Done →</button>
+        <button type="button" onclick="skipOnboard()" style="width:100%;text-align:center;background:none;border:none;font-family:var(--font-mono);font-size:11px;color:var(--ink-faint);cursor:pointer;padding:10px;letter-spacing:0.03em;">skip for now</button>
+        <button type="button" onclick="loadSampleKitchen()" style="width:100%;text-align:center;background:none;border:none;font-family:var(--font-mono);font-size:11px;color:var(--ink-faint);cursor:pointer;padding:6px 10px 4px;letter-spacing:0.03em;">try a sample kitchen</button>
       </div>
-      <button class="btn btn-green btn-full" onclick="finishOnboard()" style="margin-bottom:10px;">Done →</button>
-      <button type="button" onclick="skipOnboard()" style="width:100%;text-align:center;background:none;border:none;font-family:var(--font-mono);font-size:11px;color:var(--ink-faint);cursor:pointer;padding:10px;letter-spacing:0.03em;">skip for now</button>
-      <button type="button" onclick="loadSampleKitchen()" style="width:100%;text-align:center;background:none;border:none;font-family:var(--font-mono);font-size:11px;color:var(--ink-faint);cursor:pointer;padding:6px 10px 4px;letter-spacing:0.03em;">try a sample kitchen</button>
+      <div id="onboard-step-item" style="display:none">
+        <h2 style="font-size:26px;letter-spacing:-0.6px;margin-bottom:8px;">place your first item</h2>
+        <p style="font-size:13px;color:var(--ink-soft);line-height:1.65;margin-bottom:20px;">optional — drop something you already have into the first spot. you can always add more later.</p>
+        <button class="btn btn-green btn-full" onclick="onboardPlaceFirstItem()" style="margin-bottom:10px;">place an item →</button>
+        <button type="button" onclick="onboardNextToAnylist()" style="width:100%;text-align:center;background:none;border:none;font-family:var(--font-mono);font-size:11px;color:var(--ink-faint);cursor:pointer;padding:10px;letter-spacing:0.03em;">skip for now</button>
+      </div>
+      <div id="onboard-step-anylist" style="display:none">
+        <h2 style="font-size:26px;letter-spacing:-0.6px;margin-bottom:8px;">get lists in from AnyList</h2>
+        <p style="font-size:13px;color:var(--ink-soft);line-height:1.65;margin-bottom:20px;">optional — set up the iOS shortcut so shopping lists land in mise for a station check.</p>
+        <button class="btn btn-green btn-full" onclick="onboardOpenAnyList()" style="margin-bottom:10px;">set up shortcut →</button>
+        <button type="button" onclick="finishOnboard()" style="width:100%;text-align:center;background:none;border:none;font-family:var(--font-mono);font-size:11px;color:var(--ink-faint);cursor:pointer;padding:10px;letter-spacing:0.03em;">done</button>
+      </div>
     </div>
   </div>
 </div>
@@ -1239,7 +1445,7 @@ option{color:var(--ink);background:var(--bg-card);}
 </div>
 
 <script>
-const ITEMS_KEY='mise_items_v5',SHOP_KEY='mise_shop_v5',LOCS_KEY='mise_locs_v3',CATS_KEY='mise_cats_v3',ONBOARD_KEY='mise_onboarded';
+const ITEMS_KEY='mise_items_v5',SHOP_KEY='mise_shop_v5',LOCS_KEY='mise_locs_v3',CATS_KEY='mise_cats_v3',ONBOARD_KEY='mise_onboarded',THEME_KEY='mise_theme',SWIPE_HINT_KEY='mise_swipe_hint_seen';
 let items=[],shoppingList=[],locations=[],categories=[];
 let editingId=null,currentView='category',currentSort='name',scanStream=null;
 let renameType=null,renameIdx=null,confirmCallback=null,reviewItems=[],haulReplaceLoc=null;
@@ -1273,6 +1479,11 @@ function init(){
   const lbl=document.getElementById('today-label');
   if(lbl)lbl.textContent=`${days[d.getDay()]}, ${months[d.getMonth()]} ${d.getDate()}`;
   loadRecipes();loadStaples();
+  initAppearance();
+  initAutoRepeat();
+  initSheetDrag();
+  initKeyboardAvoidance();
+  updateSyncButtons();
   setTimeout(()=>fbPull(),800);
   renderHome();
   renderInventory();
@@ -1286,7 +1497,16 @@ function maybeShowOnboarding(){
   if(localStorage.getItem(ITEMS_KEY)) return; // returning user — has data already
   onboardLocs=[];
   renderOnboardLocs();
+  showOnboardStep('locs');
   openDialog('onboard-modal');
+}
+function showOnboardStep(step){
+  const locs=document.getElementById('onboard-step-locs');
+  const item=document.getElementById('onboard-step-item');
+  const any=document.getElementById('onboard-step-anylist');
+  if(locs)locs.style.display=step==='locs'?'':'none';
+  if(item)item.style.display=step==='item'?'':'none';
+  if(any)any.style.display=step==='anylist'?'':'none';
 }
 function renderOnboardLocs(){
   const el=document.getElementById('onboard-locs-list');
@@ -1307,12 +1527,37 @@ function addOnboardLoc(){
   inp.focus();
 }
 function removeOnboardLoc(i){onboardLocs.splice(i,1);renderOnboardLocs();}
-function finishOnboard(){
+function commitOnboardLocs(){
   if(onboardLocs.length){
-    // Prepend user's custom locations, keeping any defaults that don't conflict
     locations=[...onboardLocs,...locations.filter(l=>!onboardLocs.includes(l))];
     save();
   }
+}
+function onboardNextFromLocs(){
+  commitOnboardLocs();
+  showOnboardStep('item');
+}
+function onboardPlaceFirstItem(){
+  commitOnboardLocs();
+  localStorage.setItem(ONBOARD_KEY,'1');
+  closeDialog('onboard-modal');
+  renderInventory();
+  renderHome();
+  openAddSheet('',locations[0]||'');
+}
+function onboardNextToAnylist(){
+  showOnboardStep('anylist');
+}
+function onboardOpenAnyList(){
+  finishOnboard();
+  switchScreen('settings',null);
+  setTimeout(()=>{
+    const d=document.getElementById('anylist-setup-details');
+    if(d){d.open=true;d.scrollIntoView({behavior:'smooth',block:'center'});}
+  },120);
+}
+function finishOnboard(){
+  commitOnboardLocs();
   localStorage.setItem(ONBOARD_KEY,'1');
   closeDialog('onboard-modal');
   renderInventory();
@@ -1522,20 +1767,26 @@ function renderCat(filtered,el){
       </div>
       <div class="section-cards-wrap">
         <div class="items-grid">${g[cat].map(item=>`
-          <div class="item-card ${sc(item)}" onclick="openEdit('${item.id}')">
-            <div class="item-name">${esc(item.name)}${samplePill(item)?` ${samplePill(item)}`:''}</div>
-            <div class="item-meta">${esc(item.location)}${item.notes?' · '+esc(item.notes):''}</div>
-            <div class="item-bottom">
-              <div class="qty-controls" onclick="event.stopPropagation()">
-                <button class="qty-btn" onclick="adj('${item.id}',-1)">−</button>
-                <span class="qty-value">${item.qty}</span>
-                <button class="qty-btn" onclick="adj('${item.id}',1)">+</button>
-              </div>${pill(item)}
+          <div class="swipe-item" data-id="${item.id}">
+            <div class="swipe-bg have">✓ Confirm</div>
+            <div class="swipe-bg list">List →</div>
+            <div class="swipe-inner item-card ${sc(item)}" onclick="openEdit('${item.id}')">
+              <div class="item-name">${esc(item.name)}${samplePill(item)?` ${samplePill(item)}`:''}</div>
+              <div class="item-meta">${esc(item.location)}${item.notes?' · '+esc(item.notes):''}</div>
+              <div class="item-bottom">
+                <div class="qty-controls" onclick="event.stopPropagation()">
+                  <button type="button" class="qty-btn" data-adj="${item.id}" data-d="-1">−</button>
+                  <span class="qty-value">${item.qty}</span>
+                  <button type="button" class="qty-btn" data-adj="${item.id}" data-d="1">+</button>
+                </div>${pill(item)}
+              </div>
             </div>
           </div>`).join('')}
         </div>
       </div>
     </div>`).join('');
+  el.querySelectorAll('.swipe-item').forEach(s=>attachSwipe(s));
+  maybeShowSwipeHint();
 }
 
 function renderLoc(filtered,el){
@@ -1557,15 +1808,16 @@ function renderLoc(filtered,el){
             </div>
             ${pill(item)}
             <div class="qty-controls" onclick="event.stopPropagation()">
-              <button class="qty-btn" onclick="adj('${item.id}',-1)">−</button>
+              <button type="button" class="qty-btn" data-adj="${item.id}" data-d="-1">−</button>
               <span class="qty-value">${item.qty}</span>
-              <button class="qty-btn" onclick="adj('${item.id}',1)">+</button>
+              <button type="button" class="qty-btn" data-adj="${item.id}" data-d="1">+</button>
             </div>
           </div>
         </div>`).join('')}
       </div>
     </div>`).join('');
   el.querySelectorAll('.swipe-item').forEach(s=>attachSwipe(s));
+  maybeShowSwipeHint();
 }
 
 // ── SWIPE GESTURES ────────────────────────────────────────────────────────────
@@ -1617,12 +1869,22 @@ function handleAddToList(id){
   }
 }
 
-function adj(id,d){
+function adj(id,d,opts){
   const item=items.find(i=>i.id===id);
   if(!item)return;
   item.qty=Math.max(0,item.qty+d);
   item.lastConfirmed=Date.now();
   clearDemo(item);
+  haptic(8);
+  if(opts&&opts.soft){
+    document.querySelectorAll('.qty-btn[data-adj="'+id+'"]').forEach(btn=>{
+      const wrap=btn.closest('.qty-controls');
+      const val=wrap&&wrap.querySelector('.qty-value');
+      if(val)val.textContent=item.qty;
+    });
+    save();
+    return;
+  }
   save();renderInventory();renderHome();
 }
 
@@ -1660,7 +1922,7 @@ function setNoAlertToggle(v){
 }
 document.addEventListener('change',function(e){if(e.target.id==='f-noAlert')setNoAlertToggle(e.target.checked);});
 
-function openAddSheet(prefill){
+function openAddSheet(prefill,prefillLoc){
   editingId=null;
   document.getElementById('sheet-title').textContent='place item';
   document.getElementById('f-name').value=prefill||'';
@@ -1671,10 +1933,10 @@ function openAddSheet(prefill){
   setNoAlertToggle(false);
   document.getElementById('delete-btn').style.display='none';
   document.getElementById('method-chooser').style.display='';
-  populateSelects('','');
+  populateSelects('',prefillLoc||'');
   setMethod('manual');
   openDialog('item-sheet');
-  if(prefill) setTimeout(()=>document.getElementById('f-name').focus(),300);
+  setTimeout(()=>document.getElementById('f-name').focus(),300);
 }
 
 function openEdit(id){
@@ -1714,7 +1976,9 @@ function setMethod(m){
 
 function stepQty(id,d){
   const el=document.getElementById(id);
+  if(!el)return;
   el.value=Math.max(0,(parseInt(el.value)||0)+d);
+  haptic(8);
 }
 
 function saveItem(){
@@ -1810,7 +2074,7 @@ function renderShopping(){
     </div>`).join('');
 }
 
-function toggleShop(id,v){const s=shoppingList.find(i=>i.id===id);if(s)s.checked=v;save();renderShopping();}
+function toggleShop(id,v){const s=shoppingList.find(i=>i.id===id);if(s)s.checked=v;haptic(8);save();renderShopping();}
 function removeShop(id){
   const prev=shoppingList.slice();
   if(!shoppingList.some(i=>i.id===id))return;
@@ -2012,6 +2276,7 @@ function closeReviewSheet(){closeDialog('review-sheet');haulReplaceLoc=null;}
 function renderSettings(){
   renderLocationsList();renderCategoriesList();renderNfcUrls();renderMiseUrl();
   renderStaplesList();renderFbStatus();
+  updateAppearanceUI();
 }
 
 function renderMiseUrl(){
@@ -2160,8 +2425,224 @@ async function startScan(){
 }
 function stopScan(){if(scanStream){scanStream.getTracks().forEach(t=>t.stop());scanStream=null;}}
 
+// ── APPEARANCE / THEME ────────────────────────────────────────────────────────
+function initAppearance(){
+  const stored=localStorage.getItem(THEME_KEY)||'auto';
+  applyTheme(stored,true);
+  try{
+    const mq=window.matchMedia('(prefers-color-scheme: dark)');
+    if(mq.addEventListener)mq.addEventListener('change',()=>{if((localStorage.getItem(THEME_KEY)||'auto')==='auto')updateThemeColor();});
+  }catch(e){}
+}
+function setAppearance(mode){
+  applyTheme(mode,false);
+}
+function applyTheme(mode,silent){
+  const m=(mode==='light'||mode==='dark'||mode==='auto')?mode:'auto';
+  localStorage.setItem(THEME_KEY,m);
+  const root=document.documentElement;
+  if(m==='auto')root.removeAttribute('data-theme');
+  else root.setAttribute('data-theme',m);
+  updateThemeColor();
+  updateAppearanceUI();
+  if(!silent)haptic(8);
+}
+function resolveTheme(){
+  const t=localStorage.getItem(THEME_KEY)||'auto';
+  if(t==='light'||t==='dark')return t;
+  try{return window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}catch(e){return'light';}
+}
+function updateThemeColor(){
+  const meta=document.querySelector('meta[name="theme-color"]');
+  if(meta)meta.setAttribute('content',resolveTheme()==='dark'?'#1C1A17':'#F5F1EA');
+}
+function updateAppearanceUI(){
+  const cur=localStorage.getItem(THEME_KEY)||'auto';
+  ['auto','light','dark'].forEach(m=>{
+    const btn=document.getElementById('theme-btn-'+m);
+    if(btn)btn.classList.toggle('active',cur===m);
+  });
+}
+
+// ── AUTO-REPEAT STEPPERS ──────────────────────────────────────────────────────
+function initAutoRepeat(){
+  let holdTimer=null,repeatTimer=null,count=0,activeBtn=null,handled=false;
+  const clear=()=>{
+    if(holdTimer){clearTimeout(holdTimer);holdTimer=null;}
+    if(repeatTimer){clearTimeout(repeatTimer);repeatTimer=null;}
+    activeBtn=null;count=0;
+  };
+  let usedSoftAdj=false;
+  const fire=btn=>{
+    if(btn.dataset.adj!=null){
+      adj(btn.dataset.adj,parseInt(btn.dataset.d,10)||0,{soft:true});
+      usedSoftAdj=true;
+    }else if(btn.dataset.step){
+      stepQty(btn.dataset.step,parseInt(btn.dataset.d,10)||0);
+    }
+  };
+  const scheduleRepeat=btn=>{
+    const interval=count>=10?70:120;
+    repeatTimer=setTimeout(()=>{
+      if(activeBtn!==btn)return;
+      fire(btn);count++;
+      scheduleRepeat(btn);
+    },interval);
+  };
+  document.addEventListener('pointerdown',e=>{
+    const btn=e.target.closest('.qty-btn,.qty-step-btn');
+    if(!btn)return;
+    if(e.pointerType==='mouse'&&e.button!==0)return;
+    e.preventDefault();
+    handled=true;activeBtn=btn;count=0;usedSoftAdj=false;
+    fire(btn);count=1;
+    holdTimer=setTimeout(()=>{
+      if(activeBtn!==btn)return;
+      scheduleRepeat(btn);
+    },450);
+    try{btn.setPointerCapture(e.pointerId);}catch(err){}
+  },{passive:false});
+  const end=e=>{
+    if(!activeBtn)return;
+    const needRefresh=usedSoftAdj;
+    clear();
+    usedSoftAdj=false;
+    if(needRefresh){renderInventory();renderHome();}
+    // swallow the synthetic click that would double-fire
+    setTimeout(()=>{handled=false;},0);
+  };
+  document.addEventListener('pointerup',end);
+  document.addEventListener('pointercancel',end);
+  document.addEventListener('pointerleave',e=>{if(e.target===activeBtn)end(e);},true);
+  document.addEventListener('click',e=>{
+    const btn=e.target.closest('.qty-btn,.qty-step-btn');
+    if(btn&&handled){e.preventDefault();e.stopPropagation();}
+  },true);
+}
+
+// ── SHEET DRAG-TO-DISMISS ─────────────────────────────────────────────────────
+const SHEET_CLOSE_MAP={
+  'item-sheet':()=>closeItemSheet(),
+  'quick-add-sheet':()=>closeDialog('quick-add-sheet'),
+  'rename-sheet':()=>closeDialog('rename-sheet'),
+  'review-sheet':()=>closeReviewSheet(),
+  'recipe-detail-sheet':()=>closeRecipeDetail(),
+  'recipe-edit-sheet':()=>closeRecipeEdit(),
+  'recipe-import-sheet':()=>closeRecipeImport(),
+  'what-can-cook-sheet':()=>closeWhatCanCook(),
+  'list-check-sheet':()=>closeListCheck(),
+  'onboard-modal':()=>skipOnboard(),
+  'cook-summary':()=>closeCookSummary(),
+};
+function initSheetDrag(){
+  Object.keys(SHEET_CLOSE_MAP).forEach(id=>wireSheetDrag(id,SHEET_CLOSE_MAP[id]));
+}
+function wireSheetDrag(rootId,closeFn){
+  const root=document.getElementById(rootId);
+  if(!root)return;
+  const sheet=root.querySelector('.sheet');
+  if(!sheet||sheet._dragWired)return;
+  sheet._dragWired=true;
+  const handle=sheet.querySelector('.sheet-handle');
+  let startY=0,dy=0,dragging=false,startT=0,pointerId=null;
+  const targets=[handle,sheet.querySelector('h2')].filter(Boolean);
+  if(!targets.length)return;
+  const onDown=e=>{
+    if(e.pointerType==='mouse'&&e.button!==0)return;
+    // don't start drag from interactive controls inside h2 area
+    if(e.target.closest('button,input,select,textarea,a'))return;
+    const y=e.clientY;
+    startY=y;dy=0;dragging=true;startT=Date.now();pointerId=e.pointerId;
+    sheet.classList.add('dragging');
+    sheet.style.transition='none';
+    try{e.currentTarget.setPointerCapture(e.pointerId);}catch(err){}
+  };
+  const onMove=e=>{
+    if(!dragging||(pointerId!=null&&e.pointerId!==pointerId))return;
+    dy=Math.max(0,e.clientY-startY);
+    sheet.style.transform=`translateY(${dy}px)`;
+  };
+  const onUp=e=>{
+    if(!dragging)return;
+    if(pointerId!=null&&e.pointerId!==pointerId)return;
+    dragging=false;pointerId=null;
+    sheet.classList.remove('dragging');
+    const elapsed=Math.max(1,Date.now()-startT);
+    const velocity=dy/elapsed; // px/ms
+    const h=sheet.offsetHeight||400;
+    sheet.style.transition='transform 0.22s ease';
+    if(dy>h*0.3||(velocity>0.55&&dy>36)){
+      sheet.style.transform=`translateY(100%)`;
+      setTimeout(()=>{
+        sheet.style.transform='';
+        sheet.style.transition='';
+        closeFn();
+      },200);
+    }else{
+      sheet.style.transform='';
+      setTimeout(()=>{sheet.style.transition='';},230);
+    }
+  };
+  targets.forEach(t=>{
+    t.style.touchAction='none';
+    t.addEventListener('pointerdown',onDown);
+    t.addEventListener('pointermove',onMove);
+    t.addEventListener('pointerup',onUp);
+    t.addEventListener('pointercancel',onUp);
+  });
+}
+
+// ── KEYBOARD AVOIDANCE (visualViewport) ───────────────────────────────────────
+function initKeyboardAvoidance(){
+  if(!window.visualViewport)return;
+  const vv=window.visualViewport;
+  let activeSheet=null;
+  const apply=()=>{
+    const focused=document.activeElement;
+    const isField=focused&&(focused.tagName==='INPUT'||focused.tagName==='TEXTAREA'||focused.tagName==='SELECT');
+    const sheet=isField?focused.closest('.sheet'):null;
+    if(activeSheet&&activeSheet!==sheet){
+      activeSheet.style.paddingBottom='';
+    }
+    activeSheet=sheet;
+    if(!sheet)return;
+    const kb=Math.max(0,window.innerHeight-vv.height-vv.offsetTop);
+    if(kb>80){
+      const base=32;
+      sheet.style.paddingBottom=`calc(env(safe-area-inset-bottom,0px) + ${base+kb}px)`;
+      try{focused.scrollIntoView({block:'center',behavior:'smooth'});}catch(e){}
+    }else{
+      sheet.style.paddingBottom='';
+    }
+  };
+  vv.addEventListener('resize',apply);
+  vv.addEventListener('scroll',apply);
+  document.addEventListener('focusin',()=>setTimeout(apply,50));
+  document.addEventListener('focusout',()=>setTimeout(apply,120));
+}
+
+// ── SWIPE DISCOVERABILITY ─────────────────────────────────────────────────────
+function maybeShowSwipeHint(){
+  if(localStorage.getItem(SWIPE_HINT_KEY))return;
+  if(!items.length)return;
+  const first=document.querySelector('#inventory-main .swipe-item .swipe-inner');
+  if(!first)return;
+  localStorage.setItem(SWIPE_HINT_KEY,'1');
+  // peek then return
+  requestAnimationFrame(()=>{
+    first.style.transition='transform 0.4s ease';
+    first.style.transform='translateX(-52px)';
+    setTimeout(()=>{
+      first.style.transform='';
+      setTimeout(()=>{first.style.transition='';},420);
+    },750);
+  });
+}
+
 // ── HAPTIC ────────────────────────────────────────────────────────────────────
-function haptic(ms=10){if(navigator.vibrate)navigator.vibrate(ms);}
+let _userHasInteracted=false;
+document.addEventListener('pointerdown',()=>{_userHasInteracted=true;},{once:true,capture:true});
+function haptic(ms=10){if(_userHasInteracted&&navigator.vibrate)navigator.vibrate(ms);}
 
 // ── TOAST ─────────────────────────────────────────────────────────────────────
 let _toastTimer=null,_toastAction=null;
@@ -2195,19 +2676,29 @@ function openDialog(rootId){
   root._returnFocus=document.activeElement;
   root.style.display='';
   const panel=root.querySelector('.sheet,.confirm-box')||root;
+  if(panel.classList&&panel.classList.contains('sheet')){
+    panel.style.transform='';
+    panel.style.transition='';
+    panel.classList.remove('dragging');
+  }
   panel.setAttribute('role','dialog');
   panel.setAttribute('aria-modal','true');
   if(!panel.hasAttribute('tabindex'))panel.tabIndex=-1;
   const first=panel.querySelector('input:not([type=hidden]):not([disabled]),button:not([disabled]),select,textarea,a[href]');
   setTimeout(()=>{try{(first||panel).focus({preventScroll:true});}catch(e){}},80);
+  haptic(8);
 }
 function closeDialog(rootId){
   const root=document.getElementById(rootId);
   if(!root)return;
+  const wasOpen=root.style.display!=='none'&&getComputedStyle(root).display!=='none';
   root.style.display='none';
+  const sheet=root.querySelector('.sheet');
+  if(sheet){sheet.style.transform='';sheet.style.transition='';sheet.classList.remove('dragging');}
   const rf=root._returnFocus;
   root._returnFocus=null;
   if(rf&&typeof rf.focus==='function'){try{rf.focus({preventScroll:true});}catch(e){}}
+  if(wasOpen)haptic(8);
 }
 function isDialogOpen(rootId){
   const root=document.getElementById(rootId);
@@ -2242,12 +2733,24 @@ function renderHome(){
   const STALE_MS=21*24*60*60*1000;
   const staleItems=items.filter(i=>!i.noAlert&&(now-(i.lastConfirmed||now))>=STALE_MS);
   const lowItems=items.filter(i=>!i.noAlert&&i.qty<=i.threshold);
+  const expItems=items.filter(i=>!i.noAlert&&(()=>{const d=daysUntilExpiry(i.expiry);return d!==null&&d<=30;})());
   const countStale=document.getElementById('count-stale');
   const countLow=document.getElementById('count-low');
   const countList=document.getElementById('count-list');
   if(countStale)countStale.textContent=staleItems.length;
   if(countLow)countLow.textContent=lowItems.length;
   if(countList)countList.textContent=shoppingList.filter(s=>!s.checked).length;
+  // state-aware hero
+  const heroTitle=document.getElementById('hero-title');
+  if(heroTitle){
+    const parts=[];
+    const lowN=lowItems.length;
+    const expN=expItems.length;
+    if(lowN) parts.push(`${lowN} thing${lowN===1?'':'s'} running low`);
+    if(expN) parts.push(`${expN} thing${expN===1?'':'s'} to use soon`);
+    if(staleItems.length&&!parts.length) parts.push(`${staleItems.length} thing${staleItems.length===1?'':'s'} need a check`);
+    heroTitle.textContent=parts.length?parts.join('. ')+'.':'all stocked. nothing needs you.';
+  }
   // Needs a look: up to 5 items from staleItems union lowItems, deduped
   const seen=new Set();
   const alerts=[...staleItems,...lowItems].filter(i=>{if(seen.has(i.id))return false;seen.add(i.id);return true;}).slice(0,5);
@@ -2365,7 +2868,20 @@ function renderListCheckResults(){
     </div>`).join('');
   }
 
-  document.getElementById('lc-results').innerHTML=html||`<div class="lc-empty">nothing matched your station.</div>`;
+  if(html){
+    html+=`<button type="button" class="lc-manage-staples" onclick="goToStaples()">manage staples →</button>`;
+    document.getElementById('lc-results').innerHTML=html;
+  }else{
+    document.getElementById('lc-results').innerHTML=`<div class="lc-empty">nothing matched your station.</div><button type="button" class="lc-manage-staples" onclick="goToStaples()">manage staples →</button>`;
+  }
+}
+function goToStaples(){
+  closeListCheck();
+  switchScreen('settings',null);
+  setTimeout(()=>{
+    const el=document.getElementById('settings-staples');
+    if(el)el.scrollIntoView({behavior:'smooth',block:'start'});
+  },120);
 }
 
 function copyFilteredList(){
@@ -2727,11 +3243,38 @@ function cookNext(){
 function cookPrev(){if(cookModeStep===0)return;clearTimerState();cookModeStep--;renderCookStep();}
 function initCookSwipe(){
   const el=document.getElementById('cook-mode-overlay');
-  el.ontouchstart=e=>{swipeStartX=e.touches[0].clientX;};
-  el.ontouchend=e=>{
-    if(swipeStartX===null)return;
-    const dx=e.changedTouches[0].clientX-swipeStartX;swipeStartX=null;
-    if(Math.abs(dx)>60){if(dx<0)cookNext();else cookPrev();}
+  const pane=document.getElementById('cook-step-pane');
+  let startX=0,startY=0,dx=0,dragging=false,locked=false;
+  el.ontouchstart=e=>{
+    if(e.target.closest('#cook-ing-drawer'))return;
+    startX=e.touches[0].clientX;startY=e.touches[0].clientY;dx=0;dragging=true;locked=false;
+    if(pane){pane.style.transition='none';}
+  };
+  el.ontouchmove=e=>{
+    if(!dragging||!pane)return;
+    const cx=e.touches[0].clientX,cy=e.touches[0].clientY;
+    if(!locked){
+      if(Math.abs(cy-startY)>Math.abs(cx-startX)*1.2){dragging=false;return;}
+      locked=true;
+    }
+    dx=cx-startX;
+    pane.style.transform=`translateX(${dx*0.55}px)`;
+  };
+  el.ontouchend=()=>{
+    if(!dragging){swipeStartX=null;return;}
+    dragging=false;swipeStartX=null;
+    if(!pane)return;
+    pane.style.transition='transform 0.2s ease';
+    if(Math.abs(dx)>60){
+      pane.style.transform=`translateX(${dx<0?-28:28}%)`;
+      setTimeout(()=>{
+        pane.style.transition='none';
+        pane.style.transform='';
+        if(dx<0)cookNext();else cookPrev();
+      },160);
+    }else{
+      pane.style.transform='';
+    }
   };
 }
 function toggleIngDrawer(){
@@ -3019,6 +3562,7 @@ function renderFbStatus() {
   if (inp && url) inp.value = url;
   if (ki  && key) ki.value  = key;
   if (det) det.open = !!(url && key); // open by default if already configured
+  updateSyncButtons();
   if (!url || !key) { fbSetStatus('', 'not configured'); return; }
   const synced = localStorage.getItem(FB_SYNCED_AT);
   if (synced) {
@@ -3027,6 +3571,13 @@ function renderFbStatus() {
   } else {
     fbSetStatus('', 'connected — not yet synced');
   }
+}
+function updateSyncButtons(){
+  const show=!!fbUrl();
+  ['station-sync-btn','list-sync-btn'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el)el.classList.toggle('visible',show);
+  });
 }
 
 // Auto-pull when tab becomes visible (catches background/switch)
