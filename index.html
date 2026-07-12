@@ -59,6 +59,16 @@
   --lemon-pale: #FDFAE8;
   --lemon-dark: var(--stale);
   --border: var(--rule);
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-serif: Georgia, 'Times New Roman', serif;
+  /* phase3 legacy palette → tokens:
+     saturated green accent → --accent; muted green text → --ink-soft;
+     near-black green → --ink; sage mute → --ink-faint;
+     pale borders → --rule; off-white surfaces → --bg;
+     pale/light greens → --accent-pale / --accent-light;
+     reds → --out / --out-light; ambers → --low / --low-light / --stale;
+     dark cook surfaces → --accent; whites as surfaces → --bg-card
+  */
 }
 
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
@@ -199,12 +209,12 @@ header{background:var(--bg);border-bottom:1px solid var(--rule);padding:max(var(
 /* ── IMPORT ── */
 .import-zone{padding:16px;}
 .import-hero{background:var(--ink);border-radius:16px;padding:22px 20px 20px;margin-bottom:16px;}
-.import-hero h3{font-family:'Instrument Serif',serif;font-size:20px;color:white;font-weight:400;letter-spacing:-0.3px;margin-bottom:4px;}
+.import-hero h3{font-family:var(--font-serif);font-size:20px;color:white;font-weight:400;letter-spacing:-0.3px;margin-bottom:4px;}
 .import-hero p{font-size:10px;color:rgba(255,255,255,0.60);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:14px;}
 .import-prompt-box{background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.18);border-radius:10px;padding:13px 14px;font-size:12px;color:rgba(255,255,255,0.88);line-height:1.65;margin-bottom:14px;}
-.import-paste-area{width:100%;min-height:180px;padding:13px 14px;border:1.5px solid var(--border);border-radius:14px;background:var(--white);font-family:'Geist Mono',monospace;font-size:13px;color:var(--ink);outline:none;resize:none;-webkit-appearance:none;line-height:1.65;}
+.import-paste-area{width:100%;min-height:180px;padding:13px 14px;border:1.5px solid var(--border);border-radius:14px;background:var(--white);font-family:var(--font-mono);font-size:13px;color:var(--ink);outline:none;resize:none;-webkit-appearance:none;line-height:1.65;}
 .import-paste-area:focus{border-color:var(--green);}
-.import-paste-area::placeholder{color:#9aab92;}
+.import-paste-area::placeholder{color:var(--ink-faint);}
 /* add gap between preview and clear buttons */
 .import-actions{display:flex;flex-direction:column;gap:10px;margin-top:16px;}
 
@@ -217,13 +227,13 @@ header{background:var(--bg);border-bottom:1px solid var(--rule);padding:max(var(
 .settings-row:last-child{border-bottom:none;}
 .settings-row-label{font-size:15px;font-weight:600;color:var(--ink);}
 .settings-row-sub{font-size:12px;color:var(--ink-soft);margin-top:2px;}
-.s-btn{font-family:'Geist Mono',monospace;font-size:10px;padding:8px 13px;border-radius:8px;cursor:pointer;white-space:nowrap;min-height:38px;display:flex;align-items:center;border:1.5px solid transparent;}
+.s-btn{font-family:var(--font-mono);font-size:10px;padding:8px 13px;border-radius:8px;cursor:pointer;white-space:nowrap;min-height:38px;display:flex;align-items:center;border:1.5px solid transparent;}
 .s-btn-rename{background:var(--green-pale);color:var(--green);border-color:var(--green-light);}
 .s-btn-rename:active{background:var(--green-light);}
 .s-btn-del{background:var(--red-light);color:var(--red);border-color:var(--red-light);margin-left:4px;}
 .s-btn-del:active{background:var(--red);color:white;}
 .add-row{display:flex;gap:8px;margin-top:10px;}
-.add-row input{flex:1;padding:12px 14px;border:1.5px solid var(--border);border-radius:10px;background:var(--white);font-family:'Geist Mono',monospace;font-size:13px;color:var(--ink);outline:none;-webkit-appearance:none;min-height:48px;}
+.add-row input{flex:1;padding:12px 14px;border:1.5px solid var(--border);border-radius:10px;background:var(--white);font-family:var(--font-mono);font-size:13px;color:var(--ink);outline:none;-webkit-appearance:none;min-height:48px;}
 .add-row input:focus{border-color:var(--green);}
 
 /* ── BUTTONS ── */
@@ -235,8 +245,8 @@ header{background:var(--bg);border-bottom:1px solid var(--rule);padding:max(var(
 .btn-ghost{background:var(--bg);color:var(--ink-soft);border:1px solid var(--rule);}
 .btn-ghost:active{background:var(--rule);}
 .btn-full{width:100%;padding:16px;font-size:16px;border-radius:var(--radius);min-height:54px;}
-.btn-danger-full{width:100%;padding:16px;font-size:16px;border-radius:var(--radius);min-height:54px;background:var(--out-light);color:var(--out);border:1px solid #F5C4C4;font-family:inherit;font-weight:600;cursor:pointer;}
-.btn-danger-full:active{background:var(--out);color:#fff;}
+.btn-danger-full{width:100%;padding:16px;font-size:16px;border-radius:var(--radius);min-height:54px;background:var(--out-light);color:var(--out);border:1px solid var(--out-light);font-family:inherit;font-weight:600;cursor:pointer;}
+.btn-danger-full:active{background:var(--out);color:var(--bg-card);}
 
 /* ── SHEET ── */
 .modal-overlay{position:fixed;inset:0;background:rgba(26,26,26,0.55);z-index:200;display:flex;align-items:flex-end;justify-content:center;animation:fadeIn 0.15s ease;}
@@ -255,20 +265,20 @@ select{color:var(--ink) !important;}
 option{color:var(--ink);background:var(--bg-card);}
 .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
 .sheet-actions{display:flex;flex-direction:column;gap:10px;margin-top:20px;}
-.lemon-bar{height:3px;background:#2d6a2d;width:28px;border-radius:2px;margin-bottom:18px;}
+.lemon-bar{height:3px;background:var(--accent);width:28px;border-radius:2px;margin-bottom:18px;}
 
 /* qty stepper — warm and clear */
-.qty-stepper{display:flex;align-items:center;border:1.5px solid #e4e8e2;border-radius:12px;background:#ffffff;overflow:hidden;min-height:50px;box-shadow:inset 0 1px 3px rgba(0,0,0,0.04);}
-.qty-step-btn{width:52px;min-height:50px;display:flex;align-items:center;justify-content:center;font-size:22px;color:#2c3d28;border:none;background:#f4f6f3;cursor:pointer;flex-shrink:0;}
-.qty-step-btn:active{background:#ddecd8;color:#2d6a2d;}
-.qty-step-input{flex:1;text-align:center;border:none!important;border-left:1px solid #e4e8e2!important;border-right:1px solid #e4e8e2!important;border-radius:0!important;background:#ffffff!important;font-family:'Instrument Serif',serif!important;font-size:22px!important;font-style:italic;min-height:50px!important;padding:0!important;outline:none;color:#111a0e!important;}
+.qty-stepper{display:flex;align-items:center;border:1.5px solid var(--rule);border-radius:12px;background:var(--bg-card);overflow:hidden;min-height:50px;box-shadow:inset 0 1px 3px rgba(0,0,0,0.04);}
+.qty-step-btn{width:52px;min-height:50px;display:flex;align-items:center;justify-content:center;font-size:22px;color:var(--accent);border:none;background:var(--bg);cursor:pointer;flex-shrink:0;}
+.qty-step-btn:active{background:var(--accent-light);color:var(--accent);}
+.qty-step-input{flex:1;text-align:center;border:none!important;border-left:1px solid var(--rule)!important;border-right:1px solid var(--rule)!important;border-radius:0!important;background:var(--bg-card)!important;font-family:var(--font-serif)!important;font-size:22px!important;font-style:italic;min-height:50px!important;padding:0!important;outline:none;color:var(--ink)!important;}
 
 /* method chooser */
 .method-row{display:flex;gap:8px;margin-bottom:20px;}
-.method-btn{flex:1;padding:14px 8px;border:1.5px solid #e4e8e2;border-radius:12px;background:#f4f6f3;font-family:'Geist Mono',monospace;font-size:11px;letter-spacing:0.04em;text-transform:uppercase;color:#5a6e52;cursor:pointer;text-align:center;display:flex;flex-direction:column;align-items:center;gap:6px;min-height:72px;justify-content:center;}
+.method-btn{flex:1;padding:14px 8px;border:1.5px solid var(--rule);border-radius:12px;background:var(--bg);font-family:var(--font-mono);font-size:11px;letter-spacing:0.04em;text-transform:uppercase;color:var(--ink-soft);cursor:pointer;text-align:center;display:flex;flex-direction:column;align-items:center;gap:6px;min-height:72px;justify-content:center;}
 .method-icon{font-size:24px;}
-.method-btn.active{border-color:#2d6a2d;background:#ddecd8;color:#2d6a2d;}
-.method-btn:active{border-color:#2d6a2d;background:#ddecd8;}
+.method-btn.active{border-color:var(--accent);background:var(--accent-light);color:var(--accent);}
+.method-btn:active{border-color:var(--accent);background:var(--accent-light);}
 
 /* scanner */
 .scanner-box{background:var(--ink);border-radius:12px;overflow:hidden;margin-bottom:14px;position:relative;}
@@ -288,28 +298,28 @@ option{color:var(--ink);background:var(--bg-card);}
 .review-detail.open{display:flex;}
 .review-detail-row{display:flex;gap:10px;align-items:center;}
 .review-detail label{font-size:10px;text-transform:uppercase;letter-spacing:0.07em;color:var(--ink-3);white-space:nowrap;min-width:56px;}
-.review-detail select,.review-detail input{flex:1;padding:9px 11px;border:1.5px solid var(--border);border-radius:9px;background:var(--off);font-family:'Geist Mono',monospace;font-size:13px;color:var(--ink);outline:none;-webkit-appearance:none;min-height:44px;}
-.review-detail select:focus,.review-detail input:focus{border-color:#2d6a2d;background:white;}
+.review-detail select,.review-detail input{flex:1;padding:9px 11px;border:1.5px solid var(--border);border-radius:9px;background:var(--off);font-family:var(--font-mono);font-size:13px;color:var(--ink);outline:none;-webkit-appearance:none;min-height:44px;}
+.review-detail select:focus,.review-detail input:focus{border-color:var(--accent);background:white;}
 .review-cb{width:26px;height:26px;-webkit-appearance:none;border:2px solid var(--border);border-radius:8px;background:var(--off);flex-shrink:0;cursor:pointer;transition:all 0.1s;position:relative;}
 .review-cb:checked{background:var(--green);border-color:var(--green);}
 .review-cb:checked::after{content:'✓';color:white;font-size:15px;position:absolute;left:4px;top:1px;}
 .review-info{flex:1;min-width:0;}
-.review-name{font-family:'Instrument Serif',serif;font-size:15px;letter-spacing:-0.2px;}
+.review-name{font-family:var(--font-serif);font-size:15px;letter-spacing:-0.2px;}
 .review-tag{display:inline-block;font-size:9px;padding:2px 7px;border-radius:3px;text-transform:uppercase;letter-spacing:0.05em;margin-top:3px;}
 .review-loc-hint{font-size:10px;color:var(--ink-3);display:inline-block;margin-left:6px;}
-.review-loc-sel{font-size:11px;padding:5px 8px;border:1.5px solid var(--border);border-radius:8px;background:var(--off);font-family:'Geist Mono',monospace;color:var(--ink-2);-webkit-appearance:none;appearance:none;max-width:96px;cursor:pointer;}
-.review-loc-sel:focus{border-color:#2d6a2d;outline:none;}
-.review-name-input{border:none;background:transparent;font-family:'Instrument Serif',serif;font-size:15px;letter-spacing:-0.2px;color:#111a0e;width:100%;outline:none;padding:2px 0;min-width:0;}
-.review-name-input:focus{background:#f8f9f7;border-radius:4px;padding:2px 5px;margin:-2px -5px;width:calc(100% + 10px);}
-.review-loc-inp{font-size:11px;padding:5px 8px;border:1.5px solid var(--border);border-radius:8px;background:var(--off);font-family:'Geist Mono',monospace;color:var(--ink-2);max-width:96px;outline:none;-webkit-appearance:none;width:96px;}
-.review-loc-inp:focus{border-color:#2d6a2d;}
+.review-loc-sel{font-size:11px;padding:5px 8px;border:1.5px solid var(--border);border-radius:8px;background:var(--off);font-family:var(--font-mono);color:var(--ink-2);-webkit-appearance:none;appearance:none;max-width:96px;cursor:pointer;}
+.review-loc-sel:focus{border-color:var(--accent);outline:none;}
+.review-name-input{border:none;background:transparent;font-family:var(--font-serif);font-size:15px;letter-spacing:-0.2px;color:var(--ink);width:100%;outline:none;padding:2px 0;min-width:0;}
+.review-name-input:focus{background:var(--bg);border-radius:4px;padding:2px 5px;margin:-2px -5px;width:calc(100% + 10px);}
+.review-loc-inp{font-size:11px;padding:5px 8px;border:1.5px solid var(--border);border-radius:8px;background:var(--off);font-family:var(--font-mono);color:var(--ink-2);max-width:96px;outline:none;-webkit-appearance:none;width:96px;}
+.review-loc-inp:focus{border-color:var(--accent);}
 .tag-restock{background:var(--green-light);color:var(--green);}
-.tag-new{background:var(--lemon-2);color:#7a6a00;}
+.tag-new{background:var(--lemon-2);color:var(--stale);}
 .review-qty{display:flex;align-items:center;gap:8px;}
 .review-qty-btn{width:36px;height:36px;border-radius:50%;border:1.5px solid var(--border);background:var(--off);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--ink-2);position:relative;flex-shrink:0;}
 .review-qty-btn::after{content:'';position:absolute;inset:-6px;}
 .review-qty-btn:active{background:var(--green);color:white;border-color:var(--green);}
-.review-qty-val{font-family:'Instrument Serif',serif;font-size:19px;font-style:italic;min-width:22px;text-align:center;}
+.review-qty-val{font-family:var(--font-serif);font-size:19px;font-style:italic;min-width:22px;text-align:center;}
 
 /* confirm */
 .confirm-overlay{position:fixed;inset:0;background:rgba(26,26,26,0.55);z-index:400;display:flex;align-items:center;justify-content:center;padding:24px;animation:fadeIn 0.15s ease;}
@@ -332,7 +342,7 @@ option{color:var(--ink);background:var(--bg-card);}
 
 /* empty */
 .empty{text-align:center;padding:64px 24px;color:var(--ink-3);}
-.empty h3{font-family:'Instrument Serif',serif;font-size:22px;color:var(--ink-2);margin-bottom:8px;font-weight:400;font-style:italic;}
+.empty h3{font-family:var(--font-serif);font-size:22px;color:var(--ink-2);margin-bottom:8px;font-weight:400;font-style:italic;}
 .empty p{font-size:12px;line-height:1.6;}
 
 /* expiry badge */
@@ -346,29 +356,29 @@ option{color:var(--ink);background:var(--bg-card);}
 
 /* ── MUTED ITEM CARD ── */
 .item-card.muted{opacity:0.45;border-top:none;}
-.item-card.muted .item-name{color:#5a6e52;}
+.item-card.muted .item-name{color:var(--ink-soft);}
 
 /* ── STAT DOTS — coloured by type ── */
-.stat-dot.dot-low{background:#e8e02a;}
-.stat-dot.dot-out{background:#c44040;}
-.stat-dot.dot-exp{background:#c47c20;}
+.stat-dot.dot-low{background:var(--low);}
+.stat-dot.dot-out{background:var(--out);}
+.stat-dot.dot-exp{background:var(--low);}
 
 /* ── RESTOCK BAR — primary action highlighted ── */
-.restock-bar .btn-primary-action{background:#2d6a2d;color:#ffffff;border-color:#2d6a2d;}
-.restock-bar .btn-primary-action:active{background:#3d8c3d;}
+.restock-bar .btn-primary-action{background:var(--accent);color:var(--bg-card);border-color:var(--accent);}
+.restock-bar .btn-primary-action:active{background:var(--have);}
 
 /* ── GUIDE STEP (used by recipe steps) ── */
-.step-num{width:24px;height:24px;background:#2d6a2d;color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0;font-weight:500;margin-top:1px;}
+.step-num{width:24px;height:24px;background:var(--accent);color:var(--bg-card);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0;font-weight:500;margin-top:1px;}
 .step-body{flex:1;}
-.step-title{font-size:13px;color:#111a0e;font-weight:500;margin-bottom:3px;}
+.step-title{font-size:13px;color:var(--ink);font-weight:500;margin-bottom:3px;}
 .sync-btn-row{display:flex;gap:8px;margin-top:12px;}
 .sync-btn-row .btn{flex:1;}
 /* ── FIREBASE SYNC ── */
-.fb-status-row{display:flex;align-items:center;gap:8px;padding:10px 14px;background:#f8f9f7;border-radius:10px;margin-bottom:12px;border:1.5px solid #e4e8e2;}
-.fb-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;background:#9aab92;}
-.fb-dot.ok{background:#2d6a2d;}
-.fb-dot.syncing{background:#d4a843;}
-.fb-dot.err{background:#c44040;}
+.fb-status-row{display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--bg);border-radius:10px;margin-bottom:12px;border:1.5px solid var(--rule);}
+.fb-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;background:var(--ink-faint);}
+.fb-dot.ok{background:var(--accent);}
+.fb-dot.syncing{background:var(--low);}
+.fb-dot.err{background:var(--out);}
 
 /* ── RECIPES ── */
 .recipe-card{background:var(--bg-card);border:1px solid var(--rule);border-radius:var(--radius);padding:16px;margin-bottom:10px;cursor:pointer;display:flex;align-items:center;gap:14px;transition:transform 0.1s;}
@@ -388,97 +398,97 @@ option{color:var(--ink);background:var(--bg-card);}
 .recipe-badge.mostly{background:var(--low-light);color:var(--low);}
 .recipe-badge.missing{background:var(--out-light);color:var(--out);}
 .recipe-empty{text-align:center;padding:64px 24px;}
-.recipe-empty h3{font-family:'Instrument Serif',serif;font-size:22px;color:#2c3d28;margin-bottom:8px;font-weight:400;font-style:italic;}
-.recipe-empty p{font-size:12px;color:#5a6e52;line-height:1.6;margin-bottom:20px;}
+.recipe-empty h3{font-family:var(--font-serif);font-size:22px;color:var(--accent);margin-bottom:8px;font-weight:400;font-style:italic;}
+.recipe-empty p{font-size:12px;color:var(--ink-soft);line-height:1.6;margin-bottom:20px;}
 /* ingredient rows in detail sheet */
-.ing-row{display:flex;align-items:center;padding:11px 0;border-bottom:1px solid #e4e8e2;gap:12px;}
+.ing-row{display:flex;align-items:center;padding:11px 0;border-bottom:1px solid var(--rule);gap:12px;}
 .ing-row:last-child{border-bottom:none;}
 .ing-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
-.ing-dot.ok{background:#2d6a2d;}
-.ing-dot.low{background:#e8e02a;}
-.ing-dot.out{background:#c44040;}
-.ing-dot.unknown{background:#9aab92;}
-.ing-name{flex:1;font-family:'Instrument Serif',serif;font-size:15px;letter-spacing:-0.2px;color:#111a0e;}
-.ing-qty{font-size:11px;color:#5a6e52;white-space:nowrap;}
-.ing-stock{font-size:10px;color:#9aab92;white-space:nowrap;}
+.ing-dot.ok{background:var(--accent);}
+.ing-dot.low{background:var(--low);}
+.ing-dot.out{background:var(--out);}
+.ing-dot.unknown{background:var(--ink-faint);}
+.ing-name{flex:1;font-family:var(--font-serif);font-size:15px;letter-spacing:-0.2px;color:var(--ink);}
+.ing-qty{font-size:11px;color:var(--ink-soft);white-space:nowrap;}
+.ing-stock{font-size:10px;color:var(--ink-faint);white-space:nowrap;}
 /* ingredient builder in edit sheet */
 .ing-builder-row{display:flex;gap:6px;align-items:center;margin-bottom:8px;}
-.ing-builder-row input{flex:2;padding:10px 12px;border:1.5px solid #e4e8e2;border-radius:10px;background:#f8f9f7;font-family:'Geist Mono',monospace;font-size:13px;color:#111a0e;outline:none;min-height:44px;}
+.ing-builder-row input{flex:2;padding:10px 12px;border:1.5px solid var(--rule);border-radius:10px;background:var(--bg);font-family:var(--font-mono);font-size:13px;color:var(--ink);outline:none;min-height:44px;}
 .ing-builder-row input.ing-qty-field{flex:1;}
-.ing-builder-row input:focus{border-color:#2d6a2d;background:#fff;}
-.ing-del-btn{width:36px;height:36px;border-radius:50%;border:none;background:none;color:#9aab92;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;line-height:1;}
-.ing-del-btn:active{color:#c44040;}
-.add-ing-btn{width:100%;padding:11px;border:1.5px dashed #e4e8e2;border-radius:10px;background:none;font-family:'Geist Mono',monospace;font-size:11px;color:#5a6e52;cursor:pointer;letter-spacing:0.04em;margin-bottom:4px;}
-.add-ing-btn:active{border-color:#2d6a2d;color:#2d6a2d;background:#edf3ea;}
+.ing-builder-row input:focus{border-color:var(--accent);background:var(--bg-card);}
+.ing-del-btn{width:36px;height:36px;border-radius:50%;border:none;background:none;color:var(--ink-faint);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;line-height:1;}
+.ing-del-btn:active{color:var(--out);}
+.add-ing-btn{width:100%;padding:11px;border:1.5px dashed var(--rule);border-radius:10px;background:none;font-family:var(--font-mono);font-size:11px;color:var(--ink-soft);cursor:pointer;letter-spacing:0.04em;margin-bottom:4px;}
+.add-ing-btn:active{border-color:var(--accent);color:var(--accent);background:var(--accent-pale);}
 
 /* ── RECIPE SEARCH / FILTER / SORT ── */
-.recipe-search-wrap{display:flex;align-items:center;gap:8px;background:#f8f9f7;border:1.5px solid #e4e8e2;border-radius:10px;padding:10px 12px;margin-top:10px;}
-.recipe-search-wrap:focus-within{border-color:#2d6a2d;background:#fff;}
-#recipe-search{flex:1;border:none;background:none;font-family:'Geist Mono',monospace;font-size:13px;color:#111a0e;outline:none;min-width:0;}
-#recipe-search::placeholder{color:#9aab92;}
+.recipe-search-wrap{display:flex;align-items:center;gap:8px;background:var(--bg);border:1.5px solid var(--rule);border-radius:10px;padding:10px 12px;margin-top:10px;}
+.recipe-search-wrap:focus-within{border-color:var(--accent);background:var(--bg-card);}
+#recipe-search{flex:1;border:none;background:none;font-family:var(--font-mono);font-size:13px;color:var(--ink);outline:none;min-width:0;}
+#recipe-search::placeholder{color:var(--ink-faint);}
 .tag-filter-row{display:flex;gap:6px;overflow-x:auto;padding:8px 0 2px;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
 .tag-filter-row:empty{display:none;}
 .tag-filter-row::-webkit-scrollbar{display:none;}
-.tag-filter-pill{flex-shrink:0;padding:5px 12px;border-radius:20px;border:1.5px solid #e4e8e2;background:#fff;font-family:'Geist Mono',monospace;font-size:10px;color:#5a6e52;cursor:pointer;letter-spacing:0.04em;white-space:nowrap;transition:background 0.1s,border-color 0.1s;}
+.tag-filter-pill{flex-shrink:0;padding:5px 12px;border-radius:20px;border:1.5px solid var(--rule);background:var(--bg-card);font-family:var(--font-mono);font-size:10px;color:var(--ink-soft);cursor:pointer;letter-spacing:0.04em;white-space:nowrap;transition:background 0.1s,border-color 0.1s;}
 .tag-filter-pill:active{transform:scale(0.96);}
-.tag-filter-pill.active{background:#2d6a2d;border-color:#2d6a2d;color:#fff;}
+.tag-filter-pill.active{background:var(--accent);border-color:var(--accent);color:var(--bg-card);}
 .recipe-toolbar{display:flex;align-items:center;justify-content:space-between;margin-top:8px;}
 .recipe-sort-wrap{display:flex;align-items:center;gap:4px;}
-.sort-pill{padding:4px 10px;border-radius:20px;border:1.5px solid #e4e8e2;background:#fff;font-family:'Geist Mono',monospace;font-size:10px;color:#9aab92;cursor:pointer;letter-spacing:0.04em;}
-.sort-pill.active{border-color:#2d6a2d;color:#2d6a2d;background:#edf3ea;}
-.btn-tonight{font-family:'Geist Mono',monospace;font-size:10px;color:#2d6a2d;background:#edf3ea;border:1.5px solid #ddecd8;border-radius:20px;cursor:pointer;letter-spacing:0.04em;padding:6px 14px;min-height:36px;white-space:nowrap;}
-.btn-tonight:active{background:#ddecd8;}
+.sort-pill{padding:4px 10px;border-radius:20px;border:1.5px solid var(--rule);background:var(--bg-card);font-family:var(--font-mono);font-size:10px;color:var(--ink-faint);cursor:pointer;letter-spacing:0.04em;}
+.sort-pill.active{border-color:var(--accent);color:var(--accent);background:var(--accent-pale);}
+.btn-tonight{font-family:var(--font-mono);font-size:10px;color:var(--accent);background:var(--accent-pale);border:1.5px solid var(--accent-light);border-radius:20px;cursor:pointer;letter-spacing:0.04em;padding:6px 14px;min-height:36px;white-space:nowrap;}
+.btn-tonight:active{background:var(--accent-light);}
 .recipe-filter-empty{text-align:center;padding:48px 24px;}
-.recipe-filter-empty p{font-size:13px;color:#9aab92;margin-bottom:14px;}
+.recipe-filter-empty p{font-size:13px;color:var(--ink-faint);margin-bottom:14px;}
 /* ── RECIPE TAGS ── */
-.recipe-tag{display:inline-block;padding:2px 8px;background:#edf3ea;color:#2d6a2d;border-radius:4px;font-family:'Geist Mono',monospace;font-size:9px;letter-spacing:0.05em;text-transform:lowercase;}
+.recipe-tag{display:inline-block;padding:2px 8px;background:var(--accent-pale);color:var(--accent);border-radius:4px;font-family:var(--font-mono);font-size:9px;letter-spacing:0.05em;text-transform:lowercase;}
 .recipe-tags{display:flex;flex-wrap:wrap;gap:4px;}
 /* ── RECIPE STEPS ── */
-.step-row{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid #e4e8e2;}
+.step-row{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--rule);}
 .step-row:last-child{border-bottom:none;}
-.step-num{width:24px;height:24px;border-radius:50%;background:#edf3ea;color:#2d6a2d;font-family:'Geist Mono',monospace;font-size:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px;}
+.step-num{width:24px;height:24px;border-radius:50%;background:var(--accent-pale);color:var(--accent);font-family:var(--font-mono);font-size:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px;}
 .step-body{flex:1;}
-.step-title{font-family:'Instrument Serif',serif;font-size:15px;color:#111a0e;margin-bottom:4px;}
-.step-content{font-size:13px;color:#5a6e52;line-height:1.6;}
-.step-timer-badge{display:inline-block;margin-top:6px;padding:3px 8px;background:#fdf2e0;color:#c47c20;border-radius:5px;font-family:'Geist Mono',monospace;font-size:10px;}
-.ing-dot.staple{background:#9aab92;}
+.step-title{font-family:var(--font-serif);font-size:15px;color:var(--ink);margin-bottom:4px;}
+.step-content{font-size:13px;color:var(--ink-soft);line-height:1.6;}
+.step-timer-badge{display:inline-block;margin-top:6px;padding:3px 8px;background:var(--low-light);color:var(--low);border-radius:5px;font-family:var(--font-mono);font-size:10px;}
+.ing-dot.staple{background:var(--ink-faint);}
 /* ── COOK MODE ── */
-#cook-mode-overlay{display:none;position:fixed;inset:0;background:#1c3a1e;z-index:2000;flex-direction:column;overflow:hidden;}
+#cook-mode-overlay{display:none;position:fixed;inset:0;background:var(--accent);z-index:2000;flex-direction:column;overflow:hidden;}
 #cook-mode-overlay.active{display:flex;}
-#cook-ing-drawer{position:absolute;bottom:0;left:0;right:0;background:#243d26;border-radius:16px 16px 0 0;transform:translateY(calc(100% - 50px));transition:transform 0.3s ease;}
+#cook-ing-drawer{position:absolute;bottom:0;left:0;right:0;background:var(--accent);border-radius:16px 16px 0 0;transform:translateY(calc(100% - 50px));transition:transform 0.3s ease;}
 .cook-ing-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.08);}
 .cook-ing-row:last-child{border-bottom:none;}
-.cook-ing-name{font-family:'Instrument Serif',serif;font-size:15px;color:rgba(255,255,255,0.85);}
-.cook-ing-amt{font-family:'Geist Mono',monospace;font-size:11px;color:rgba(255,255,255,0.5);}
+.cook-ing-name{font-family:var(--font-serif);font-size:15px;color:rgba(255,255,255,0.85);}
+.cook-ing-amt{font-family:var(--font-mono);font-size:11px;color:rgba(255,255,255,0.5);}
 /* ── WHAT CAN I COOK ── */
-.wcc-section-head{font-size:12px;font-weight:600;color:#5a6e52;padding:12px 0 6px;margin-top:4px;letter-spacing:0.03em;}
+.wcc-section-head{font-size:12px;font-weight:600;color:var(--ink-soft);padding:12px 0 6px;margin-top:4px;letter-spacing:0.03em;}
 .wcc-section-head:first-child{padding-top:0;margin-top:0;}
-.wcc-card{padding:14px 16px;border-radius:12px;margin-bottom:8px;cursor:pointer;border-left:4px solid transparent;background:#fff;border:1.5px solid #e4e8e2;transition:transform 0.1s;}
+.wcc-card{padding:14px 16px;border-radius:12px;margin-bottom:8px;cursor:pointer;border-left:4px solid transparent;background:var(--bg-card);border:1.5px solid var(--rule);transition:transform 0.1s;}
 .wcc-card:active{transform:scale(0.98);}
-.wcc-card.ready{border-left:4px solid #2d6a2d;background:#fafcf9;}
-.wcc-card.mostly{border-left:4px solid #c47c20;background:#fffaf5;}
-.wcc-card.missing{border-left:4px solid #c44040;background:#fffafa;}
+.wcc-card.ready{border-left:4px solid var(--accent);background:var(--accent-pale);}
+.wcc-card.mostly{border-left:4px solid var(--low);background:var(--low-light);}
+.wcc-card.missing{border-left:4px solid var(--out);background:var(--out-light);}
 /* ── STAPLES in settings ── */
-.s-btn-delete{background:none;border:none;color:#9aab92;font-size:18px;cursor:pointer;padding:6px 8px;line-height:1;}
-.s-btn-delete:active{color:#c44040;}
+.s-btn-delete{background:none;border:none;color:var(--ink-faint);font-size:18px;cursor:pointer;padding:6px 8px;line-height:1;}
+.s-btn-delete:active{color:var(--out);}
 /* ── STICKY TOOLBARS ── */
 #screen-station .toolbar{position:sticky;top:0;z-index:10;}
 #screen-recipes .page-header{position:sticky;top:0;z-index:10;}
 
 /* ── LIST CHECK (AnyList) ── */
-.lc-section-label{font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:#5a6e52;margin:16px 0 8px;}
+.lc-section-label{font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-soft);margin:16px 0 8px;}
 .lc-section-label:first-child{margin-top:0;}
-.lc-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #e4e8e2;}
+.lc-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--rule);}
 .lc-row:last-child{border-bottom:none;}
 .lc-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
-.lc-dot.ok{background:#2d6a2d;}
-.lc-dot.low{background:#e8c02a;}
-.lc-dot.out{background:#c44040;}
-.lc-dot.unknown{background:#c0c0b8;}
-.lc-name{flex:1;font-family:'Instrument Serif',serif;font-size:15px;letter-spacing:-0.2px;color:#111a0e;}
-.lc-name.stocked{text-decoration:line-through;color:#9aab92;}
-.lc-meta{font-size:10px;color:#9aab92;white-space:nowrap;}
-.lc-empty{text-align:center;padding:32px 0;font-size:12px;color:#9aab92;}
+.lc-dot.ok{background:var(--accent);}
+.lc-dot.low{background:var(--low);}
+.lc-dot.out{background:var(--out);}
+.lc-dot.unknown{background:var(--ink-faint);}
+.lc-name{flex:1;font-family:var(--font-serif);font-size:15px;letter-spacing:-0.2px;color:var(--ink);}
+.lc-name.stocked{text-decoration:line-through;color:var(--ink-faint);}
+.lc-meta{font-size:10px;color:var(--ink-faint);white-space:nowrap;}
+.lc-empty{text-align:center;padding:32px 0;font-size:12px;color:var(--ink-faint);}
 .lc-copy-bar{display:flex;gap:8px;margin-top:16px;}
 .lc-copy-bar .btn{flex:1;}
 
@@ -515,7 +525,7 @@ option{color:var(--ink);background:var(--bg-card);}
 
 /* ── S5 STALENESS ── */
 .item-card.stale{border-top:3px solid var(--stale);}
-.loc-row.stale{background:#FBF4EE;}
+.loc-row.stale{background:var(--low-light);}
 
 /* ── S6 SWIPE GESTURES ── */
 .swipe-item{position:relative;overflow:hidden;border-radius:var(--radius-sm);margin-bottom:6px;}
@@ -565,10 +575,10 @@ option{color:var(--ink);background:var(--bg-card);}
     <div class="home-content">
       <div class="home-date" id="today-label"></div>
       <div class="hero">
-        <div class="hero-eyebrow" id="hero-eyebrow">Your kitchen</div>
-        <div class="hero-title" id="hero-title">Ready for the week?</div>
-        <div class="hero-sub">A quick look at what's low, stale, and what you can make tonight.</div>
-        <button class="hero-cta" onclick="switchScreen('station',document.getElementById('nav-station'))">View station →</button>
+        <div class="hero-eyebrow" id="hero-eyebrow">your kitchen</div>
+        <div class="hero-title" id="hero-title">ready for the week?</div>
+        <div class="hero-sub">a quick look at what's low, stale, and what you can make tonight.</div>
+        <button class="hero-cta" onclick="switchScreen('station',document.getElementById('nav-station'))">view station →</button>
       </div>
       <div class="status-row">
         <div class="status-card" onclick="switchScreen('station',document.getElementById('nav-station'))">
@@ -585,7 +595,7 @@ option{color:var(--ink);background:var(--bg-card);}
         </div>
       </div>
       <div id="home-needs-look" style="display:none">
-        <div class="home-section-head">Needs a look</div>
+        <div class="home-section-head">needs a look</div>
         <div id="home-items-list"></div>
       </div>
     </div>
@@ -594,6 +604,14 @@ option{color:var(--ink);background:var(--bg-card);}
   <!-- STATION -->
 
   <div class="screen" id="screen-station">
+    <div class="page-header">
+      <div class="page-header-row">
+        <div>
+          <div class="page-title">station.</div>
+          <div class="page-sub">your kitchen, mapped.</div>
+        </div>
+      </div>
+    </div>
     <div class="stats-strip" id="stats-strip"></div>
     <div class="toolbar">
       <div class="search-wrap">
@@ -617,8 +635,8 @@ option{color:var(--ink);background:var(--bg-card);}
     <div class="page-header">
       <div class="page-header-row">
         <div>
-          <div class="page-title">Restock</div>
-          <div class="page-sub">your shopping list</div>
+          <div class="page-title">list.</div>
+          <div class="page-sub">what your kitchen needs.</div>
         </div>
       </div>
     </div>
@@ -639,7 +657,7 @@ option{color:var(--ink);background:var(--bg-card);}
     <div class="page-header">
       <div class="page-header-row">
         <div>
-          <div class="page-title">Haul Import</div>
+          <div class="page-title">haul import.</div>
           <div class="page-sub">import via Claude</div>
         </div>
         <button class="btn btn-ghost" onclick="switchScreen('station',document.getElementById('nav-station'))" style="font-size:11px;padding:8px 14px;">← back</button>
@@ -647,11 +665,11 @@ option{color:var(--ink);background:var(--bg-card);}
     </div>
     <div class="import-zone">
       <div class="import-hero">
-        <h3>Location import</h3>
+        <h3>location import</h3>
         <p>scan tag · snap a photo · paste · apply</p>
         <div class="form-row" style="margin-bottom:12px">
           <label>Location</label>
-          <select id="import-loc-select" onchange="onImportLocChange()" style="width:100%;padding:12px 14px;border:1.5px solid #e4e8e2;border-radius:10px;background:#f8f9f7;font-family:'Geist Mono',monospace;font-size:13px;color:#111a0e;appearance:auto;">
+          <select id="import-loc-select" onchange="onImportLocChange()" style="width:100%;padding:12px 14px;border:1.5px solid var(--rule);border-radius:10px;background:var(--bg);font-family:var(--font-mono);font-size:13px;color:var(--ink);appearance:auto;">
             <!-- populated by renderImportLocSelect() -->
           </select>
         </div>
@@ -675,28 +693,28 @@ option{color:var(--ink);background:var(--bg-card);}
     <div class="page-header">
       <div class="page-header-row">
         <div>
-          <div class="page-title">Recipes</div>
+          <div class="page-title">recipes.</div>
           <div class="page-sub" id="recipes-sub">what you can cook right now</div>
         </div>
-        <button class="btn btn-green" onclick="openRecipeImport()" style="font-size:11px;padding:8px 14px;">Import →</button>
+        <button class="btn btn-green" onclick="openRecipeImport()" style="font-size:11px;padding:8px 14px;">import →</button>
       </div>
       <!-- Search -->
       <div class="recipe-search-wrap">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9aab92" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--ink-faint)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         <input type="search" id="recipe-search" placeholder="Search recipes…" oninput="onRecipeSearch(this.value)" autocomplete="off" autocorrect="off" spellcheck="false">
-        <button id="recipe-search-clear" onclick="clearRecipeSearch()" style="display:none;background:none;border:none;color:#9aab92;font-size:18px;cursor:pointer;padding:0 2px;line-height:1;">×</button>
+        <button id="recipe-search-clear" onclick="clearRecipeSearch()" style="display:none;background:none;border:none;color:var(--ink-faint);font-size:18px;cursor:pointer;padding:0 2px;line-height:1;">×</button>
       </div>
       <!-- Tag filters -->
       <div class="tag-filter-row" id="tag-filter-row"></div>
       <!-- Sort + Tonight row -->
       <div class="recipe-toolbar">
         <div class="recipe-sort-wrap">
-          <span style="font-size:10px;color:#9aab92;letter-spacing:0.04em;text-transform:uppercase;margin-right:6px;">Sort</span>
+          <span style="font-size:10px;color:var(--ink-faint);letter-spacing:0.04em;text-transform:uppercase;margin-right:6px;">Sort</span>
           <button class="sort-pill active" id="sort-readiness" onclick="setRecipeSort('readiness')">readiness</button>
           <button class="sort-pill" id="sort-alpha" onclick="setRecipeSort('alpha')">A→Z</button>
           <button class="sort-pill" id="sort-newest" onclick="setRecipeSort('newest')">newest</button>
         </div>
-        <button class="btn-tonight" onclick="openWhatCanCook()">Tonight? →</button>
+        <button class="btn-tonight" onclick="openWhatCanCook()">tonight? →</button>
       </div>
     </div>
     <div class="content-pad" id="recipes-list"></div>
@@ -706,34 +724,40 @@ option{color:var(--ink);background:var(--bg-card);}
 
   <div class="screen" id="screen-settings">
     <div class="page-header">
-      <div class="page-title">Settings</div>
-      <div class="page-sub">sync · organize · backup</div>
+      <div class="page-title">settings.</div>
+      <div class="page-sub">sync · organize · backup.</div>
     </div>
     <div class="settings-section">
-      <div class="settings-heading">Firebase sync</div>
+      <div class="settings-heading">share with household</div>
+      <div style="font-size:12px;color:var(--ink-soft);margin:-4px 0 12px;line-height:1.5;">keep two phones on the same kitchen.</div>
       <div class="fb-status-row">
         <div class="fb-dot" id="fb-dot"></div>
-        <div id="fb-status-text" style="font-size:11px;color:#5a6e52;">Not configured</div>
+        <div id="fb-status-text" style="font-size:11px;color:var(--ink-soft);">not configured</div>
       </div>
       <div class="settings-card">
-        <div class="settings-row" style="flex-direction:column;align-items:flex-start;gap:6px">
-          <div class="settings-row-label">Database URL</div>
-          <input type="url" id="fb-url-input" placeholder="https://mise-xxxxx-default-rtdb.firebaseio.com" autocomplete="off" style="width:100%;padding:10px 12px;border:1.5px solid #e4e8e2;border-radius:8px;background:#f8f9f7;font-family:'Geist Mono',monospace;font-size:11px;color:#111a0e;box-sizing:border-box;">
+        <div style="display:flex;gap:8px;margin-bottom:4px;">
+          <button class="btn btn-outline" onclick="fbPull()" style="flex:1;padding:12px;">fetch now</button>
+          <button class="btn btn-outline" onclick="fbPush()" style="flex:1;padding:12px;">send now</button>
         </div>
-        <div class="settings-row" style="flex-direction:column;align-items:flex-start;gap:6px;margin-top:8px;">
-          <div class="settings-row-label">Sync key <span style="font-weight:400;color:#9aab92">(same on both phones)</span></div>
-          <input type="text" id="fb-key-input" placeholder="e.g. brianandjane-mise" autocomplete="off" autocorrect="off" autocapitalize="off" style="width:100%;padding:10px 12px;border:1.5px solid #e4e8e2;border-radius:8px;background:#f8f9f7;font-family:'Geist Mono',monospace;font-size:11px;color:#111a0e;box-sizing:border-box;">
-        </div>
-        <div style="display:flex;gap:8px;margin-top:12px;">
-          <button class="btn btn-green" onclick="saveFbConfig()" style="flex:1;padding:12px;">Save</button>
-          <button class="btn btn-outline" onclick="fbPull()" style="flex:1;padding:12px;">Pull ↓</button>
-          <button class="btn btn-outline" onclick="fbPush()" style="flex:1;padding:12px;">Push ↑</button>
-        </div>
-        <div style="font-size:10px;color:#9aab92;margin-top:10px;line-height:1.6;">Syncs inventory, shopping list, locations, categories, and recipes between devices. Auto-pulls on open, auto-pushes after every change.</div>
+        <details id="fb-connection-details">
+          <summary class="settings-row-label" style="cursor:pointer;list-style:none;padding:10px 0;color:var(--ink-soft);">connection settings</summary>
+          <div class="settings-row" style="flex-direction:column;align-items:flex-start;gap:6px">
+            <div class="settings-row-label">database URL</div>
+            <input type="url" id="fb-url-input" placeholder="https://mise-xxxxx-default-rtdb.firebaseio.com" autocomplete="off" style="width:100%;padding:10px 12px;border:1.5px solid var(--rule);border-radius:8px;background:var(--bg);font-family:var(--font-mono);font-size:11px;color:var(--ink);box-sizing:border-box;">
+          </div>
+          <div class="settings-row" style="flex-direction:column;align-items:flex-start;gap:6px;margin-top:8px;">
+            <div class="settings-row-label">sync key <span style="font-weight:400;color:var(--ink-faint)">(same on both phones)</span></div>
+            <input type="text" id="fb-key-input" placeholder="e.g. brianandjane-mise" autocomplete="off" autocorrect="off" autocapitalize="off" style="width:100%;padding:10px 12px;border:1.5px solid var(--rule);border-radius:8px;background:var(--bg);font-family:var(--font-mono);font-size:11px;color:var(--ink);box-sizing:border-box;">
+          </div>
+          <div style="display:flex;gap:8px;margin-top:12px;">
+            <button class="btn btn-green" onclick="saveFbConfig()" style="flex:1;padding:12px;">save</button>
+          </div>
+          <div style="font-size:10px;color:var(--ink-faint);margin-top:10px;line-height:1.6;">keeps inventory, list, spots, and recipes in sync. auto-fetches on open, auto-sends after every change.</div>
+        </details>
       </div>
     </div>
     <div class="settings-section">
-      <div class="settings-heading">Locations</div>
+      <div class="settings-heading">locations</div>
       <div class="settings-card" id="locations-list"></div>
       <div class="add-row">
         <input type="text" id="new-loc-input" placeholder="New location..." autocomplete="off">
@@ -741,7 +765,7 @@ option{color:var(--ink);background:var(--bg-card);}
       </div>
     </div>
     <div class="settings-section">
-      <div class="settings-heading">Categories</div>
+      <div class="settings-heading">categories</div>
       <div class="settings-card" id="categories-list"></div>
       <div class="add-row">
         <input type="text" id="new-cat-input" placeholder="New category..." autocomplete="off">
@@ -749,29 +773,29 @@ option{color:var(--ink);background:var(--bg-card);}
       </div>
     </div>
     <div class="settings-section">
-      <div class="settings-heading">Staples</div>
-      <div style="font-size:11px;color:#9aab92;margin-bottom:10px;line-height:1.5;">Always assumed present — never checked against your pantry.</div>
+      <div class="settings-heading">staples</div>
+      <div style="font-size:11px;color:var(--ink-faint);margin-bottom:10px;line-height:1.5;">Always assumed present — never checked against your pantry.</div>
       <div class="settings-card" id="staples-list"></div>
       <div class="add-row">
         <input type="text" id="new-staple-input" placeholder="e.g. flour, sugar..." autocomplete="off" onkeydown="if(event.key==='Enter')addStaple()">
         <button class="btn btn-green" onclick="addStaple()" style="padding:12px 20px">Add</button>
       </div>
-      <button onclick="resetStaples()" style="background:none;border:none;font-size:11px;color:#9aab92;cursor:pointer;padding:4px 0;font-family:'Geist Mono',monospace;margin-top:4px;">reset to defaults</button>
+      <button onclick="resetStaples()" style="background:none;border:none;font-size:11px;color:var(--ink-faint);cursor:pointer;padding:4px 0;font-family:var(--font-mono);margin-top:4px;">reset to defaults</button>
     </div>
     <div class="settings-section">
-      <div class="settings-heading">Data</div>
+      <div class="settings-heading">data</div>
       <div class="settings-card">
         <div class="settings-row">
-          <div style="flex:1"><div class="settings-row-label">Export backup</div><div class="settings-row-sub">Download everything as JSON — inventory, recipes, lists</div></div>
+          <div style="flex:1"><div class="settings-row-label">export backup</div><div class="settings-row-sub">download everything as JSON — inventory, recipes, lists</div></div>
           <button class="s-btn s-btn-rename" onclick="exportData()">export</button>
         </div>
         <div class="settings-row">
-          <div style="flex:1"><div class="settings-row-label">Import backup</div><div class="settings-row-sub">Restore from a previous export</div></div>
+          <div style="flex:1"><div class="settings-row-label">import backup</div><div class="settings-row-sub">restore from a previous export</div></div>
           <button class="s-btn s-btn-rename" onclick="document.getElementById('import-file-input').click()">import</button>
           <input type="file" id="import-file-input" accept=".json" style="display:none" onchange="importData(this)">
         </div>
         <div class="settings-row">
-          <div style="flex:1"><div class="settings-row-label">Remove sample items</div><div class="settings-row-sub">Delete all items marked as sample data</div></div>
+          <div style="flex:1"><div class="settings-row-label">remove sample items</div><div class="settings-row-sub">delete all items marked as sample data</div></div>
           <button class="s-btn s-btn-del" onclick="removeSampleItems()">remove</button>
         </div>
       </div>
@@ -780,32 +804,32 @@ option{color:var(--ink);background:var(--bg-card);}
       <div class="settings-heading">NFC Tags</div>
       <div class="settings-card">
         <div class="settings-row">
-          <div style="flex:1"><div class="settings-row-label">Location tag URLs</div><div class="settings-row-sub">Tap a location to copy its NFC tag URL</div></div>
+          <div style="flex:1"><div class="settings-row-label">location tag URLs</div><div class="settings-row-sub">tap a location to copy its NFC tag URL</div></div>
         </div>
         <div id="nfc-urls-list"></div>
         <details style="margin-top:4px;">
-          <summary class="settings-row-label" style="cursor:pointer;list-style:none;padding:10px 0;color:#5a6e52;">iOS setup ▾</summary>
+          <summary class="settings-row-label" style="cursor:pointer;list-style:none;padding:10px 0;color:var(--ink-soft);">iOS setup ▾</summary>
           <div class="settings-row-sub" style="line-height:1.7;padding-bottom:8px;">1. Write the tag URL to an NFC tag using <strong>NFC Tools</strong> (free, App Store)<br>2. In <strong>Shortcuts</strong>, create a new automation → trigger: NFC → scan your tag<br>3. Add action: <em>Open URL</em> with the tag URL<br>4. Tap the tag → Mise opens to that location's import screen</div>
         </details>
         <details>
-          <summary class="settings-row-label" style="cursor:pointer;list-style:none;padding:10px 0;color:#5a6e52;">Android setup ▾</summary>
+          <summary class="settings-row-label" style="cursor:pointer;list-style:none;padding:10px 0;color:var(--ink-soft);">Android setup ▾</summary>
           <div class="settings-row-sub" style="line-height:1.7;padding-bottom:8px;">1. Install <strong>NFC Tools</strong> (free, Play Store)<br>2. Write a <em>URL record</em> with the tag URL to your NFC tag<br>3. Tapping the tag opens mise directly in your default browser</div>
         </details>
       </div>
     </div>
     <div class="settings-section" style="padding-bottom:48px">
-      <div class="settings-heading">About</div>
+      <div class="settings-heading">about</div>
       <div class="settings-card">
         <div class="settings-row">
           <div><div class="settings-row-label">mise.</div><div class="settings-row-sub">your kitchen, prepped.</div></div>
         </div>
         <div class="settings-row" style="flex-direction:column;align-items:flex-start;gap:6px">
-          <div class="settings-row-label">Install as app</div>
+          <div class="settings-row-label">install as app</div>
           <div class="settings-row-sub" style="line-height:1.7"><strong>iOS:</strong> Safari → Share → Add to Home Screen<br><strong>Android:</strong> Chrome menu → Add to Home Screen</div>
         </div>
         <details>
-          <summary class="settings-row-label" style="cursor:pointer;list-style:none;padding:10px 0;color:#5a6e52;">AnyList → mise. shortcut (iOS) ▾</summary>
-          <div class="settings-row-sub" style="line-height:1.7;padding-bottom:8px;">iOS doesn't support web app share targets. Use a Shortcut instead:<br><br>1. Open <strong>Shortcuts</strong> → tap <strong>+</strong><br>2. Rename to <strong>mise.</strong><br>3. Add action → <strong>URL</strong> → type your mise URL + <code>?cl=</code><br>4. Tap after <code>cl=</code> → token picker → <strong>Shortcut Input</strong><br>5. Add action → <strong>Open URLs</strong><br>6. Tap shortcut name → <strong>Add to Share Sheet</strong> → input type: Text<br><br>Your mise URL: <span id="mise-url-display" style="font-family:monospace;word-break:break-all"></span> <button id="copy-mise-url" style="margin-left:6px;padding:2px 8px;font-size:11px;border-radius:4px;border:1px solid #9aab92;background:transparent;color:#9aab92;cursor:pointer">Copy</button></div>
+          <summary class="settings-row-label" style="cursor:pointer;list-style:none;padding:10px 0;color:var(--ink-soft);">AnyList → mise. shortcut (iOS) ▾</summary>
+          <div class="settings-row-sub" style="line-height:1.7;padding-bottom:8px;">iOS doesn't support web app share targets. Use a Shortcut instead:<br><br>1. Open <strong>Shortcuts</strong> → tap <strong>+</strong><br>2. Rename to <strong>mise.</strong><br>3. Add action → <strong>URL</strong> → type your mise URL + <code>?cl=</code><br>4. Tap after <code>cl=</code> → token picker → <strong>Shortcut Input</strong><br>5. Add action → <strong>Open URLs</strong><br>6. Tap shortcut name → <strong>Add to Share Sheet</strong> → input type: Text<br><br>Your mise URL: <span id="mise-url-display" style="font-family:monospace;word-break:break-all"></span> <button id="copy-mise-url" style="margin-left:6px;padding:2px 8px;font-size:11px;border-radius:4px;border:1px solid var(--ink-faint);background:transparent;color:var(--ink-faint);cursor:pointer">Copy</button></div>
         </details>
       </div>
     </div>
@@ -834,7 +858,7 @@ option{color:var(--ink);background:var(--bg-card);}
     <div class="sheet" onclick="event.stopPropagation()">
       <div class="sheet-handle"></div>
       <div class="lemon-bar"></div>
-      <h2 id="sheet-title">Place item</h2>
+      <h2 id="sheet-title">place item</h2>
       <div id="method-chooser">
         <div class="method-row">
           <button class="method-btn active" id="method-manual" onclick="setMethod('manual')">
@@ -850,19 +874,19 @@ option{color:var(--ink);background:var(--bg-card);}
       </div>
       <div id="haul-panel" style="display:none">
         <div class="form-row" style="margin-top:4px">
-          <label>Location <span style="color:#9aab92;font-weight:400">(pick or type new)</span></label>
-          <input type="text" id="haul-loc-input" list="haul-loc-list" placeholder="e.g. Pantry — Top" autocomplete="off" autocorrect="off" style="width:100%;padding:12px 14px;border:1.5px solid #e4e8e2;border-radius:10px;background:#f8f9f7;font-family:'Geist Mono',monospace;font-size:13px;color:#111a0e;box-sizing:border-box;outline:none;-webkit-appearance:none;">
+          <label>Location <span style="color:var(--ink-faint);font-weight:400">(pick or type new)</span></label>
+          <input type="text" id="haul-loc-input" list="haul-loc-list" placeholder="e.g. Pantry — Top" autocomplete="off" autocorrect="off" style="width:100%;padding:12px 14px;border:1.5px solid var(--rule);border-radius:10px;background:var(--bg);font-family:var(--font-mono);font-size:13px;color:var(--ink);box-sizing:border-box;outline:none;-webkit-appearance:none;">
           <datalist id="haul-loc-list"></datalist>
         </div>
         <div class="form-row" style="margin-top:8px">
-          <label>Box / area label <span style="color:#9aab92;font-weight:400">(optional)</span></label>
-          <input type="text" id="haul-box-input" placeholder="e.g. DS-B2 · Box 54" autocomplete="off" style="width:100%;padding:12px 14px;border:1.5px solid #e4e8e2;border-radius:10px;background:#f8f9f7;font-family:'Geist Mono',monospace;font-size:13px;color:#111a0e;box-sizing:border-box;outline:none;">
+          <label>Box / area label <span style="color:var(--ink-faint);font-weight:400">(optional)</span></label>
+          <input type="text" id="haul-box-input" placeholder="e.g. DS-B2 · Box 54" autocomplete="off" style="width:100%;padding:12px 14px;border:1.5px solid var(--rule);border-radius:10px;background:var(--bg);font-family:var(--font-mono);font-size:13px;color:var(--ink);box-sizing:border-box;outline:none;">
         </div>
-        <label style="display:flex;align-items:center;gap:8px;margin-top:12px;font-size:12px;color:#5a6e52;cursor:pointer">
-          <input type="checkbox" id="haul-replace" checked style="width:16px;height:16px;accent-color:#2d6a2d;flex-shrink:0">
+        <label style="display:flex;align-items:center;gap:8px;margin-top:12px;font-size:12px;color:var(--ink-soft);cursor:pointer">
+          <input type="checkbox" id="haul-replace" checked style="width:16px;height:16px;accent-color:var(--accent);flex-shrink:0">
           Replace existing contents at this location
         </label>
-        <div style="margin-top:14px;padding:13px 14px;background:#f8f9f7;border:1.5px solid #e4e8e2;border-radius:12px;font-size:12px;color:#5a6e52;line-height:1.7">
+        <div style="margin-top:14px;padding:13px 14px;background:var(--bg);border:1.5px solid var(--rule);border-radius:12px;font-size:12px;color:var(--ink-soft);line-height:1.7">
           1. Tap <strong>Open Claude</strong> — the prompt is copied<br>
           2. Paste it in Claude, take a photo of your haul<br>
           3. Copy Claude's reply, come back &amp; tap <strong>Paste result</strong>
@@ -905,7 +929,7 @@ option{color:var(--ink);background:var(--bg-card);}
             </div>
           </div>
           <div class="form-row">
-            <label>Restock below</label>
+            <label>restock below</label>
             <div class="qty-stepper">
               <button class="qty-step-btn" onclick="stepQty('f-thresh',-1)">−</button>
               <input class="qty-step-input" type="number" id="f-thresh" value="1" min="0" inputmode="numeric">
@@ -918,18 +942,18 @@ option{color:var(--ink);background:var(--bg-card);}
           <input type="text" id="f-notes" placeholder="brand, size, source...">
         </div>
         <div class="form-row">
-          <label>Expiry <span style="color:#9aab92;font-weight:400">(optional)</span></label>
+          <label>Expiry <span style="color:var(--ink-faint);font-weight:400">(optional)</span></label>
           <input type="date" id="f-expiry" style="font-size:13px;padding:13px 10px;">
         </div>
-        <div class="form-row" style="display:flex;align-items:center;justify-content:space-between;border:1.5px solid #e4e8e2;border-radius:12px;padding:13px 14px;background:#f8f9f7;">
+        <div class="form-row" style="display:flex;align-items:center;justify-content:space-between;border:1.5px solid var(--rule);border-radius:12px;padding:13px 14px;background:var(--bg);">
           <div>
-            <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:#5a6e52;margin-bottom:2px;">Mute alerts</div>
-            <div style="font-size:11px;color:#9aab92;">No low/out warnings or restock suggestions</div>
+            <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-soft);margin-bottom:2px;">mute alerts</div>
+            <div style="font-size:11px;color:var(--ink-faint);">no low/out warnings or restock suggestions</div>
           </div>
           <label style="position:relative;display:inline-block;width:44px;height:26px;flex-shrink:0;">
             <input type="checkbox" id="f-noAlert" style="opacity:0;width:0;height:0;position:absolute;">
-            <span id="f-noAlert-track" style="position:absolute;inset:0;border-radius:13px;background:#e4e8e2;transition:background 0.2s;cursor:pointer;"></span>
-            <span id="f-noAlert-thumb" style="position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,0.18);transition:transform 0.2s;pointer-events:none;"></span>
+            <span id="f-noAlert-track" style="position:absolute;inset:0;border-radius:13px;background:var(--rule);transition:background 0.2s;cursor:pointer;"></span>
+            <span id="f-noAlert-thumb" style="position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:var(--bg-card);box-shadow:0 1px 4px rgba(0,0,0,0.18);transition:transform 0.2s;pointer-events:none;"></span>
           </label>
         </div>
       </div>
@@ -949,7 +973,7 @@ option{color:var(--ink);background:var(--bg-card);}
     <div class="sheet" onclick="event.stopPropagation()" style="padding-bottom:calc(var(--sab) + 20px)">
       <div class="sheet-handle"></div>
       <div class="lemon-bar"></div>
-      <h2>Add to list</h2>
+      <h2>add to list</h2>
       <div class="form-row">
         <label>Item</label>
         <input type="text" id="qa-name" placeholder="e.g. Oat milk" autocomplete="off">
@@ -993,7 +1017,7 @@ option{color:var(--ink);background:var(--bg-card);}
     <div class="sheet" onclick="event.stopPropagation()">
       <div class="sheet-handle"></div>
       <div class="lemon-bar"></div>
-      <h2>Review haul</h2>
+      <h2>review haul</h2>
       <div style="font-size:10px;color:var(--ink-3);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px" id="review-summary"></div>
       <div style="font-size:11px;color:var(--ink-3);margin-bottom:16px">Location auto-assigned from existing items. Change inline or tap ▾ for category &amp; notes.</div>
       <div id="review-list"></div>
@@ -1014,25 +1038,25 @@ option{color:var(--ink);background:var(--bg-card);}
       <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:6px;">
         <h2 id="rd-title" style="margin-bottom:0;flex:1;padding-right:12px;"></h2>
         <div style="display:flex;gap:8px;flex-shrink:0;margin-top:4px;">
-          <button onclick="printRecipe()" style="border:none;background:none;font-family:'Geist Mono',monospace;font-size:11px;color:#9aab92;cursor:pointer;padding:6px 0;">PDF</button>
-          <button onclick="editCurrentRecipe()" style="border:1.5px solid #e4e8e2;background:#f8f9f7;border-radius:8px;font-family:'Geist Mono',monospace;font-size:11px;color:#5a6e52;cursor:pointer;padding:8px 14px;white-space:nowrap;min-height:38px;">edit →</button>
+          <button onclick="printRecipe()" style="border:none;background:none;font-family:var(--font-mono);font-size:11px;color:var(--ink-faint);cursor:pointer;padding:6px 0;">PDF</button>
+          <button onclick="editCurrentRecipe()" style="border:1.5px solid var(--rule);background:var(--bg);border-radius:8px;font-family:var(--font-mono);font-size:11px;color:var(--ink-soft);cursor:pointer;padding:8px 14px;white-space:nowrap;min-height:38px;">edit →</button>
         </div>
       </div>
       <div id="rd-tags" style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px;"></div>
-      <div id="rd-notes" style="font-size:12px;color:#5a6e52;margin-bottom:14px;line-height:1.5;"></div>
+      <div id="rd-notes" style="font-size:12px;color:var(--ink-soft);margin-bottom:14px;line-height:1.5;"></div>
       <!-- Servings scaler -->
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:11px 14px;background:#f8f9f7;border:1.5px solid #e4e8e2;border-radius:10px;margin-bottom:18px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:11px 14px;background:var(--bg);border:1.5px solid var(--rule);border-radius:10px;margin-bottom:18px;">
         <div>
-          <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:#5a6e52;">Servings</div>
-          <div style="font-size:10px;color:#9aab92;" id="rd-servings-base"></div>
+          <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-soft);">Servings</div>
+          <div style="font-size:10px;color:var(--ink-faint);" id="rd-servings-base"></div>
         </div>
         <div style="display:flex;align-items:center;gap:10px;">
-          <button onclick="adjRecipeScale(-1)" style="width:36px;height:36px;border-radius:50%;border:1.5px solid #e4e8e2;background:#fff;font-size:18px;color:#2d6a2d;cursor:pointer;line-height:1;">−</button>
-          <span id="rd-servings-val" style="font-family:'Geist Mono',monospace;font-size:18px;font-weight:500;color:#111a0e;min-width:24px;text-align:center;"></span>
-          <button onclick="adjRecipeScale(1)" style="width:36px;height:36px;border-radius:50%;border:1.5px solid #e4e8e2;background:#fff;font-size:18px;color:#2d6a2d;cursor:pointer;line-height:1;">+</button>
+          <button onclick="adjRecipeScale(-1)" style="width:36px;height:36px;border-radius:50%;border:1.5px solid var(--rule);background:var(--bg-card);font-size:18px;color:var(--accent);cursor:pointer;line-height:1;">−</button>
+          <span id="rd-servings-val" style="font-family:var(--font-mono);font-size:18px;font-weight:500;color:var(--ink);min-width:24px;text-align:center;"></span>
+          <button onclick="adjRecipeScale(1)" style="width:36px;height:36px;border-radius:50%;border:1.5px solid var(--rule);background:var(--bg-card);font-size:18px;color:var(--accent);cursor:pointer;line-height:1;">+</button>
         </div>
       </div>
-      <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:#5a6e52;margin-bottom:10px;">Ingredients</div>
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-soft);margin-bottom:10px;">Ingredients</div>
       <div id="rd-ingredients"></div>
       <div id="rd-steps"></div>
       <div class="sheet-actions" style="margin-top:20px;">
@@ -1051,16 +1075,16 @@ option{color:var(--ink);background:var(--bg-card);}
     <div class="sheet" onclick="event.stopPropagation()">
       <div class="sheet-handle"></div>
       <div class="lemon-bar"></div>
-      <h2 id="re-title">New recipe</h2>
+      <h2 id="re-title">new recipe</h2>
       <div class="form-row">
-        <label>Recipe name</label>
+        <label>recipe name</label>
         <input type="text" id="re-name" placeholder="e.g. Oat porridge" autocomplete="off">
       </div>
       <div class="form-row">
         <label>Notes (optional)</label>
         <input type="text" id="re-notes" placeholder="serves 2, 20 min...">
       </div>
-      <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:#5a6e52;margin-bottom:10px;margin-top:4px;">Ingredients</div>
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-soft);margin-bottom:10px;margin-top:4px;">Ingredients</div>
       <div id="re-ingredients-list"></div>
       <button class="add-ing-btn" onclick="addIngredientRow()">+ add ingredient</button>
       <div class="sheet-actions" style="margin-top:12px;">
@@ -1078,13 +1102,13 @@ option{color:var(--ink);background:var(--bg-card);}
   <div class="modal-overlay" onclick="if(event.target===event.currentTarget)closeRecipeImport()">
     <div class="sheet" onclick="event.stopPropagation()">
       <div class="sheet-handle"></div>
-      <h2>Import from Claude</h2>
-      <div style="font-size:12px;color:#5a6e52;line-height:1.6;margin-bottom:14px;">Develop a recipe in Claude chat, then copy the JSON and paste it here.</div>
-      <textarea id="recipe-import-textarea" rows="7" placeholder='Paste recipe JSON here...' oninput="previewRecipeImport()" style="width:100%;padding:12px;border:1.5px solid #e4e8e2;border-radius:10px;background:#f8f9f7;font-family:'Geist Mono',monospace;font-size:11px;color:#111a0e;resize:none;box-sizing:border-box;outline:none;line-height:1.6;"></textarea>
-      <div id="recipe-import-error" style="display:none;margin-top:8px;padding:10px 12px;background:#fdeaea;border:1.5px solid #f5c6c6;border-radius:8px;font-size:11px;color:#c44040;font-family:'Geist Mono',monospace;"></div>
-      <div id="recipe-import-preview" style="display:none;margin-top:10px;padding:13px 14px;background:#edf3ea;border:1.5px solid #ddecd8;border-radius:10px;"></div>
+      <h2>import from Claude</h2>
+      <div style="font-size:12px;color:var(--ink-soft);line-height:1.6;margin-bottom:14px;">Develop a recipe in Claude chat, then copy the JSON and paste it here.</div>
+      <textarea id="recipe-import-textarea" rows="7" placeholder='Paste recipe JSON here...' oninput="previewRecipeImport()" style="width:100%;padding:12px;border:1.5px solid var(--rule);border-radius:10px;background:var(--bg);font-family:var(--font-mono);font-size:11px;color:var(--ink);resize:none;box-sizing:border-box;outline:none;line-height:1.6;"></textarea>
+      <div id="recipe-import-error" style="display:none;margin-top:8px;padding:10px 12px;background:var(--out-light);border:1.5px solid var(--out-light);border-radius:8px;font-size:11px;color:var(--out);font-family:var(--font-mono);"></div>
+      <div id="recipe-import-preview" style="display:none;margin-top:10px;padding:13px 14px;background:var(--accent-pale);border:1.5px solid var(--accent-light);border-radius:10px;"></div>
       <div class="sheet-actions" style="margin-top:14px;">
-        <button class="btn btn-green btn-full" onclick="confirmRecipeImport()">Save to library</button>
+        <button class="btn btn-green btn-full" onclick="confirmRecipeImport()">save to library</button>
         <button class="btn btn-ghost btn-full" onclick="closeRecipeImport()">cancel</button>
       </div>
     </div>
@@ -1098,8 +1122,8 @@ option{color:var(--ink);background:var(--bg-card);}
     <div class="sheet" style="max-height:90vh;overflow-y:auto;" onclick="event.stopPropagation()">
       <div class="sheet-handle"></div>
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
-        <h2 style="margin:0;">Tonight?</h2>
-        <button onclick="closeWhatCanCook()" style="border:none;background:none;font-size:20px;color:#9aab92;cursor:pointer;padding:6px;">×</button>
+        <h2 style="margin:0;">tonight?</h2>
+        <button onclick="closeWhatCanCook()" style="border:none;background:none;font-size:20px;color:var(--ink-faint);cursor:pointer;padding:6px;">×</button>
       </div>
       <div id="wcc-list"></div>
     </div>
@@ -1110,28 +1134,28 @@ option{color:var(--ink);background:var(--bg-card);}
 
 <div id="cook-mode-overlay">
   <div style="padding:env(safe-area-inset-top,16px) 20px 0;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
-    <div id="cook-progress" style="font-family:'Geist Mono',monospace;font-size:11px;color:rgba(255,255,255,0.5);letter-spacing:0.06em;">STEP 1 OF 1</div>
+    <div id="cook-progress" style="font-family:var(--font-mono);font-size:11px;color:rgba(255,255,255,0.5);letter-spacing:0.06em;">STEP 1 OF 1</div>
     <button onclick="closeCookMode()" style="width:44px;height:44px;background:rgba(255,255,255,0.12);border:none;border-radius:50%;color:rgba(255,255,255,0.8);font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;">×</button>
   </div>
   <div style="flex:1;overflow-y:auto;padding:24px 24px 12px;">
-    <div id="cook-step-title" style="font-family:'Instrument Serif',serif;font-size:30px;color:#ffffff;margin-bottom:16px;line-height:1.2;"></div>
+    <div id="cook-step-title" style="font-family:var(--font-serif);font-size:30px;color:var(--bg-card);margin-bottom:16px;line-height:1.2;"></div>
     <div id="cook-step-content" style="font-size:17px;color:rgba(255,255,255,0.85);line-height:1.75;"></div>
     <div id="cook-timer-wrap" style="display:none;margin-top:28px;text-align:center;padding:20px;background:rgba(0,0,0,0.2);border-radius:16px;">
-      <div id="cook-timer-display" style="font-family:'Instrument Serif',serif;font-size:58px;color:#d4a843;line-height:1;margin-bottom:18px;letter-spacing:0.02em;">00:00</div>
+      <div id="cook-timer-display" style="font-family:var(--font-serif);font-size:58px;color:var(--low);line-height:1;margin-bottom:18px;letter-spacing:0.02em;">00:00</div>
       <div style="display:flex;gap:10px;justify-content:center;">
-        <button id="cook-timer-start" onclick="toggleTimer()" style="padding:13px 32px;background:#d4a843;border:none;border-radius:10px;font-family:'Geist Mono',monospace;font-size:12px;color:#1c3a1e;cursor:pointer;font-weight:500;letter-spacing:0.04em;">START</button>
-        <button onclick="resetTimer()" style="padding:13px 20px;background:rgba(255,255,255,0.12);border:none;border-radius:10px;font-family:'Geist Mono',monospace;font-size:12px;color:rgba(255,255,255,0.7);cursor:pointer;letter-spacing:0.04em;">RESET</button>
+        <button id="cook-timer-start" onclick="toggleTimer()" style="padding:13px 32px;background:var(--low);border:none;border-radius:10px;font-family:var(--font-mono);font-size:12px;color:var(--accent);cursor:pointer;font-weight:500;letter-spacing:0.04em;">START</button>
+        <button onclick="resetTimer()" style="padding:13px 20px;background:rgba(255,255,255,0.12);border:none;border-radius:10px;font-family:var(--font-mono);font-size:12px;color:rgba(255,255,255,0.7);cursor:pointer;letter-spacing:0.04em;">RESET</button>
       </div>
     </div>
   </div>
   <div style="padding:10px 16px;display:grid;grid-template-columns:1fr 1fr;gap:10px;flex-shrink:0;padding-bottom:calc(10px + env(safe-area-inset-bottom,0px));">
-    <button id="cook-prev-btn" onclick="cookPrev()" style="height:58px;background:rgba(255,255,255,0.12);border:none;border-radius:12px;font-family:'Geist Mono',monospace;font-size:13px;color:rgba(255,255,255,0.8);cursor:pointer;letter-spacing:0.03em;">← Prev</button>
-    <button id="cook-next-btn" onclick="cookNext()" style="height:58px;background:#2d6a2d;border:none;border-radius:12px;font-family:'Geist Mono',monospace;font-size:13px;color:#ffffff;cursor:pointer;letter-spacing:0.03em;">Next →</button>
+    <button id="cook-prev-btn" onclick="cookPrev()" style="height:58px;background:rgba(255,255,255,0.12);border:none;border-radius:12px;font-family:var(--font-mono);font-size:13px;color:rgba(255,255,255,0.8);cursor:pointer;letter-spacing:0.03em;">← Prev</button>
+    <button id="cook-next-btn" onclick="cookNext()" style="height:58px;background:var(--accent);border:none;border-radius:12px;font-family:var(--font-mono);font-size:13px;color:var(--bg-card);cursor:pointer;letter-spacing:0.03em;">Next →</button>
   </div>
   <!-- Ingredient drawer -->
   <div id="cook-ing-drawer">
     <div onclick="toggleIngDrawer()" style="height:50px;display:flex;align-items:center;justify-content:center;cursor:pointer;border-radius:16px 16px 0 0;">
-      <span id="cook-ing-toggle" style="font-family:'Geist Mono',monospace;font-size:11px;color:rgba(255,255,255,0.5);letter-spacing:0.06em;">INGREDIENTS ▲</span>
+      <span id="cook-ing-toggle" style="font-family:var(--font-mono);font-size:11px;color:rgba(255,255,255,0.5);letter-spacing:0.06em;">INGREDIENTS ▲</span>
     </div>
     <div id="cook-ing-list" style="max-height:45vh;overflow-y:auto;padding:0 20px 16px;"></div>
   </div>
@@ -1144,12 +1168,12 @@ option{color:var(--ink);background:var(--bg-card);}
     <div class="sheet" onclick="event.stopPropagation()">
       <div class="sheet-handle"></div>
       <div class="lemon-bar"></div>
-      <h2>Check my list</h2>
-      <div style="font-size:12px;color:#5a6e52;margin-bottom:16px;line-height:1.5">Paste your AnyList (or any shopping list) below. Mise will flag what you already have.</div>
+      <h2>check my list</h2>
+      <div style="font-size:12px;color:var(--ink-soft);margin-bottom:16px;line-height:1.5">paste your AnyList (or any shopping list) below. mise will flag what you already have.</div>
       <div id="lc-paste-area" style="display:block">
         <div class="form-row" style="margin-bottom:10px">
-          <label>Paste list here</label>
-          <textarea id="lc-paste" style="width:100%;min-height:140px;padding:12px;border:1.5px solid #e4e8e2;border-radius:10px;background:#f8f9f7;font-family:'Geist Mono',monospace;font-size:13px;color:#111a0e;outline:none;resize:vertical;box-sizing:border-box" placeholder="Coconut Milk, 2&#10;Olive Oil, 1&#10;Black Beans, 3&#10;..."></textarea>
+          <label>paste list here</label>
+          <textarea id="lc-paste" style="width:100%;min-height:140px;padding:12px;border:1.5px solid var(--rule);border-radius:10px;background:var(--bg);font-family:var(--font-mono);font-size:13px;color:var(--ink);outline:none;resize:vertical;box-sizing:border-box" placeholder="Coconut Milk, 2&#10;Olive Oil, 1&#10;Black Beans, 3&#10;..."></textarea>
         </div>
         <div class="sheet-actions" style="margin-top:0">
           <button class="btn btn-green btn-full" onclick="runListCheck()">check against my station →</button>
@@ -1157,7 +1181,7 @@ option{color:var(--ink);background:var(--bg-card);}
         </div>
       </div>
       <div id="lc-results-area" style="display:none">
-        <div id="lc-summary" style="font-size:11px;color:#5a6e52;margin-bottom:14px;line-height:1.6"></div>
+        <div id="lc-summary" style="font-size:11px;color:var(--ink-soft);margin-bottom:14px;line-height:1.6"></div>
         <div id="lc-results"></div>
         <div class="lc-copy-bar">
           <button class="btn btn-green" onclick="copyFilteredList()">⎘ copy filtered list</button>
@@ -1188,16 +1212,16 @@ option{color:var(--ink);background:var(--bg-card);}
   <div class="modal-overlay" style="align-items:flex-end;">
     <div class="sheet" onclick="event.stopPropagation()" style="padding-bottom:calc(env(safe-area-inset-bottom,0px) + 28px)">
       <div class="sheet-handle"></div>
-      <h2 style="font-size:26px;letter-spacing:-0.6px;margin-bottom:8px;">Set up your stations.</h2>
-      <p style="font-size:13px;color:#5a6e52;line-height:1.65;margin-bottom:20px;">Where do you store food? Add your spots — pantry shelves, fridge, freezer, basement. You can always change these in Settings.</p>
+      <h2 style="font-size:26px;letter-spacing:-0.6px;margin-bottom:8px;">where do you keep food?</h2>
+      <p style="font-size:13px;color:var(--ink-soft);line-height:1.65;margin-bottom:20px;">Add your spots — pantry shelves, fridge, freezer. You can always change these in Settings.</p>
       <div id="onboard-locs-list" style="margin-bottom:10px;"></div>
       <div style="display:flex;gap:8px;margin-bottom:20px;">
-        <input type="text" id="onboard-loc-input" placeholder="e.g. Pantry — Top" autocomplete="off" autocorrect="off" onkeydown="if(event.key==='Enter')addOnboardLoc()" style="flex:1;padding:13px 14px;border:1.5px solid #e4e8e2;border-radius:12px;background:#f8f9f7;font-family:'Geist Mono',monospace;font-size:14px;color:#111a0e;outline:none;min-height:50px;box-sizing:border-box;">
+        <input type="text" id="onboard-loc-input" placeholder="e.g. Pantry — Top" autocomplete="off" autocorrect="off" onkeydown="if(event.key==='Enter')addOnboardLoc()" style="flex:1;padding:13px 14px;border:1.5px solid var(--rule);border-radius:12px;background:var(--bg);font-family:var(--font-mono);font-size:14px;color:var(--ink);outline:none;min-height:50px;box-sizing:border-box;">
         <button class="btn btn-green" onclick="addOnboardLoc()" style="padding:13px 18px;min-height:50px;font-size:13px;">add</button>
       </div>
       <button class="btn btn-green btn-full" onclick="finishOnboard()" style="margin-bottom:10px;">Done →</button>
-      <button type="button" onclick="skipOnboard()" style="width:100%;text-align:center;background:none;border:none;font-family:'Geist Mono',monospace;font-size:11px;color:#9aab92;cursor:pointer;padding:10px;letter-spacing:0.03em;">skip for now</button>
-      <button type="button" onclick="loadSampleKitchen()" style="width:100%;text-align:center;background:none;border:none;font-family:'Geist Mono',monospace;font-size:11px;color:#9aab92;cursor:pointer;padding:6px 10px 4px;letter-spacing:0.03em;">try a sample kitchen</button>
+      <button type="button" onclick="skipOnboard()" style="width:100%;text-align:center;background:none;border:none;font-family:var(--font-mono);font-size:11px;color:var(--ink-faint);cursor:pointer;padding:10px;letter-spacing:0.03em;">skip for now</button>
+      <button type="button" onclick="loadSampleKitchen()" style="width:100%;text-align:center;background:none;border:none;font-family:var(--font-mono);font-size:11px;color:var(--ink-faint);cursor:pointer;padding:6px 10px 4px;letter-spacing:0.03em;">try a sample kitchen</button>
     </div>
   </div>
 </div>
@@ -1268,10 +1292,10 @@ function renderOnboardLocs(){
   const el=document.getElementById('onboard-locs-list');
   if(!el) return;
   el.innerHTML=onboardLocs.map((l,i)=>`
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:11px 14px;background:#fff;border:1.5px solid #e4e8e2;border-radius:10px;margin-bottom:6px;">
-      <span style="font-family:'Instrument Serif',serif;font-size:15px;letter-spacing:-0.2px;">${esc(l)}</span>
-      <button onclick="removeOnboardLoc(${i})" style="background:none;border:none;color:#9aab92;font-size:20px;cursor:pointer;padding:2px 6px;line-height:1;">×</button>
-    </div>`).join('')||'<p style="font-size:12px;color:#9aab92;padding:4px 0 6px;">No locations yet — add your first spot above.</p>';
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:11px 14px;background:var(--bg-card);border:1.5px solid var(--rule);border-radius:10px;margin-bottom:6px;">
+      <span style="font-family:var(--font-serif);font-size:15px;letter-spacing:-0.2px;">${esc(l)}</span>
+      <button onclick="removeOnboardLoc(${i})" style="background:none;border:none;color:var(--ink-faint);font-size:20px;cursor:pointer;padding:2px 6px;line-height:1;">×</button>
+    </div>`).join('')||'<p style="font-size:12px;color:var(--ink-faint);padding:4px 0 6px;">No locations yet — add your first spot above.</p>';
 }
 function addOnboardLoc(){
   const inp=document.getElementById('onboard-loc-input');
@@ -1474,7 +1498,7 @@ function sc(i){
 }
 
 function pill(i){
-  if(i.noAlert) return`<span class="stock-pill" style="background:#f0f0ec;color:#9aab92;">muted</span>`;
+  if(i.noAlert) return`<span class="stock-pill" style="background:var(--bg);color:var(--ink-faint);">muted</span>`;
   const ep=expiryPill(i);
   if(ep) return ep;
   if(i.qty===0) return`<span class="stock-pill pill-out">out</span>`;
@@ -1611,10 +1635,10 @@ function setView(v){
   catBtn.setAttribute('aria-pressed',v==='category'?'true':'false');
   locBtn.setAttribute('aria-pressed',v==='location'?'true':'false');
   // Inline styles as fallback for Chrome iOS CSS variable failures
-  catBtn.style.background=v==='category'?'#2d6a2d':'#f8f9f7';
-  catBtn.style.color=v==='category'?'#ffffff':'#5a6e52';
-  locBtn.style.background=v==='location'?'#2d6a2d':'#f8f9f7';
-  locBtn.style.color=v==='location'?'#ffffff':'#5a6e52';
+  catBtn.style.background=v==='category'?'var(--accent)':'var(--bg)';
+  catBtn.style.color=v==='category'?'var(--bg-card)':'var(--ink-soft)';
+  locBtn.style.background=v==='location'?'var(--accent)':'var(--bg)';
+  locBtn.style.color=v==='location'?'var(--bg-card)':'var(--ink-soft)';
   renderInventory();
 }
 
@@ -1631,14 +1655,14 @@ function setNoAlertToggle(v){
   const thumb=document.getElementById('f-noAlert-thumb');
   if(!cb)return;
   cb.checked=v;
-  track.style.background=v?'#2d6a2d':'#e4e8e2';
+  track.style.background=v?'var(--accent)':'var(--rule)';
   thumb.style.transform=v?'translateX(18px)':'translateX(0)';
 }
 document.addEventListener('change',function(e){if(e.target.id==='f-noAlert')setNoAlertToggle(e.target.checked);});
 
 function openAddSheet(prefill){
   editingId=null;
-  document.getElementById('sheet-title').textContent='Place item';
+  document.getElementById('sheet-title').textContent='place item';
   document.getElementById('f-name').value=prefill||'';
   document.getElementById('f-qty').value=1;
   document.getElementById('f-thresh').value=1;
@@ -1721,7 +1745,7 @@ function saveItem(){
 function confirmDelete(){
   const item=items.find(i=>i.id===editingId);
   if(!item)return;
-  showConfirm(`Remove ${item.name}?`,'This will remove it from your station.','Remove',()=>{
+  showConfirm(`remove ${item.name}?`,'this will remove it from your station.','remove',()=>{
     items=items.filter(i=>i.id!==editingId);
     save();renderInventory();closeItemSheet();showToast('removed.');
   });
@@ -2017,9 +2041,9 @@ function renderNfcUrls(){
     return`<div class="settings-row" style="cursor:pointer;user-select:none" onclick="copyNfcUrl('${esc(loc)}',this)" title="Tap to copy">
       <div style="flex:1;min-width:0">
         <div class="settings-row-label">${esc(loc)}</div>
-        <div class="settings-row-sub" style="font-family:'Geist Mono',monospace;font-size:9px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:220px">${esc(url)}</div>
+        <div class="settings-row-sub" style="font-family:var(--font-mono);font-size:9px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:220px">${esc(url)}</div>
       </div>
-      <span style="font-size:10px;color:#5a6e52;white-space:nowrap;padding-left:8px">⎘ copy</span>
+      <span style="font-size:10px;color:var(--ink-soft);white-space:nowrap;padding-left:8px">⎘ copy</span>
     </div>`;
   }).join('');
 }
@@ -2048,7 +2072,7 @@ function importData(input){
     try{
       const d=JSON.parse(e.target.result);
       if(!Array.isArray(d.items))throw new Error('invalid format');
-      showConfirm('Replace all data?','This will overwrite your current inventory and recipes.','Import',()=>{
+      showConfirm('replace all data?','this will overwrite your current inventory and recipes.','import',()=>{
         items=d.items||[];shoppingList=d.shoppingList||[];
         locations=d.locations||DEFAULT_LOCS.slice();categories=d.categories||DEFAULT_CATS.slice();
         if(Array.isArray(d.recipes))recipes=d.recipes.map(migrateRecipe);
@@ -2068,7 +2092,7 @@ function renderLocationsList(){
         <div style="flex:1"><div class="settings-row-label">${esc(loc)}</div><div class="settings-row-sub">${items.filter(i=>i.location===loc).length} items</div></div>
         <button class="s-btn s-btn-rename" onclick="openRenameSheet('location',${idx})">rename</button>
         <button class="s-btn s-btn-del" onclick="confirmDeleteLocation(${idx})">✕</button>
-      </div>`).join('')||`<div class="settings-row"><div class="settings-row-label" style="color:var(--ink-3);font-style:italic;font-family:'Instrument Serif',serif">no locations yet</div></div>`;
+      </div>`).join('')||`<div class="settings-row"><div class="settings-row-label" style="color:var(--ink-3);font-style:italic;font-family:var(--font-serif)">no locations yet</div></div>`;
 }
 
 function renderCategoriesList(){
@@ -2078,7 +2102,7 @@ function renderCategoriesList(){
         <div style="flex:1"><div class="settings-row-label">${esc(cat)}</div><div class="settings-row-sub">${items.filter(i=>i.category===cat).length} items</div></div>
         <button class="s-btn s-btn-rename" onclick="openRenameSheet('category',${idx})">rename</button>
         <button class="s-btn s-btn-del" onclick="confirmDeleteCategory(${idx})">✕</button>
-      </div>`).join('')||`<div class="settings-row"><div class="settings-row-label" style="color:var(--ink-3);font-style:italic;font-family:'Instrument Serif',serif">no categories yet</div></div>`;
+      </div>`).join('')||`<div class="settings-row"><div class="settings-row-label" style="color:var(--ink-3);font-style:italic;font-family:var(--font-serif)">no categories yet</div></div>`;
 }
 
 function addLocation(){const input=document.getElementById('new-loc-input');const name=input.value.trim();if(!name)return;if(locations.includes(name)){showToast('already exists');return;}locations.push(name);input.value='';save();renderLocationsList();showToast('location added.');}
@@ -2110,12 +2134,12 @@ function saveRename(){
 
 function confirmDeleteLocation(idx){
   const name=locations[idx],count=items.filter(i=>i.location===name).length;
-  showConfirm(`Remove "${name}"?`,count>0?`${count} item${count>1?'s':''} use this location.`:'This location has no items.','Remove',
+  showConfirm(`remove "${name}"?`,count>0?`${count} item${count>1?'s':''} use this location.`:'this location has no items.','remove',
     ()=>{locations.splice(idx,1);save();renderLocationsList();showToast('removed.');});
 }
 function confirmDeleteCategory(idx){
   const name=categories[idx],count=items.filter(i=>i.category===name).length;
-  showConfirm(`Remove "${name}"?`,count>0?`${count} item${count>1?'s':''} use this category.`:'This category has no items.','Remove',
+  showConfirm(`remove "${name}"?`,count>0?`${count} item${count>1?'s':''} use this category.`:'this category has no items.','remove',
     ()=>{categories.splice(idx,1);save();renderCategoriesList();showToast('removed.');});
 }
 
@@ -2315,7 +2339,7 @@ function renderListCheckResults(){
   const need=[...out,...unknown,...low];
 
   const summary=`${need.length} still needed · ${ok.length} already stocked`;
-  document.getElementById('lc-summary').innerHTML=`<strong>${esc(summary)}</strong><br>Items in <span style="color:#2d6a2d">green</span> are crossed off. Items below are your filtered list.`;
+  document.getElementById('lc-summary').innerHTML=`<strong>${esc(summary)}</strong><br>items in <span style="color:var(--accent)">green</span> are crossed off. items below are your filtered list.`;
 
   let html='';
 
@@ -2341,7 +2365,7 @@ function renderListCheckResults(){
     </div>`).join('');
   }
 
-  document.getElementById('lc-results').innerHTML=html||`<div class="lc-empty">Nothing matched your station.</div>`;
+  document.getElementById('lc-results').innerHTML=html||`<div class="lc-empty">nothing matched your station.</div>`;
 }
 
 function copyFilteredList(){
@@ -2518,14 +2542,14 @@ function renderRecipes(){
   renderTagFilters();
   const sub=document.getElementById('recipes-sub');
   if(!recipes.length){
-    el.innerHTML=`<div class="recipe-empty"><h3>No recipes yet.</h3><p>Develop a recipe in Claude chat and tap <strong>Import →</strong> to bring it here.</p><button class="btn btn-green" onclick="openRecipeImport()">Import from Claude</button></div>`;
+    el.innerHTML=`<div class="recipe-empty"><h3>no recipes yet.</h3><p>develop a recipe in Claude chat and tap <strong>import →</strong> to bring it here.</p><button class="btn btn-green" onclick="openRecipeImport()">import from Claude</button></div>`;
     if(sub)sub.textContent='what you can cook right now';
     return;
   }
   const list=getFilteredRecipes();
   if(sub)sub.textContent=`${list.length} of ${recipes.length} recipe${recipes.length!==1?'s':''}`;
   if(!list.length){
-    el.innerHTML=`<div class="recipe-filter-empty"><p>No recipes match.</p><button class="btn btn-outline" onclick="clearRecipeSearch();setTagFilter(null)">Clear filters</button></div>`;
+    el.innerHTML=`<div class="recipe-filter-empty"><p>no recipes match.</p><button class="btn btn-outline" onclick="clearRecipeSearch();setTagFilter(null)">clear filters</button></div>`;
     return;
   }
   el.innerHTML=list.map(r=>{
@@ -2568,11 +2592,11 @@ function renderRecipeDetail(r){
     else{dc='out';sl='not in pantry';}
     const amt=fmtAmt(d,sc);
     return`<div class="ing-row"><div class="ing-dot ${dc}"></div><div class="ing-name">${esc(d.name)}</div>${amt?`<div class="ing-qty">${esc(amt)}</div>`:''}<div class="ing-stock">${esc(sl)}</div></div>`;
-  }).join('')||'<div style="font-size:12px;color:#9aab92;padding:8px 0">No ingredients listed.</div>';
+  }).join('')||'<div style="font-size:12px;color:var(--ink-faint);padding:8px 0">No ingredients listed.</div>';
   const stepsEl=document.getElementById('rd-steps');
   if(r.steps&&r.steps.length){
     stepsEl.style.display='';
-    stepsEl.innerHTML='<div style="font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:#5a6e52;margin:18px 0 10px;">Steps</div>'+
+    stepsEl.innerHTML='<div style="font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-soft);margin:18px 0 10px;">Steps</div>'+
       r.steps.map((s,i)=>`<div class="step-row"><div class="step-num">${i+1}</div><div class="step-body"><div class="step-title">${esc(s.title)}</div><div class="step-content">${esc(s.content)}</div>${s.timer_seconds?`<div class="step-timer-badge">⏱ ${formatDuration(s.timer_seconds)}</div>`:''}</div></div>`).join('');
   }else{stepsEl.style.display='none';}
   const cb=document.getElementById('rd-cook-mode-btn');
@@ -2609,7 +2633,7 @@ function performCook(recipeId,scale,afterOk){
     if(afterOk)afterOk();
     showCookSummary(used,skipped);
     const snapshot=prevQty;
-    showToast(used.length?`used ${used.length}`:'nothing used',{
+    showToast(used.length?`cooked. ${used.length} ingredient${used.length!==1?'s':''} used.`:'nothing used.',{
       label:'undo',
       fn:()=>{
         Object.keys(snapshot).forEach(id=>{
@@ -2644,8 +2668,8 @@ function printRecipe(){
   const sc=recipeDetailScale,srv=Math.round(r.servings*sc);
   const w=window.open('','_blank');if(!w)return;
   const ings=(r.ingredients||[]).map(ing=>`<li>${esc(ing.name)}${ing.amount?` — ${esc(fmtAmt(ing,sc))}`:''}</li>`).join('');
-  const steps=(r.steps||[]).map((s,i)=>`<div style="margin-bottom:14px"><strong>${i+1}. ${esc(s.title)}</strong>${s.timer_seconds?` <em style="color:#5a6e52;font-size:11px">(${formatDuration(s.timer_seconds)})</em>`:''}<br><span style="line-height:1.7">${esc(s.content)}</span></div>`).join('');
-  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${esc(r.title)}</title><style>body{font-family:Georgia,serif;max-width:600px;margin:40px auto;padding:20px;color:#1a1a14}h1{font-size:28px}h2{font-size:13px;font-weight:normal;color:#5a6e52;margin-top:0}ul{line-height:2.1}footer{margin-top:40px;font-family:monospace;font-size:10px;color:#9aab92}@media print{footer::after{content:'mise. — westbt-cpu.github.io/mise'}}</style></head><body><h1>${esc(r.title)}</h1><h2>${srv} serving${srv!==1?'s':''}${(r.tags||[]).length?' · '+r.tags.join(', '):''}</h2><h3>Ingredients</h3><ul>${ings}</ul>${steps?`<h3>Method</h3>${steps}`:''}${r.notes?`<p><em>${esc(r.notes)}</em></p>`:''}<footer></footer></body></html>`);
+  const steps=(r.steps||[]).map((s,i)=>`<div style="margin-bottom:14px"><strong>${i+1}. ${esc(s.title)}</strong>${s.timer_seconds?` <em style="color:var(--ink-soft);font-size:11px">(${formatDuration(s.timer_seconds)})</em>`:''}<br><span style="line-height:1.7">${esc(s.content)}</span></div>`).join('');
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${esc(r.title)}</title><style>:root{--ink:#1A1A1A;--ink-soft:#5C5651;--ink-faint:#9A938B;--font-serif:Georgia,'Times New Roman',serif;--font-mono:ui-monospace,SFMono-Regular,Menlo,monospace}body{font-family:var(--font-serif);max-width:600px;margin:40px auto;padding:20px;color:var(--ink)}h1{font-size:28px}h2{font-size:13px;font-weight:normal;color:var(--ink-soft);margin-top:0}ul{line-height:2.1}footer{margin-top:40px;font-family:var(--font-mono);font-size:10px;color:var(--ink-faint)}@media print{footer::after{content:'mise. — westbt-cpu.github.io/mise'}}</style></head><body><h1>${esc(r.title)}</h1><h2>${srv} serving${srv!==1?'s':''}${(r.tags||[]).length?' · '+r.tags.join(', '):''}</h2><h3>Ingredients</h3><ul>${ings}</ul>${steps?`<h3>Method</h3>${steps}`:''}${r.notes?`<p><em>${esc(r.notes)}</em></p>`:''}<footer></footer></body></html>`);
   w.document.close();w.print();
 }
 
@@ -2681,7 +2705,7 @@ function renderCookStep(){
   document.getElementById('cook-next-btn').textContent=cookModeStep===total-1?'Done ✓':'Next →';
   clearTimerState();
   const tw=document.getElementById('cook-timer-wrap');
-  if(s.timer_seconds){timerDuration=s.timer_seconds;tw.style.display='';updateTimerDisplay(timerDuration);document.getElementById('cook-timer-start').textContent='START';document.getElementById('cook-timer-display').style.color='#d4a843';}
+  if(s.timer_seconds){timerDuration=s.timer_seconds;tw.style.display='';updateTimerDisplay(timerDuration);document.getElementById('cook-timer-start').textContent='START';document.getElementById('cook-timer-display').style.color='var(--low)';}
   else tw.style.display='none';
   renderCookIngredients();
 }
@@ -2720,13 +2744,13 @@ function toggleTimer(){timerRunning?pauseTimer():startTimer();}
 function startTimer(){
   timerRunning=true;timerStartTime=Date.now();
   document.getElementById('cook-timer-start').textContent='PAUSE';
-  document.getElementById('cook-timer-display').style.color='#d4a843';
+  document.getElementById('cook-timer-display').style.color='var(--low)';
   timerInterval=setInterval(()=>{
     const rem=Math.max(0,timerDuration-Math.floor((Date.now()-timerStartTime)/1000));
     updateTimerDisplay(rem);
     if(rem===0){
       clearInterval(timerInterval);timerRunning=false;
-      document.getElementById('cook-timer-display').style.color='#c44040';
+      document.getElementById('cook-timer-display').style.color='var(--out)';
       document.getElementById('cook-timer-start').textContent='START';
       try{navigator.vibrate([200,100,200,100,200]);}catch(e){}
       playBeep();
@@ -2743,7 +2767,7 @@ function resetTimer(){
   const r=recipes.find(x=>x.id===cookModeRecipeId);
   timerDuration=r?(r.steps[cookModeStep]||{}).timer_seconds||0:0;
   updateTimerDisplay(timerDuration);
-  document.getElementById('cook-timer-display').style.color='#d4a843';
+  document.getElementById('cook-timer-display').style.color='var(--low)';
 }
 function clearTimerState(){clearInterval(timerInterval);timerInterval=null;timerRunning=false;timerStartTime=null;}
 function updateTimerDisplay(s){
@@ -2770,7 +2794,7 @@ function previewRecipeImport(){
   if(!obj.title&&!obj.name){errEl.textContent='Missing required field: title';errEl.style.display='';return;}
   if(!Array.isArray(obj.ingredients)){errEl.textContent='Missing required field: ingredients';errEl.style.display='';return;}
   const r=migrateRecipe({...obj,id:obj.id||uid()});
-  preEl.innerHTML=`<div style="font-weight:500;margin-bottom:4px">${esc(r.title)}</div><div style="font-size:12px;color:#5a6e52">${r.servings} serving${r.servings!==1?'s':''} · ${r.ingredients.length} ingredients · ${(r.steps||[]).length} steps</div>${(r.tags||[]).length?`<div style="margin-top:6px">${r.tags.map(t=>`<span class="recipe-tag">${esc(t)}</span>`).join('')}</div>`:''}`;
+  preEl.innerHTML=`<div style="font-weight:500;margin-bottom:4px">${esc(r.title)}</div><div style="font-size:12px;color:var(--ink-soft)">${r.servings} serving${r.servings!==1?'s':''} · ${r.ingredients.length} ingredients · ${(r.steps||[]).length} steps</div>${(r.tags||[]).length?`<div style="margin-top:6px">${r.tags.map(t=>`<span class="recipe-tag">${esc(t)}</span>`).join('')}</div>`:''}`;
   preEl.dataset.parsed=JSON.stringify(r);preEl.style.display='';
 }
 function confirmRecipeImport(){
@@ -2796,14 +2820,14 @@ function renderWhatCanCook(){
     html+=`<div class="wcc-section-head" onclick="document.getElementById('wcc-miss').style.display=document.getElementById('wcc-miss').style.display?'':'none'" style="cursor:pointer">📦 Need to shop (${g.missing.length}) ▾</div>`;
     html+=`<div id="wcc-miss" style="display:none">${g.missing.map(r=>wccCard(r,'missing')).join('')}</div>`;
   }
-  if(!recipes.length)html='<div style="text-align:center;padding:40px 20px;color:#5a6e52;font-size:13px">No recipes yet. Import some first.</div>';
+  if(!recipes.length)html='<div style="text-align:center;padding:40px 20px;color:var(--ink-soft);font-size:13px">no recipes yet. Import some first.</div>';
   el.innerHTML=html;
 }
 function wccCard(r,rd){
   const{details}=recipeReadinessDetail(r,1);
   const missing=details.filter(d=>d.status==='missing');
-  const mt=missing.length?`<div style="font-size:11px;color:#c47c20;margin-top:4px">Missing: ${missing.map(d=>d.name+(d.amount?` (${esc(fmtAmt(d,1))})`:'') ).join(', ')}</div>`:'';
-  return`<div class="wcc-card ${rd}" onclick="closeWhatCanCook();openRecipeDetail('${esc(r.id)}')"><div style="font-family:'Instrument Serif',serif;font-size:16px;color:#111a0e;margin-bottom:2px">${esc(r.title)}</div><div style="font-size:11px;color:#5a6e52">${r.servings} servings · ${r.ingredients.length} ingredients</div>${mt}</div>`;
+  const mt=missing.length?`<div style="font-size:11px;color:var(--low);margin-top:4px">Missing: ${missing.map(d=>d.name+(d.amount?` (${esc(fmtAmt(d,1))})`:'') ).join(', ')}</div>`:'';
+  return`<div class="wcc-card ${rd}" onclick="closeWhatCanCook();openRecipeDetail('${esc(r.id)}')"><div style="font-family:var(--font-serif);font-size:16px;color:var(--ink);margin-bottom:2px">${esc(r.title)}</div><div style="font-size:11px;color:var(--ink-soft)">${r.servings} servings · ${r.ingredients.length} ingredients</div>${mt}</div>`;
 }
 // ── STAPLES ──────────────────────────────────────────────────────────────────
 function renderStaplesList(){
@@ -2812,7 +2836,7 @@ function renderStaplesList(){
 }
 function addStaple(){
   const input=document.getElementById('new-staple-input'),v=(input.value||'').trim().toLowerCase();
-  if(!v)return;if(staples.includes(v)){showToast('Already a staple');return;}
+  if(!v)return;if(staples.includes(v)){showToast('already a staple.');return;}
   staples.push(v);saveStaples();renderStaplesList();input.value='';
 }
 function removeStaple(i){staples.splice(i,1);saveStaples();renderStaplesList();}
@@ -2821,7 +2845,7 @@ function resetStaples(){staples=DEFAULT_STAPLES.slice();saveStaples();renderStap
 function openRecipeEdit(id){
   editingRecipeId=id;
   const r=id?recipes.find(x=>x.id===id):null;
-  document.getElementById('re-title').textContent=r?'Edit recipe':'New recipe';
+  document.getElementById('re-title').textContent=r?'edit recipe':'new recipe';
   document.getElementById('re-name').value=r?r.title:'';
   document.getElementById('re-notes').value=r?r.notes:'';
   document.getElementById('re-delete-btn').style.display=r?'':'none';
@@ -2854,21 +2878,21 @@ function collectIngredients(){
 }
 function saveRecipe(){
   const title=document.getElementById('re-name').value.trim();
-  if(!title){showToast('Recipe needs a name');return;}
+  if(!title){showToast('recipe needs a name.');return;}
   const data={title,notes:document.getElementById('re-notes').value.trim(),ingredients:collectIngredients()};
   if(editingRecipeId){
     const idx=recipes.findIndex(x=>x.id===editingRecipeId);
-    if(idx!==-1){recipes[idx]={...recipes[idx],...data};showToast('Recipe updated.');}
+    if(idx!==-1){recipes[idx]={...recipes[idx],...data};showToast('recipe updated.');}
   }else{
     recipes.push({id:uid(),servings:1,tags:[],steps:[],createdAt:new Date().toISOString(),...data});
-    showToast('Recipe saved.');
+    showToast('recipe saved.');
   }
   saveRecipes();closeRecipeEdit();renderRecipes();
 }
 function confirmDeleteRecipe(){
-  showConfirm('Delete recipe?','This cannot be undone.','Delete',()=>{
+  showConfirm('delete recipe?','this cannot be undone.','delete',()=>{
     recipes=recipes.filter(x=>x.id!==editingRecipeId);
-    saveRecipes();closeRecipeEdit();renderRecipes();showToast('Recipe deleted.');
+    saveRecipes();closeRecipeEdit();renderRecipes();showToast('recipe deleted.');
   });
 }
 
@@ -2899,7 +2923,7 @@ function fbSetStatus(state, text) {
 async function fbPush() {
   const url = fbUrl();
   if (!url) return;
-  fbSetStatus('syncing', 'Pushing…');
+  fbSetStatus('syncing', 'sending…');
   const payload = {
     items, shoppingList, locations, categories, recipes,
     pushedAt: new Date().toISOString(),
@@ -2913,9 +2937,9 @@ async function fbPush() {
     if (!res.ok) throw new Error(res.status);
     const ts = new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
     localStorage.setItem(FB_SYNCED_AT, new Date().toISOString());
-    fbSetStatus('ok', 'Synced · ' + ts);
+    fbSetStatus('ok', 'synced · ' + ts);
   } catch(e) {
-    fbSetStatus('err', 'Push failed — check connection');
+    fbSetStatus('err', 'send failed — check connection');
   }
 }
 
@@ -2930,12 +2954,12 @@ function scheduleFbPush() {
 async function fbPull() {
   const url = fbUrl();
   if (!url) return;
-  fbSetStatus('syncing', 'Pulling…');
+  fbSetStatus('syncing', 'fetching…');
   try {
     const res = await fetch(url);
     if (!res.ok) throw new Error(res.status);
     const remote = await res.json();
-    if (!remote) { fbSetStatus('ok', 'No remote data yet — push first'); return; }
+    if (!remote) { fbSetStatus('ok', 'no remote data yet — send first'); return; }
 
     // Merge by ID so simultaneous edits on both phones don't wipe each other
     items        = mergeById(items,        remote.items        || []);
@@ -2954,10 +2978,10 @@ async function fbPull() {
 
     const ts = new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
     localStorage.setItem(FB_SYNCED_AT, new Date().toISOString());
-    fbSetStatus('ok', 'Synced · ' + ts);
-    showToast('Synced ↓');
+    fbSetStatus('ok', 'synced · ' + ts);
+    showToast('synced.');
   } catch(e) {
-    fbSetStatus('err', 'Pull failed — check URL and key');
+    fbSetStatus('err', 'fetch failed — check url and key');
   }
 }
 
@@ -2978,11 +3002,11 @@ function unionArr(local, remote) {
 function saveFbConfig() {
   const url = (document.getElementById('fb-url-input').value  || '').trim();
   const key = (document.getElementById('fb-key-input').value  || '').trim();
-  if (!url || !key) { showToast('Enter both URL and sync key'); return; }
+  if (!url || !key) { showToast('enter both url and sync key.'); return; }
   localStorage.setItem(FB_URL_KEY,  url);
   localStorage.setItem(FB_KEY_KEY,  key);
   renderFbStatus();
-  showToast('Firebase config saved');
+  showToast('connection saved.');
   fbPull();   // pull immediately so both phones start from the same state
 }
 
@@ -2991,15 +3015,17 @@ function renderFbStatus() {
   const key = localStorage.getItem(FB_KEY_KEY);
   const inp = document.getElementById('fb-url-input');
   const ki  = document.getElementById('fb-key-input');
+  const det = document.getElementById('fb-connection-details');
   if (inp && url) inp.value = url;
   if (ki  && key) ki.value  = key;
-  if (!url || !key) { fbSetStatus('', 'Not configured'); return; }
+  if (det) det.open = !!(url && key); // open by default if already configured
+  if (!url || !key) { fbSetStatus('', 'not configured'); return; }
   const synced = localStorage.getItem(FB_SYNCED_AT);
   if (synced) {
     const ts = new Date(synced).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
-    fbSetStatus('ok', 'Configured · last synced ' + ts);
+    fbSetStatus('ok', 'connected · last synced ' + ts);
   } else {
-    fbSetStatus('', 'Configured — not yet synced');
+    fbSetStatus('', 'connected — not yet synced');
   }
 }
 
