@@ -1,0 +1,325 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>mise. — what's new</title>
+</head>
+<body>
+<style>
+:root{
+  --bg:#F5F1EA; --bg-card:#FBF8F2; --ink:#1A1A1A; --ink-soft:#5C5651; --ink-faint:#9A938B;
+  --rule:#E5DFD4; --accent:#4A5D3A; --accent-ink:#FBF8F2; --accent-soft:#EAEDE4;
+  --low:#7A5520; --low-soft:#F2E8D8; --out:#8B3A3A; --out-soft:#F2DEDE;
+  --serif:Georgia,'Times New Roman',serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#1C1A17; --bg-card:#26231F; --ink:#F0EBE3; --ink-soft:#B5ADA2; --ink-faint:#7A7369;
+    --rule:#3D3832; --accent:#A3B892; --accent-ink:#1C1A17; --accent-soft:#2E3329;
+    --low:#D4A86A; --low-soft:#332B1E; --out:#D48484; --out-soft:#3A2626;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#1C1A17; --bg-card:#26231F; --ink:#F0EBE3; --ink-soft:#B5ADA2; --ink-faint:#7A7369;
+  --rule:#3D3832; --accent:#A3B892; --accent-ink:#1C1A17; --accent-soft:#2E3329;
+  --low:#D4A86A; --low-soft:#332B1E; --out:#D48484; --out-soft:#3A2626;
+}
+:root[data-theme="light"]{
+  --bg:#F5F1EA; --bg-card:#FBF8F2; --ink:#1A1A1A; --ink-soft:#5C5651; --ink-faint:#9A938B;
+  --rule:#E5DFD4; --accent:#4A5D3A; --accent-ink:#FBF8F2; --accent-soft:#EAEDE4;
+  --low:#7A5520; --low-soft:#F2E8D8; --out:#8B3A3A; --out-soft:#F2DEDE;
+}
+html{background:var(--bg);}
+body{
+  font-family:var(--serif); color:var(--ink); background:var(--bg);
+  max-width:760px; margin:0 auto; padding:56px 24px 80px; line-height:1.65; font-size:16.5px;
+}
+a{color:var(--accent); text-decoration-color:var(--rule); text-underline-offset:3px;}
+a:hover{text-decoration-color:var(--accent);}
+a:focus-visible{outline:2px solid var(--accent); outline-offset:2px; border-radius:2px;}
+h1{font-size:36px; font-weight:normal; margin:0 0 6px; letter-spacing:-0.01em; text-wrap:balance;}
+h1 .dot{color:var(--accent);}
+.subtitle{color:var(--ink-soft); font-size:16px; margin:0 0 24px; max-width:56ch;}
+.links{display:flex; flex-wrap:wrap; gap:8px 24px; font-size:14.5px; margin-bottom:12px;}
+.links .k{font-family:var(--mono); font-size:11px; color:var(--ink-faint); text-transform:uppercase; letter-spacing:0.08em; margin-right:6px;}
+h2{font-size:23px; font-weight:600; margin:60px 0 6px; text-wrap:balance;}
+h2:first-of-type{margin-top:44px;}
+.lede{color:var(--ink-soft); font-size:16px; margin:0 0 20px; max-width:58ch;}
+p{margin:0 0 14px; max-width:62ch;}
+
+/* ── before / after stage ── */
+.stage{background:var(--bg-card); border:1px solid var(--rule); border-radius:14px;
+       padding:26px 20px; display:flex; gap:10px; align-items:center; justify-content:center;
+       flex-wrap:wrap; margin:6px 0 10px;}
+.panel{display:flex; flex-direction:column; align-items:center; gap:10px;}
+.tag{font-family:var(--mono); font-size:10.5px; letter-spacing:0.14em; text-transform:uppercase; color:var(--ink-faint);}
+.tag.after{color:var(--accent);}
+.arrow{font-size:22px; color:var(--ink-faint); padding:0 4px; align-self:center;}
+.caption{font-size:13.5px; color:var(--ink-soft); margin:2px 0 0; max-width:62ch;}
+
+/* ── sketch phone ── */
+.phone{width:196px; background:var(--bg); border:1.5px solid var(--rule); border-radius:20px;
+       padding:12px 10px; box-shadow:0 1px 3px rgba(0,0,0,0.06); font-family:var(--mono);}
+.phone .titlebar{font-size:11px; color:var(--ink); letter-spacing:0.02em; padding:0 4px 8px; font-weight:600;}
+.phone .titlebar small{color:var(--ink-faint); font-weight:normal;}
+.row{background:var(--bg-card); border:1px solid var(--rule); border-radius:8px;
+     padding:7px 9px; font-size:10.5px; color:var(--ink); margin-bottom:6px;
+     display:flex; justify-content:space-between; align-items:center; gap:6px;}
+.row .sub{color:var(--ink-faint); font-size:9px;}
+.pill{font-size:8.5px; padding:2px 7px; border-radius:99px; white-space:nowrap;}
+.pill.ok{background:var(--accent-soft); color:var(--accent);}
+.pill.low{background:var(--low-soft); color:var(--low);}
+.pill.out{background:var(--out-soft); color:var(--out);}
+.statbar{display:flex; gap:5px; margin-bottom:8px;}
+.statchip{flex:1; text-align:center; background:var(--bg-card); border:1px solid var(--rule);
+          border-radius:8px; padding:5px 2px; font-size:9px; color:var(--ink-soft);}
+.statchip b{display:block; font-size:13px; color:var(--ink); font-weight:600;}
+.statchip.pressed{border-color:var(--low); background:var(--low-soft); color:var(--low);}
+.statchip.pressed b{color:var(--low);}
+.navbar{display:flex; gap:4px; border-top:1px solid var(--rule); padding-top:8px; margin-top:8px;}
+.navitem{flex:1; text-align:center; font-size:8.5px; color:var(--ink-faint); line-height:1.5;}
+.navitem span{display:block; font-size:13px;}
+.navitem.on{color:var(--accent);}
+.btnrow{display:flex; gap:6px; margin-bottom:6px;}
+.mockbtn{flex:1; text-align:center; font-size:9.5px; padding:9px 4px; border-radius:9px;
+         border:1px solid var(--rule); color:var(--ink); background:var(--bg-card); line-height:1.4;}
+.mockbtn.green{background:var(--accent); color:var(--accent-ink); border-color:var(--accent);}
+.mockbtn.dead{color:var(--ink-faint); text-decoration:line-through; text-decoration-color:var(--out);}
+.mockbtn.full{flex-basis:100%;}
+.blocked{font-size:9px; color:var(--out); text-align:center; margin-top:2px;}
+.seg{display:flex; border:1px solid var(--rule); border-radius:9px; overflow:hidden; margin-bottom:6px;}
+.seg div{flex:1; text-align:center; font-size:8.5px; padding:6px 2px; color:var(--ink-soft); border-right:1px solid var(--rule);}
+.seg div:last-child{border-right:none;}
+.seg div.on{background:var(--accent); color:var(--accent-ink);}
+.scanwin{border:1.5px dashed var(--accent); border-radius:10px; height:74px; margin-bottom:6px;
+         display:flex; align-items:center; justify-content:center; position:relative;}
+.barcode{display:flex; gap:2px; align-items:center; height:30px;}
+.barcode i{display:block; background:var(--ink); width:2px; height:100%;}
+.barcode i:nth-child(2n){height:70%; width:1.5px;}
+.barcode i:nth-child(3n){width:3px;}
+.empty-note{font-size:9.5px; color:var(--ink-faint); text-align:center; padding:14px 6px; line-height:1.6;}
+
+/* dark-mode sketch: fixed colors on purpose — it depicts the dark theme itself */
+.phone.dark{background:#1C1A17; border-color:#3D3832;}
+.phone.dark .titlebar{color:#F0EBE3;}
+.phone.dark .titlebar small{color:#7A7369;}
+.phone.dark .row{background:#26231F; border-color:#3D3832; color:#F0EBE3;}
+.phone.dark .row .sub{color:#7A7369;}
+.phone.dark .pill.ok{background:#2E3329; color:#A3B892;}
+.phone.dark .pill.low{background:#332B1E; color:#D4A86A;}
+.phone.dark .navbar{border-color:#3D3832;}
+.phone.dark .navitem{color:#7A7369;}
+.phone.dark .navitem.on{color:#A3B892;}
+
+/* match diagram */
+.matches{display:flex; flex-direction:column; gap:10px; font-family:var(--mono); font-size:13px;}
+.mrow{display:flex; align-items:center; gap:12px; flex-wrap:wrap;}
+.chip{background:var(--bg); border:1px solid var(--rule); border-radius:8px; padding:4px 12px;}
+.verdict{font-size:12px;}
+.verdict.bad{color:var(--out);}
+.verdict.good{color:var(--accent);}
+
+.quiet{list-style:none; padding:0; margin:0;}
+.quiet li{padding:10px 0; border-bottom:1px solid var(--rule); font-size:15.5px; max-width:62ch;}
+.quiet li:last-child{border-bottom:none;}
+.quiet b{font-weight:600;}
+footer{margin-top:64px; padding-top:18px; border-top:1px solid var(--rule);
+       font-size:13.5px; color:var(--ink-soft); line-height:1.9;}
+footer .mono{font-family:var(--mono); font-size:11.5px; color:var(--ink-faint);}
+@media (max-width:560px){ body{padding-top:36px;} h1{font-size:29px;} .arrow{transform:rotate(90deg);} }
+@media (prefers-reduced-motion: no-preference){
+  .stage{transition:box-shadow 0.2s;}
+}
+</style>
+
+<h1>mise<span class="dot">.</span> — what's new</h1>
+<p class="subtitle">I spent some time with mise and made a set of improvements. Here's a plain tour of what changed — every sketch below is a simplified picture of the real app, and you can try everything live before reading a word.</p>
+
+<div class="links">
+  <div><span class="k">try it</span><a href="https://brenton-beachplain.github.io/Mise/">live demo on my fork</a></div>
+  <div><span class="k">the code</span><a href="https://github.com/westbt-cpu/Mise./pull/19">pull request #19</a></div>
+</div>
+
+<h2>recipes are back on the menu</h2>
+<p class="lede">The recipes screen existed, but there was no tab to reach it — and no button on the station screen to add an item. Both entry points are restored.</p>
+<div class="stage">
+  <div class="panel">
+    <div class="phone">
+      <div class="titlebar">station <small>· 24 items</small></div>
+      <div class="row">coconut milk <span class="pill ok">stocked</span></div>
+      <div class="row">rolled oats <span class="pill low">low</span></div>
+      <div class="navbar">
+        <div class="navitem on"><span>▤</span>home</div>
+        <div class="navitem"><span>☰</span>station</div>
+        <div class="navitem"><span>✓</span>list</div>
+      </div>
+    </div>
+    <div class="tag">before — no way in</div>
+  </div>
+  <div class="arrow">→</div>
+  <div class="panel">
+    <div class="phone">
+      <div class="titlebar">station <small>· 24 items</small> &nbsp;⊕</div>
+      <div class="row">coconut milk <span class="pill ok">stocked</span></div>
+      <div class="row">rolled oats <span class="pill low">low</span></div>
+      <div class="navbar">
+        <div class="navitem on"><span>▤</span>home</div>
+        <div class="navitem"><span>☰</span>station</div>
+        <div class="navitem"><span>✓</span>list</div>
+        <div class="navitem"><span>♨</span>recipes</div>
+      </div>
+    </div>
+    <div class="tag after">after — recipes tab + add button</div>
+  </div>
+</div>
+
+<h2>a real dark mode</h2>
+<p class="lede">The whole color system was consolidated first, then dark mode was built on top of it — so every screen, sheet, and toast has a considered dark version. It follows the phone automatically, or can be locked either way in settings.</p>
+<div class="stage">
+  <div class="panel">
+    <div class="phone">
+      <div class="titlebar">station <small>· evening</small></div>
+      <div class="row">arborio rice <span class="pill ok">stocked</span></div>
+      <div class="row">parmesan <span class="pill low">low</span></div>
+      <div class="navbar">
+        <div class="navitem"><span>▤</span>home</div>
+        <div class="navitem on"><span>☰</span>station</div>
+        <div class="navitem"><span>✓</span>list</div>
+        <div class="navitem"><span>♨</span>recipes</div>
+      </div>
+    </div>
+    <div class="tag">light</div>
+  </div>
+  <div class="arrow">↔</div>
+  <div class="panel">
+    <div class="phone dark">
+      <div class="titlebar">station <small>· evening</small></div>
+      <div class="row">arborio rice <span class="pill ok">stocked</span></div>
+      <div class="row">parmesan <span class="pill low">low</span></div>
+      <div class="navbar">
+        <div class="navitem"><span>▤</span>home</div>
+        <div class="navitem on"><span>☰</span>station</div>
+        <div class="navitem"><span>✓</span>list</div>
+        <div class="navitem"><span>♨</span>recipes</div>
+      </div>
+    </div>
+    <div class="tag after">dark</div>
+  </div>
+</div>
+
+<h2>barcode scanning that works on iPhone</h2>
+<p class="lede">Scanning quietly did nothing on iPhones — Safari is missing the piece of browser machinery it relied on. That piece is now bundled with the app, and a scanned barcode also looks up the product's name automatically from Open Food Facts, a free grocery database.</p>
+<div class="stage">
+  <div class="panel">
+    <div class="phone">
+      <div class="titlebar">scan <small>· iPhone</small></div>
+      <div class="scanwin"><div class="barcode"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div>
+      <div class="empty-note">…nothing happens</div>
+    </div>
+    <div class="tag">before</div>
+  </div>
+  <div class="arrow">→</div>
+  <div class="panel">
+    <div class="phone">
+      <div class="titlebar">scan <small>· iPhone</small></div>
+      <div class="scanwin"><div class="barcode"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div>
+      <div class="row">coconut milk <span class="sub">Thai Kitchen</span> <span class="pill ok">found</span></div>
+    </div>
+    <div class="tag after">after — recognized &amp; named</div>
+  </div>
+</div>
+
+<h2>tap the numbers to filter</h2>
+<p class="lede">The station screen always showed counts of low and out items — now those counts are buttons. Tap "low" and the list shows only what's running low; tap again to see everything. The "running low" card on the home screen jumps straight into that filtered view.</p>
+<div class="stage">
+  <div class="panel">
+    <div class="phone">
+      <div class="titlebar">station</div>
+      <div class="statbar">
+        <div class="statchip"><b>3</b>low</div>
+        <div class="statchip"><b>1</b>out</div>
+        <div class="statchip"><b>2</b>expiring</div>
+      </div>
+      <div class="row">coconut milk <span class="pill ok">stocked</span></div>
+      <div class="row">rolled oats <span class="pill low">low</span></div>
+      <div class="row">olive oil <span class="pill ok">stocked</span></div>
+      <div class="row">espresso beans <span class="pill low">low</span></div>
+    </div>
+    <div class="tag">before — numbers are just labels</div>
+  </div>
+  <div class="arrow">→</div>
+  <div class="panel">
+    <div class="phone">
+      <div class="titlebar">station <small>· filtered</small></div>
+      <div class="statbar">
+        <div class="statchip pressed"><b>3</b>low</div>
+        <div class="statchip"><b>1</b>out</div>
+        <div class="statchip"><b>2</b>expiring</div>
+      </div>
+      <div class="row">rolled oats <span class="pill low">low</span></div>
+      <div class="row">espresso beans <span class="pill low">low</span></div>
+      <div class="row">parmesan <span class="pill low">low</span></div>
+    </div>
+    <div class="tag after">after — tap "low", see only low</div>
+  </div>
+</div>
+
+<h2>your AI assistant, your choice</h2>
+<p class="lede">mise writes shopping-haul and recipe prompts you paste into an AI chat. The old "open Claude" button was hardwired to one assistant and — because of how it tried to open the app — usually got blocked and did nothing. Now there are two dependable buttons, and settings lets each person pick Claude, ChatGPT, Gemini, Grok, or their own. The prompt itself got smarter too: it now asks the AI for categories, package notes, and expiry dates, and mise files all of it automatically.</p>
+<div class="stage">
+  <div class="panel">
+    <div class="phone">
+      <div class="titlebar">haul import</div>
+      <div class="btnrow"><div class="mockbtn dead full">open Claude</div></div>
+      <div class="blocked">✕ blocked by the browser</div>
+    </div>
+    <div class="tag">before — one broken button</div>
+  </div>
+  <div class="arrow">→</div>
+  <div class="panel">
+    <div class="phone">
+      <div class="titlebar">haul import</div>
+      <div class="btnrow">
+        <div class="mockbtn green">⎘ copy<br>prompt</div>
+        <div class="mockbtn">open<br>ChatGPT ↗</div>
+      </div>
+      <div class="seg"><div>claude</div><div class="on">chatgpt</div><div>gemini</div><div>grok</div></div>
+      <div class="empty-note">pick your assistant in settings</div>
+    </div>
+    <div class="tag after">after — copy, open, your pick</div>
+  </div>
+</div>
+
+<h2>the pantry matcher stopped guessing</h2>
+<p class="lede">When a recipe checks your shelf, it has to decide whether "oats" in the recipe means "rolled oats" in your pantry. The old matcher compared fragments of words, which produced confident nonsense — it fixed these by only matching whole words.</p>
+<div class="stage">
+  <div class="matches">
+    <div class="mrow"><span class="chip">aluminum foil</span> <span class="verdict bad">✕ used to match</span> <span class="chip">olive oil</span></div>
+    <div class="mrow"><span class="chip">steak</span> <span class="verdict bad">✕ used to match</span> <span class="chip">green tea</span></div>
+    <div class="mrow"><span class="chip">rolled oats</span> <span class="verdict good">✓ still matches</span> <span class="chip">oats</span></div>
+  </div>
+</div>
+<p class="caption">Cooking also now subtracts exactly one package per ingredient it finds — before, two different screens did this math two different ways.</p>
+
+<h2>quieter improvements you'll feel</h2>
+<ul class="quiet">
+  <li><b>A gentler first run.</b> New users are asked whether they'd like a sample kitchen to explore — instead of silently finding groceries they never bought.</li>
+  <li><b>Undo instead of oops.</b> Deleting from the shopping list shows an undo button for a few seconds.</li>
+  <li><b>It feels like an app.</b> Little haptic taps, press-and-hold to count quantities fast, sheets you can flick away, and swipe actions that work in both directions.</li>
+  <li><b>One-tap handoff on iPhone.</b> Optionally, an Apple Shortcut can take a prompt straight to your assistant — one tap instead of copy, switch, paste.</li>
+  <li><b>Updates actually arrive.</b> A versioning fix means phones pick up new releases on the next open, instead of clinging to an old copy indefinitely.</li>
+  <li><b>A safety net for the future.</b> The trickiest logic (parsing, matching, cooking math) now lives in small tested modules — 32 automatic checks that catch regressions before users do.</li>
+</ul>
+
+<h2>what I deliberately didn't touch</h2>
+<p>Storage and household sync work exactly as they do today. No accounts, no new services, no changes to where anyone's data lives.</p>
+
+<footer>
+  Everything above is on <a href="https://github.com/westbt-cpu/Mise./pull/19">pull request #19</a>, split into eleven tidy steps so you can take all of it, some of it, or none of it. Happy to walk through any piece.<br>
+  <span class="mono">— brenton · july 2026 · sketches are simplified; the real thing is at brenton-beachplain.github.io/Mise</span>
+</footer>
+</body>
+</html>
