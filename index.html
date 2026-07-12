@@ -27,8 +27,10 @@
   --accent-pale: #E8EEE2;
   --accent-ink: #FBF8F2;
   --stale: #8B5E3C;
-  --low: #A87A3A;
+  --low: #7A5520;
   --low-light: #F2E4C8;
+  --exp: #8B4A5C;
+  --exp-light: #F0E0E6;
   --out: #8B3A3A;
   --out-light: #F5D4D4;
   --have: #6B7D5A;
@@ -68,7 +70,11 @@ appearance:none;
 font-family:inherit;
 }
 button{color:inherit;}
-button:focus,a:focus{outline:none;}
+button:focus,a:focus,input:focus,select:focus,textarea:focus{outline:none;}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{
+  outline:2px solid var(--accent);
+  outline-offset:2px;
+}
 button svg,a svg{stroke:currentColor;}
 
 html,body{height:100%;overflow:hidden;}
@@ -140,7 +146,7 @@ header{background:var(--bg);border-bottom:1px solid var(--rule);padding:max(var(
 .item-card:active{transform:scale(0.97);}
 .item-card.low{border-top:3px solid var(--low);}
 .item-card.out{border-top:3px solid var(--out);background:var(--out-light);}
-.item-card.expiring{border-top:3px solid var(--stale);}
+.item-card.expiring{border-top:3px solid var(--exp);}
 
 .item-name{font-size:15px;font-weight:600;color:var(--ink);margin-bottom:3px;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
 .item-meta{font-size:12px;color:var(--ink-soft);margin-bottom:10px;line-height:1.4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
@@ -156,7 +162,8 @@ header{background:var(--bg);border-bottom:1px solid var(--rule);padding:max(var(
 .pill-ok{background:var(--accent-light);color:var(--accent);}
 .pill-low{background:var(--low-light);color:var(--low);}
 .pill-out{background:var(--out-light);color:var(--out);}
-.pill-exp{background:var(--low-light);color:var(--stale);}
+.pill-exp{background:var(--exp-light);color:var(--exp);}
+.pill-sample{background:var(--accent-pale);color:var(--ink-soft);}
 
 /* ── LOCATION VIEW ── */
 .loc-section{margin-bottom:16px;}
@@ -169,14 +176,13 @@ header{background:var(--bg);border-bottom:1px solid var(--rule);padding:max(var(
 .loc-row:active{background:var(--accent-pale);}
 .loc-row.low{background:var(--low-light);}
 .loc-row.out{background:var(--out-light);}
-.loc-row.expiring{background:var(--low-light);}
+.loc-row.expiring{background:var(--exp-light);}
 .loc-info{flex:1;min-width:0;}
 .loc-name{font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--ink);}
 .loc-cat{font-size:12px;color:var(--ink-soft);margin-top:2px;}
 
 /* ── RESTOCK ── */
-.restock-bar{padding:10px 16px;display:flex;gap:8px;background:var(--bg);border-bottom:1px solid var(--rule);overflow-x:auto;}
-.restock-bar::-webkit-scrollbar{display:none;}
+.restock-bar{padding:10px 16px;display:flex;flex-wrap:wrap;gap:8px;background:var(--bg);border-bottom:1px solid var(--rule);}
 /* shop-item kept for legacy; new list-item class used for redesigned checkboxes */
 .shop-item{display:flex;align-items:center;padding:14px 16px;background:var(--bg-card);border:1px solid var(--rule);border-radius:var(--radius);margin-bottom:8px;gap:14px;min-height:56px;}
 .shop-item.checked{opacity:0.4;}
@@ -318,8 +324,11 @@ option{color:var(--ink);background:var(--bg-card);}
 .confirm-ok:active{opacity:0.85;}
 
 /* toast — S8 */
-.toast{position:fixed;bottom:calc(var(--nav-height) + var(--sab) + 20px);left:50%;transform:translateX(-50%) translateY(20px);background:var(--ink);color:var(--bg);padding:12px 20px;border-radius:var(--radius-sm);font-size:14px;font-weight:500;z-index:600;opacity:0;transition:all 0.25s ease;white-space:nowrap;pointer-events:none;}
-.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.toast{position:fixed;bottom:calc(var(--nav-height) + var(--sab, env(safe-area-inset-bottom)) + 12px);left:50%;transform:translateX(-50%) translateY(20px);background:var(--ink);color:var(--bg);padding:12px 16px;border-radius:var(--radius-sm);font-size:14px;font-weight:500;z-index:600;opacity:0;transition:all 0.25s ease;white-space:nowrap;pointer-events:none;display:flex;align-items:center;gap:12px;max-width:calc(100% - 32px);}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:auto;}
+.toast-msg{min-width:0;overflow:hidden;text-overflow:ellipsis;}
+.toast-action{background:none;border:none;color:var(--accent-light);font-family:inherit;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;cursor:pointer;padding:4px 2px;flex-shrink:0;}
+.toast-action:active{opacity:0.75;}
 
 /* empty */
 .empty{text-align:center;padding:64px 24px;color:var(--ink-3);}
@@ -594,9 +603,9 @@ option{color:var(--ink);background:var(--bg-card);}
       </div>
       <button class="add-btn" onclick="openAddSheet()" aria-label="Add item">+</button>
       <button class="sort-btn" onclick="cycleSort()" id="sort-btn">A–Z</button>
-      <div class="view-toggle">
-        <div class="toggle-btn active" id="view-cat-btn" onclick="setView('category')">cat.</div>
-        <div class="toggle-btn" id="view-loc-btn" onclick="setView('location')">loc.</div>
+      <div class="view-toggle" role="group" aria-label="view">
+        <button type="button" class="toggle-btn active" id="view-cat-btn" onclick="setView('category')" aria-pressed="true">cat.</button>
+        <button type="button" class="toggle-btn" id="view-loc-btn" onclick="setView('location')" aria-pressed="false">loc.</button>
       </div>
     </div>
     <div class="content-pad" id="inventory-main"></div>
@@ -760,6 +769,10 @@ option{color:var(--ink);background:var(--bg-card);}
           <div style="flex:1"><div class="settings-row-label">Import backup</div><div class="settings-row-sub">Restore from a previous export</div></div>
           <button class="s-btn s-btn-rename" onclick="document.getElementById('import-file-input').click()">import</button>
           <input type="file" id="import-file-input" accept=".json" style="display:none" onchange="importData(this)">
+        </div>
+        <div class="settings-row">
+          <div style="flex:1"><div class="settings-row-label">Remove sample items</div><div class="settings-row-sub">Delete all items marked as sample data</div></div>
+          <button class="s-btn s-btn-del" onclick="removeSampleItems()">remove</button>
         </div>
       </div>
     </div>
@@ -932,7 +945,7 @@ option{color:var(--ink);background:var(--bg-card);}
 <!-- QUICK ADD SHEET -->
 
 <div id="quick-add-sheet" style="display:none">
-  <div class="modal-overlay" onclick="document.getElementById('quick-add-sheet').style.display='none'">
+  <div class="modal-overlay" onclick="closeDialog('quick-add-sheet')">
     <div class="sheet" onclick="event.stopPropagation()" style="padding-bottom:calc(var(--sab) + 20px)">
       <div class="sheet-handle"></div>
       <div class="lemon-bar"></div>
@@ -947,7 +960,7 @@ option{color:var(--ink);background:var(--bg-card);}
       </div>
       <div class="sheet-actions">
         <button class="btn btn-green btn-full" onclick="saveQuickAdd()">add to list</button>
-        <button class="btn btn-ghost btn-full" onclick="document.getElementById('quick-add-sheet').style.display='none'">cancel</button>
+        <button class="btn btn-ghost btn-full" onclick="closeDialog('quick-add-sheet')">cancel</button>
       </div>
     </div>
   </div>
@@ -956,7 +969,7 @@ option{color:var(--ink);background:var(--bg-card);}
 <!-- RENAME SHEET -->
 
 <div id="rename-sheet" style="display:none">
-  <div class="modal-overlay" onclick="document.getElementById('rename-sheet').style.display='none'">
+  <div class="modal-overlay" onclick="closeDialog('rename-sheet')">
     <div class="sheet" onclick="event.stopPropagation()" style="padding-bottom:calc(var(--sab) + 20px)">
       <div class="sheet-handle"></div>
       <div class="lemon-bar"></div>
@@ -967,7 +980,7 @@ option{color:var(--ink);background:var(--bg-card);}
       </div>
       <div class="sheet-actions">
         <button class="btn btn-green btn-full" onclick="saveRename()">save</button>
-        <button class="btn btn-ghost btn-full" onclick="document.getElementById('rename-sheet').style.display='none'">cancel</button>
+        <button class="btn btn-ghost btn-full" onclick="closeDialog('rename-sheet')">cancel</button>
       </div>
     </div>
   </div>
@@ -1183,7 +1196,20 @@ option{color:var(--ink);background:var(--bg-card);}
         <button class="btn btn-green" onclick="addOnboardLoc()" style="padding:13px 18px;min-height:50px;font-size:13px;">add</button>
       </div>
       <button class="btn btn-green btn-full" onclick="finishOnboard()" style="margin-bottom:10px;">Done →</button>
-      <button onclick="finishOnboard()" style="width:100%;text-align:center;background:none;border:none;font-family:'Geist Mono',monospace;font-size:11px;color:#9aab92;cursor:pointer;padding:10px;letter-spacing:0.03em;">skip for now</button>
+      <button type="button" onclick="skipOnboard()" style="width:100%;text-align:center;background:none;border:none;font-family:'Geist Mono',monospace;font-size:11px;color:#9aab92;cursor:pointer;padding:10px;letter-spacing:0.03em;">skip for now</button>
+      <button type="button" onclick="loadSampleKitchen()" style="width:100%;text-align:center;background:none;border:none;font-family:'Geist Mono',monospace;font-size:11px;color:#9aab92;cursor:pointer;padding:6px 10px 4px;letter-spacing:0.03em;">try a sample kitchen</button>
+    </div>
+  </div>
+</div>
+
+<!-- COOK SUMMARY -->
+<div id="cook-summary" style="display:none">
+  <div class="modal-overlay" onclick="if(event.target===event.currentTarget)closeCookSummary()">
+    <div class="sheet" onclick="event.stopPropagation()" style="padding-bottom:calc(env(safe-area-inset-bottom,0px) + 24px);max-height:70vh;overflow-y:auto;">
+      <div class="sheet-handle"></div>
+      <h2 style="font-size:22px;letter-spacing:-0.4px;margin-bottom:14px;">cooked.</h2>
+      <div id="cook-summary-body"></div>
+      <button class="btn btn-green btn-full" onclick="closeCookSummary()" style="margin-top:16px;">done</button>
     </div>
   </div>
 </div>
@@ -1202,19 +1228,20 @@ const SORT_LABELS={'name':'A–Z','qty-low':'Qty ↑','qty-high':'Qty ↓'};
 
 function init(){
   try{
-    items=JSON.parse(localStorage.getItem(ITEMS_KEY))||seed();
+    const rawItems=localStorage.getItem(ITEMS_KEY);
+    items=rawItems?JSON.parse(rawItems):[];
     shoppingList=JSON.parse(localStorage.getItem(SHOP_KEY))||[];
     locations=JSON.parse(localStorage.getItem(LOCS_KEY))||DEFAULT_LOCS.slice();
     categories=JSON.parse(localStorage.getItem(CATS_KEY))||DEFAULT_CATS.slice();
-  }catch(e){items=seed();shoppingList=[];locations=DEFAULT_LOCS.slice();categories=DEFAULT_CATS.slice();}
+  }catch(e){items=[];shoppingList=[];locations=DEFAULT_LOCS.slice();categories=DEFAULT_CATS.slice();}
   // Seed lastConfirmed for any items missing it
   const now=Date.now();
   items.forEach(i=>{if(!i.lastConfirmed)i.lastConfirmed=now;});
   currentView='category';
   const catBtn=document.getElementById('view-cat-btn');
   const locBtn=document.getElementById('view-loc-btn');
-  if(catBtn){catBtn.classList.add('active');catBtn.style.background='var(--accent)';catBtn.style.color='var(--accent-ink)';}
-  if(locBtn){locBtn.classList.remove('active');locBtn.style.background='var(--bg-card)';locBtn.style.color='var(--ink-soft)';}
+  if(catBtn){catBtn.classList.add('active');catBtn.setAttribute('aria-pressed','true');catBtn.style.background='var(--accent)';catBtn.style.color='var(--accent-ink)';}
+  if(locBtn){locBtn.classList.remove('active');locBtn.setAttribute('aria-pressed','false');locBtn.style.background='var(--bg-card)';locBtn.style.color='var(--ink-soft)';}
   // Set today's date label
   const d=new Date();
   const days=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
@@ -1225,8 +1252,8 @@ function init(){
   setTimeout(()=>fbPull(),800);
   renderHome();
   renderInventory();
-  handleUrlParams();
-  maybeShowOnboarding();
+  const urlRouted=handleUrlParams();
+  if(!urlRouted) maybeShowOnboarding();
 }
 
 // ── ONBOARDING ────────────────────────────────────────────────────────────────
@@ -1235,7 +1262,7 @@ function maybeShowOnboarding(){
   if(localStorage.getItem(ITEMS_KEY)) return; // returning user — has data already
   onboardLocs=[];
   renderOnboardLocs();
-  document.getElementById('onboard-modal').style.display='';
+  openDialog('onboard-modal');
 }
 function renderOnboardLocs(){
   const el=document.getElementById('onboard-locs-list');
@@ -1263,8 +1290,31 @@ function finishOnboard(){
     save();
   }
   localStorage.setItem(ONBOARD_KEY,'1');
-  document.getElementById('onboard-modal').style.display='none';
+  closeDialog('onboard-modal');
   renderInventory();
+  renderHome();
+}
+function skipOnboard(){
+  localStorage.setItem(ONBOARD_KEY,'1');
+  closeDialog('onboard-modal');
+  renderInventory();
+  renderHome();
+}
+function loadSampleKitchen(){
+  items=seed().map(i=>({...i,demo:true,lastConfirmed:Date.now()}));
+  save();
+  renderInventory();
+  renderHome();
+  showToast('sample kitchen loaded.');
+}
+function removeSampleItems(){
+  const n=items.filter(i=>i.demo).length;
+  if(!n){showToast('no sample items');return;}
+  showConfirm('remove sample items?',`${n} sample item${n!==1?'s':''} will be deleted.`,'remove',()=>{
+    items=items.filter(i=>!i.demo);
+    save();renderInventory();renderHome();renderSettings();
+    showToast('sample items removed.');
+  });
 }
 
 function save(){
@@ -1276,10 +1326,12 @@ function save(){
 }
 
 function handleUrlParams(){
+  let routed=false;
   try{
     const p=new URLSearchParams(location.search);
     // NFC location import deep-link
     if(p.has('import')||p.has('loc')){
+      routed=true;
       const loc=p.get('loc')||'';
       switchScreen('import',null);
       renderImportLocSelect(loc||locations[0]||'');
@@ -1287,6 +1339,7 @@ function handleUrlParams(){
     // AnyList / share-target: ?cl=<list text>
     const cl=p.get('cl')||p.get('text')||'';
     if(cl){
+      routed=true;
       switchScreen('restock',document.getElementById('nav-list'));
       openListCheck();
       document.getElementById('lc-paste').value=decodeURIComponent(cl);
@@ -1295,6 +1348,7 @@ function handleUrlParams(){
       history.replaceState({},'',location.pathname);
     }
   }catch(e){}
+  return routed;
 }
 
 // ── SERVICE WORKER ────────────────────────────────────────────────────────────
@@ -1427,6 +1481,12 @@ function pill(i){
   if(i.qty<=i.threshold) return`<span class="stock-pill pill-low">low</span>`;
   return`<span class="stock-pill pill-ok">ok</span>`;
 }
+function samplePill(i){
+  return i.demo?`<span class="stock-pill pill-sample">sample</span>`:'';
+}
+function clearDemo(item){
+  if(item&&item.demo) delete item.demo;
+}
 
 function renderCat(filtered,el){
   const g={};filtered.forEach(i=>{(g[i.category]=g[i.category]||[]).push(i);});
@@ -1439,7 +1499,7 @@ function renderCat(filtered,el){
       <div class="section-cards-wrap">
         <div class="items-grid">${g[cat].map(item=>`
           <div class="item-card ${sc(item)}" onclick="openEdit('${item.id}')">
-            <div class="item-name">${esc(item.name)}</div>
+            <div class="item-name">${esc(item.name)}${samplePill(item)?` ${samplePill(item)}`:''}</div>
             <div class="item-meta">${esc(item.location)}${item.notes?' · '+esc(item.notes):''}</div>
             <div class="item-bottom">
               <div class="qty-controls" onclick="event.stopPropagation()">
@@ -1468,7 +1528,7 @@ function renderLoc(filtered,el){
           <div class="swipe-bg list">List →</div>
           <div class="swipe-inner loc-row ${sc(item)}" onclick="openEdit('${item.id}')">
             <div class="loc-info">
-              <div class="loc-name">${esc(item.name)}</div>
+              <div class="loc-name">${esc(item.name)}${samplePill(item)?` ${samplePill(item)}`:''}</div>
               <div class="loc-cat">${esc(item.category)}${item.notes?' · '+esc(item.notes):''}</div>
             </div>
             ${pill(item)}
@@ -1538,6 +1598,7 @@ function adj(id,d){
   if(!item)return;
   item.qty=Math.max(0,item.qty+d);
   item.lastConfirmed=Date.now();
+  clearDemo(item);
   save();renderInventory();renderHome();
 }
 
@@ -1547,6 +1608,8 @@ function setView(v){
   const locBtn=document.getElementById('view-loc-btn');
   catBtn.classList.toggle('active',v==='category');
   locBtn.classList.toggle('active',v==='location');
+  catBtn.setAttribute('aria-pressed',v==='category'?'true':'false');
+  locBtn.setAttribute('aria-pressed',v==='location'?'true':'false');
   // Inline styles as fallback for Chrome iOS CSS variable failures
   catBtn.style.background=v==='category'?'#2d6a2d':'#f8f9f7';
   catBtn.style.color=v==='category'?'#ffffff':'#5a6e52';
@@ -1586,7 +1649,7 @@ function openAddSheet(prefill){
   document.getElementById('method-chooser').style.display='';
   populateSelects('','');
   setMethod('manual');
-  document.getElementById('item-sheet').style.display='';
+  openDialog('item-sheet');
   if(prefill) setTimeout(()=>document.getElementById('f-name').focus(),300);
 }
 
@@ -1606,10 +1669,10 @@ function openEdit(id){
   document.getElementById('scan-panel').style.display='none';
   document.getElementById('item-form').style.display='';
   populateSelects(item.category,item.location);
-  document.getElementById('item-sheet').style.display='';
+  openDialog('item-sheet');
 }
 
-function closeItemSheet(){document.getElementById('item-sheet').style.display='none';stopScan();}
+function closeItemSheet(){closeDialog('item-sheet');stopScan();}
 function closeSheetOverlay(e){if(e.target===e.currentTarget)closeItemSheet();}
 
 function setMethod(m){
@@ -1646,6 +1709,7 @@ function saveItem(){
   if(editingId){
     const idx=items.findIndex(i=>i.id===editingId);
     items[idx]={...items[idx],...data};
+    clearDemo(items[idx]);
     showToast('updated.');
   }else{
     items.push({id:uid(),...data});
@@ -1668,16 +1732,16 @@ function showConfirm(title,msg,okLabel,cb){
   document.getElementById('confirm-message').textContent=msg;
   document.getElementById('confirm-ok-btn').textContent=okLabel;
   confirmCallback=cb;
-  document.getElementById('confirm-dialog').style.display='';
+  openDialog('confirm-dialog');
 }
-function dismissConfirm(){document.getElementById('confirm-dialog').style.display='none';confirmCallback=null;}
+function dismissConfirm(){closeDialog('confirm-dialog');confirmCallback=null;}
 document.getElementById('confirm-ok-btn').onclick=function(){const cb=confirmCallback;dismissConfirm();if(cb)cb();};
 
 // ── QUICK ADD ─────────────────────────────────────────────────────────────────
 function openQuickAddSheet(){
   document.getElementById('qa-name').value='';
   document.getElementById('qa-note').value='';
-  document.getElementById('quick-add-sheet').style.display='';
+  openDialog('quick-add-sheet');
   setTimeout(()=>document.getElementById('qa-name').focus(),300);
 }
 function saveQuickAdd(){
@@ -1685,7 +1749,7 @@ function saveQuickAdd(){
   if(!name){showToast('name is required');return;}
   shoppingList.push({id:uid(),name,note:document.getElementById('qa-note').value.trim(),checked:false});
   save();renderShopping();
-  document.getElementById('quick-add-sheet').style.display='none';
+  closeDialog('quick-add-sheet');
   showToast('added to list.');
 }
 
@@ -1723,8 +1787,21 @@ function renderShopping(){
 }
 
 function toggleShop(id,v){const s=shoppingList.find(i=>i.id===id);if(s)s.checked=v;save();renderShopping();}
-function removeShop(id){shoppingList=shoppingList.filter(i=>i.id!==id);save();renderShopping();}
-function clearChecked(){shoppingList=shoppingList.filter(i=>!i.checked);save();renderShopping();}
+function removeShop(id){
+  const prev=shoppingList.slice();
+  if(!shoppingList.some(i=>i.id===id))return;
+  shoppingList=shoppingList.filter(i=>i.id!==id);
+  save();renderShopping();
+  showToast('removed.',{label:'undo',fn:()=>{shoppingList=prev;save();renderShopping();}});
+}
+function clearChecked(){
+  const prev=shoppingList.slice();
+  const next=shoppingList.filter(i=>!i.checked);
+  if(next.length===prev.length){showToast('nothing to clear');return;}
+  shoppingList=next;
+  save();renderShopping();
+  showToast('cleared.',{label:'undo',fn:()=>{shoppingList=prev;save();renderShopping();}});
+}
 
 // ── IDEAS ─────────────────────────────────────────────────────────────────────
 // ── IMPORT ────────────────────────────────────────────────────────────────────
@@ -1840,7 +1917,7 @@ function openReviewSheet(parsed,forceLoc){
     };
   });
   renderReviewSheet();
-  document.getElementById('review-sheet').style.display='';
+  openDialog('review-sheet');
 }
 
 function renderReviewSheet(){
@@ -1905,7 +1982,7 @@ function applyImport(){
   showToast(replacing?`${added} items placed at ${replacing}`:`↑${restocked} restocked · +${added} new`);
   switchScreen('station',document.getElementById('nav-station'));
 }
-function closeReviewSheet(){document.getElementById('review-sheet').style.display='none';haulReplaceLoc=null;}
+function closeReviewSheet(){closeDialog('review-sheet');haulReplaceLoc=null;}
 
 // ── SETTINGS ──────────────────────────────────────────────────────────────────
 function renderSettings(){
@@ -2012,7 +2089,7 @@ function openRenameSheet(type,idx){
   const current=type==='location'?locations[idx]:categories[idx];
   document.getElementById('rename-title').textContent=type==='location'?'Rename location':'Rename category';
   document.getElementById('rename-input').value=current;
-  document.getElementById('rename-sheet').style.display='';
+  openDialog('rename-sheet');
   setTimeout(()=>{const inp=document.getElementById('rename-input');inp.focus();inp.select();},300);
 }
 
@@ -2020,15 +2097,15 @@ function saveRename(){
   const newName=document.getElementById('rename-input').value.trim();
   if(!newName){showToast('name cannot be empty');return;}
   if(renameType==='location'){
-    const old=locations[renameIdx];if(newName===old){document.getElementById('rename-sheet').style.display='none';return;}
+    const old=locations[renameIdx];if(newName===old){closeDialog('rename-sheet');return;}
     items.forEach(i=>{if(i.location===old)i.location=newName;});locations[renameIdx]=newName;
     save();renderLocationsList();renderInventory();showToast('location renamed.');
   }else{
-    const old=categories[renameIdx];if(newName===old){document.getElementById('rename-sheet').style.display='none';return;}
+    const old=categories[renameIdx];if(newName===old){closeDialog('rename-sheet');return;}
     items.forEach(i=>{if(i.category===old)i.category=newName;});categories[renameIdx]=newName;
     save();renderCategoriesList();renderInventory();showToast('category renamed.');
   }
-  document.getElementById('rename-sheet').style.display='none';
+  closeDialog('rename-sheet');
 }
 
 function confirmDeleteLocation(idx){
@@ -2063,15 +2140,77 @@ function stopScan(){if(scanStream){scanStream.getTracks().forEach(t=>t.stop());s
 function haptic(ms=10){if(navigator.vibrate)navigator.vibrate(ms);}
 
 // ── TOAST ─────────────────────────────────────────────────────────────────────
-let _toastTimer=null;
-function showToast(msg){
+let _toastTimer=null,_toastAction=null;
+function showToast(msg,action){
   const t=document.getElementById('toast');
   if(!t)return;
-  t.textContent=msg;
+  _toastAction=action&&action.fn?action:null;
+  if(_toastAction&&action.label){
+    t.innerHTML=`<span class="toast-msg">${esc(msg)}</span><button type="button" class="toast-action" id="toast-action-btn">${esc(action.label)}</button>`;
+    const btn=document.getElementById('toast-action-btn');
+    if(btn)btn.onclick=function(e){
+      e.stopPropagation();
+      const fn=_toastAction&&_toastAction.fn;
+      t.classList.remove('show');
+      if(_toastTimer)clearTimeout(_toastTimer);
+      _toastAction=null;
+      if(fn)fn();
+    };
+  }else{
+    t.textContent=msg;
+  }
   t.classList.add('show');
   if(_toastTimer)clearTimeout(_toastTimer);
-  _toastTimer=setTimeout(()=>{t.classList.remove('show');},2400);
+  _toastTimer=setTimeout(()=>{t.classList.remove('show');_toastAction=null;},_toastAction?5000:2400);
 }
+
+// ── DIALOG A11Y (lightweight — no full focus trap) ────────────────────────────
+function openDialog(rootId){
+  const root=document.getElementById(rootId);
+  if(!root)return;
+  root._returnFocus=document.activeElement;
+  root.style.display='';
+  const panel=root.querySelector('.sheet,.confirm-box')||root;
+  panel.setAttribute('role','dialog');
+  panel.setAttribute('aria-modal','true');
+  if(!panel.hasAttribute('tabindex'))panel.tabIndex=-1;
+  const first=panel.querySelector('input:not([type=hidden]):not([disabled]),button:not([disabled]),select,textarea,a[href]');
+  setTimeout(()=>{try{(first||panel).focus({preventScroll:true});}catch(e){}},80);
+}
+function closeDialog(rootId){
+  const root=document.getElementById(rootId);
+  if(!root)return;
+  root.style.display='none';
+  const rf=root._returnFocus;
+  root._returnFocus=null;
+  if(rf&&typeof rf.focus==='function'){try{rf.focus({preventScroll:true});}catch(e){}}
+}
+function isDialogOpen(rootId){
+  const root=document.getElementById(rootId);
+  if(!root)return false;
+  if(root.style.display==='none')return false;
+  return getComputedStyle(root).display!=='none';
+}
+document.addEventListener('keydown',function(e){
+  if(e.key!=='Escape')return;
+  const stack=[
+    ['confirm-dialog',()=>dismissConfirm()],
+    ['cook-summary',()=>closeCookSummary()],
+    ['recipe-import-sheet',()=>closeRecipeImport()],
+    ['recipe-edit-sheet',()=>closeRecipeEdit()],
+    ['recipe-detail-sheet',()=>closeRecipeDetail()],
+    ['what-can-cook-sheet',()=>closeWhatCanCook()],
+    ['list-check-sheet',()=>closeListCheck()],
+    ['rename-sheet',()=>{closeDialog('rename-sheet');}],
+    ['quick-add-sheet',()=>closeDialog('quick-add-sheet')],
+    ['item-sheet',()=>closeItemSheet()],
+    ['review-sheet',()=>closeReviewSheet()],
+    ['onboard-modal',()=>skipOnboard()],
+  ];
+  for(const [id,fn] of stack){
+    if(isDialogOpen(id)){e.preventDefault();fn();return;}
+  }
+});
 
 // ── HOME ──────────────────────────────────────────────────────────────────────
 function renderHome(){
@@ -2114,9 +2253,9 @@ let lcCheckedItems=[];
 
 function openListCheck(){
   resetListCheck();
-  document.getElementById('list-check-sheet').style.display='';
+  openDialog('list-check-sheet');
 }
-function closeListCheck(){document.getElementById('list-check-sheet').style.display='none';}
+function closeListCheck(){closeDialog('list-check-sheet');}
 
 function resetListCheck(){
   document.getElementById('lc-paste').value='';
@@ -2411,7 +2550,7 @@ function openRecipeDetail(id){
   if(!r)return;
   viewingRecipeId=id;recipeDetailScale=1;
   renderRecipeDetail(r);
-  document.getElementById('recipe-detail-sheet').style.display='';
+  openDialog('recipe-detail-sheet');
 }
 function renderRecipeDetail(r){
   const sc=recipeDetailScale,srv=Math.round(r.servings*sc);
@@ -2445,19 +2584,61 @@ function adjRecipeScale(d){
   recipeDetailScale=Math.max(0.25,Math.round((recipeDetailScale+d*0.5)*2)/2);
   renderRecipeDetail(r);
 }
-function closeRecipeDetail(){document.getElementById('recipe-detail-sheet').style.display='none';viewingRecipeId=null;}
+function closeRecipeDetail(){closeDialog('recipe-detail-sheet');viewingRecipeId=null;}
 function editCurrentRecipe(){const id=viewingRecipeId;closeRecipeDetail();openRecipeEdit(id);}
 function cookRecipe(){
-  const r=recipes.find(x=>x.id===viewingRecipeId);if(!r)return;
-  let updated=0;
-  for(const ing of r.ingredients){
-    if(isStaple(ing.name))continue;
-    const item=matchItem(ing.name);
-    if(item&&item.qty>0&&!item.noAlert){item.qty=Math.max(0,item.qty-Math.max(1,Math.floor(ing.amount*recipeDetailScale)));updated++;}
-  }
-  save();renderInventory();renderStats();closeRecipeDetail();
-  showToast(updated?`Cooked! ${updated} item${updated!==1?'s':''} updated.`:'Nothing to decrement.');
+  const id=viewingRecipeId;
+  performCook(id,recipeDetailScale,()=>{closeRecipeDetail();});
 }
+function performCook(recipeId,scale,afterOk){
+  const r=recipes.find(x=>x.id===recipeId);if(!r)return;
+  showConfirm('mark as cooked?','pantry counts will be reduced.','cook',()=>{
+    const used=[],skipped=[],prevQty={};
+    for(const ing of(r.ingredients||[])){
+      if(isStaple(ing.name)){skipped.push({name:ing.name,reason:'staple'});continue;}
+      const item=matchItem(ing.name);
+      if(!item){skipped.push({name:ing.name,reason:'not in station'});continue;}
+      if(item.noAlert){skipped.push({name:ing.name,reason:'muted'});continue;}
+      if(item.qty<=0){skipped.push({name:ing.name,reason:'already out'});continue;}
+      if(prevQty[item.id]==null)prevQty[item.id]=item.qty;
+      item.qty=Math.max(0,item.qty-1);
+      clearDemo(item);
+      used.push({name:item.name,qty:item.qty});
+    }
+    save();renderInventory();renderStats();renderHome();
+    if(afterOk)afterOk();
+    showCookSummary(used,skipped);
+    const snapshot=prevQty;
+    showToast(used.length?`used ${used.length}`:'nothing used',{
+      label:'undo',
+      fn:()=>{
+        Object.keys(snapshot).forEach(id=>{
+          const it=items.find(i=>i.id===id);
+          if(it)it.qty=snapshot[id];
+        });
+        save();renderInventory();renderStats();renderHome();
+        showToast('cook undone.');
+      }
+    });
+  });
+}
+function showCookSummary(used,skipped){
+  const body=document.getElementById('cook-summary-body');
+  if(!body)return;
+  let html='';
+  if(used.length){
+    html+=`<div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--ink-soft);margin-bottom:8px;">used</div>`;
+    html+=used.map(u=>`<div style="display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid var(--rule);font-size:14px;"><span>${esc(u.name)}</span><span style="font-weight:600;color:var(--ink-soft);">→ ${u.qty}</span></div>`).join('');
+  }
+  if(skipped.length){
+    html+=`<div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--ink-soft);margin:16px 0 8px;">skipped</div>`;
+    html+=skipped.map(s=>`<div style="display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid var(--rule);font-size:14px;"><span>${esc(s.name)}</span><span style="font-size:12px;color:var(--ink-faint);">${esc(s.reason)}</span></div>`).join('');
+  }
+  if(!used.length&&!skipped.length)html='<p style="font-size:14px;color:var(--ink-soft);">no ingredients to update.</p>';
+  body.innerHTML=html;
+  openDialog('cook-summary');
+}
+function closeCookSummary(){closeDialog('cook-summary');}
 function printRecipe(){
   const r=recipes.find(x=>x.id===viewingRecipeId);if(!r)return;
   const sc=recipeDetailScale,srv=Math.round(r.servings*sc);
@@ -2473,7 +2654,7 @@ function openCookMode(){
   const r=recipes.find(x=>x.id===viewingRecipeId);
   if(!r||!r.steps||!r.steps.length)return;
   cookModeRecipeId=viewingRecipeId;cookModeStep=0;clearTimerState();
-  document.getElementById('recipe-detail-sheet').style.display='none';
+  closeDialog('recipe-detail-sheet');
   renderCookStep();
   document.getElementById('cook-mode-overlay').classList.add('active');
   ingDrawerOpen=false;
@@ -2514,17 +2695,8 @@ function renderCookIngredients(){
 function cookNext(){
   const r=recipes.find(x=>x.id===cookModeRecipeId);if(!r)return;
   if(cookModeStep===r.steps.length-1){
-    if(confirm('Mark recipe as cooked and update pantry?')){
-      let updated=0;
-      for(const ing of r.ingredients){
-        if(isStaple(ing.name))continue;
-        const item=matchItem(ing.name);
-        if(item&&item.qty>0&&!item.noAlert){item.qty=Math.max(0,item.qty-Math.max(1,Math.floor(ing.amount*recipeDetailScale)));updated++;}
-      }
-      save();renderInventory();renderStats();
-      showToast(updated?`${updated} ingredient${updated!==1?'s':''} decremented.`:'Done!');
-    }
-    closeCookMode();return;
+    performCook(cookModeRecipeId,recipeDetailScale,()=>{closeCookMode();});
+    return;
   }
   clearTimerState();cookModeStep++;renderCookStep();
 }
@@ -2586,9 +2758,9 @@ function openRecipeImport(){
   document.getElementById('recipe-import-textarea').value='';
   document.getElementById('recipe-import-preview').style.display='none';
   document.getElementById('recipe-import-error').style.display='none';
-  document.getElementById('recipe-import-sheet').style.display='';
+  openDialog('recipe-import-sheet');
 }
-function closeRecipeImport(){document.getElementById('recipe-import-sheet').style.display='none';}
+function closeRecipeImport(){closeDialog('recipe-import-sheet');}
 function previewRecipeImport(){
   const raw=document.getElementById('recipe-import-textarea').value.trim();
   const errEl=document.getElementById('recipe-import-error'),preEl=document.getElementById('recipe-import-preview');
@@ -2611,8 +2783,8 @@ function confirmRecipeImport(){
   showToast(`"${r.title}" imported ✓`);
 }
 // ── WHAT CAN I COOK ──────────────────────────────────────────────────────────
-function openWhatCanCook(){renderWhatCanCook();document.getElementById('what-can-cook-sheet').style.display='';}
-function closeWhatCanCook(){document.getElementById('what-can-cook-sheet').style.display='none';}
+function openWhatCanCook(){renderWhatCanCook();openDialog('what-can-cook-sheet');}
+function closeWhatCanCook(){closeDialog('what-can-cook-sheet');}
 function renderWhatCanCook(){
   const el=document.getElementById('wcc-list');if(!el)return;
   const g={ready:[],mostly:[],missing:[]};
@@ -2654,10 +2826,10 @@ function openRecipeEdit(id){
   document.getElementById('re-notes').value=r?r.notes:'';
   document.getElementById('re-delete-btn').style.display=r?'':'none';
   renderIngredientBuilder(r?r.ingredients:[{name:'',amount:'',unit:''}]);
-  document.getElementById('recipe-edit-sheet').style.display='';
+  openDialog('recipe-edit-sheet');
   setTimeout(()=>document.getElementById('re-name').focus(),300);
 }
-function closeRecipeEdit(){document.getElementById('recipe-edit-sheet').style.display='none';}
+function closeRecipeEdit(){closeDialog('recipe-edit-sheet');}
 function renderIngredientBuilder(ings){
   const el=document.getElementById('re-ingredients-list');el.innerHTML='';
   (ings.length?ings:[{name:'',amount:'',unit:''}]).forEach((ing,i)=>el.appendChild(makeIngRow(ing,i)));
