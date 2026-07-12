@@ -1,6 +1,7 @@
-const VERSION = '4'; // bump VERSION on deploy
+const VERSION = '5'; // bump VERSION on deploy
 const CACHE = 'mise-' + VERSION;
-const SHELL = ['./index.html', './manifest.json', './icon.svg', './js/interpret.js', './js/planner.js'];
+const SHELL = ['./index.html', './manifest.json', './icon.svg', './js/interpret.js', './js/planner.js',
+  './js/vendor/barcode-detector-ponyfill.js', './js/vendor/zxing_reader.wasm'];
 
 self.addEventListener('install', e => {
   e.waitUntil(

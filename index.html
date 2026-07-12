@@ -2765,19 +2765,85 @@ function confirmDeleteCategory(idx){
 }
 
 // ── SCANNER ───────────────────────────────────────────────────────────────────
+// Native BarcodeDetector where available (Chrome/Android); vendored zxing-wasm
+// ponyfill everywhere else (iOS Safari has no BarcodeDetector). Loaded lazily
+// on first scan — the ~1MB wasm never touches boot.
+let bdClassPromise=null;
+function loadBarcodeDetector(){
+  if('BarcodeDetector' in window)return Promise.resolve(window.BarcodeDetector);
+  if(!bdClassPromise){
+    bdClassPromise=new Promise((resolve,reject)=>{
+      const s=document.createElement('script');
+      s.src='./js/vendor/barcode-detector-ponyfill.js';
+      s.onload=()=>{try{
+        BarcodeDetectionAPI.prepareZXingModule({overrides:{locateFile:(file,prefix)=>file.endsWith('.wasm')?'./js/vendor/zxing_reader.wasm':prefix+file}});
+        resolve(BarcodeDetectionAPI.BarcodeDetector);
+      }catch(e){reject(e);}};
+      s.onerror=()=>reject(new Error('scanner failed to load'));
+      document.head.appendChild(s);
+    });
+    bdClassPromise.catch(()=>{bdClassPromise=null;});
+  }
+  return bdClassPromise;
+}
+async function lookupBarcode(code){
+  // Open Food Facts — open database, no key required. Online only; caller falls back.
+  if(!/^\d{8,14}$/.test(code))return null;
+  const ctl=new AbortController();
+  const t=setTimeout(()=>ctl.abort(),4000);
+  try{
+    const res=await fetch(`https://world.openfoodfacts.org/api/v2/product/${code}.json?fields=product_name,brands,quantity`,{signal:ctl.signal});
+    if(!res.ok)return null;
+    const data=await res.json();
+    const p=data&&data.product;
+    if(!p||!p.product_name)return null;
+    const brand=(p.brands||'').split(',')[0].trim();
+    const name=p.product_name.trim();
+    const label=(brand&&!name.toLowerCase().includes(brand.toLowerCase())?brand+' ':'')+name;
+    return{label,quantity:(p.quantity||'').trim()};
+  }catch(e){return null;}
+  finally{clearTimeout(t);}
+}
+async function onScanHit(code){
+  stopScan();
+  haptic(12);
+  const statusEl=document.getElementById('scan-status');
+  if(statusEl)statusEl.textContent='found — looking it up…';
+  let hit=await lookupBarcode(code);
+  // UPC-A often decodes as 13 digits with a leading zero; OFF may store the 12-digit form
+  if(!hit&&/^0\d{12}$/.test(code))hit=await lookupBarcode(code.slice(1));
+  setMethod('manual');
+  document.getElementById('f-name').value=hit?hit.label:code;
+  if(hit){
+    const notes=document.getElementById('f-notes');
+    if(notes&&!notes.value)notes.value=[hit.quantity,`upc ${code}`].filter(Boolean).join(' · ');
+    showToast('found it.');
+  }else{
+    showToast('no match — name it yourself.');
+  }
+  setTimeout(()=>document.getElementById('f-name').focus(),100);
+}
 async function startScan(){
   const statusEl=document.getElementById('scan-status');
   try{
     scanStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});
     const video=document.getElementById('scan-video');video.srcObject=scanStream;
-    if('BarcodeDetector' in window){
-      const bd=new BarcodeDetector({formats:['ean_13','ean_8','upc_a','upc_e','code_128','qr_code']});
-      const iv=setInterval(async()=>{
-        if(!scanStream){clearInterval(iv);return;}
-        try{const codes=await bd.detect(video);if(codes.length){clearInterval(iv);stopScan();setMethod('manual');document.getElementById('f-name').value=codes[0].rawValue;setTimeout(()=>document.getElementById('f-name').focus(),100);}}catch(e){}
-      },400);
-    }else{statusEl.textContent='camera active — enter name manually';}
-  }catch(e){statusEl.textContent='camera not available';setMethod('manual');}
+    let BD;
+    try{
+      if(!('BarcodeDetector' in window)&&statusEl)statusEl.textContent='loading scanner…';
+      BD=await loadBarcodeDetector();
+    }catch(e){
+      if(statusEl)statusEl.textContent='scanning not supported here — enter name manually';
+      return;
+    }
+    if(!scanStream)return;
+    if(statusEl)statusEl.textContent='point camera at barcode';
+    const bd=new BD({formats:['ean_13','ean_8','upc_a','upc_e','code_128','qr_code']});
+    const iv=setInterval(async()=>{
+      if(!scanStream){clearInterval(iv);return;}
+      try{const codes=await bd.detect(video);if(codes.length){clearInterval(iv);onScanHit(codes[0].rawValue);}}catch(e){}
+    },400);
+  }catch(e){if(statusEl)statusEl.textContent='camera not available';setMethod('manual');}
 }
 function stopScan(){if(scanStream){scanStream.getTracks().forEach(t=>t.stop());scanStream=null;}}
 
