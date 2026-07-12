@@ -1,6 +1,6 @@
-const VERSION = '2'; // bump VERSION on deploy
+const VERSION = '3'; // bump VERSION on deploy
 const CACHE = 'mise-' + VERSION;
-const SHELL = ['./index.html', './manifest.json', './icon.svg'];
+const SHELL = ['./index.html', './manifest.json', './icon.svg', './js/interpret.js', './js/planner.js'];
 
 self.addEventListener('install', e => {
   e.waitUntil(

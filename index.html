@@ -1444,6 +1444,16 @@ option{color:var(--ink);background:var(--bg-card);}
   </div>
 </div>
 
+<!-- Pure domain modules (ES). Deferred; bridge onto window before main init runs. -->
+<script type="module">
+  import * as Interpret from './js/interpret.js';
+  import * as Planner from './js/planner.js';
+  window.Interpret = Interpret;
+  window.Planner = Planner;
+  window.__miseModulesReady = true;
+  window.dispatchEvent(new Event('mise-modules-ready'));
+</script>
+
 <script>
 const ITEMS_KEY='mise_items_v5',SHOP_KEY='mise_shop_v5',LOCS_KEY='mise_locs_v3',CATS_KEY='mise_cats_v3',ONBOARD_KEY='mise_onboarded',THEME_KEY='mise_theme',SWIPE_HINT_KEY='mise_swipe_hint_seen';
 const RECIPES_KEY='mise_recipes_v1';
@@ -1454,102 +1464,7 @@ const DEFAULT_CATS=['Grains & Pasta','Canned Goods','Snacks','Baking','Condiment
 const SORTS=['name','qty-low','qty-high'];
 const SORT_LABELS={'name':'A–Z','qty-low':'Qty ↑','qty-high':'Qty ↓'};
 
-// ── INTERPRET (one inventory interpretation) ─────────────────────────────────
-// Canonical normalize / parse / fuzzy-match. Prefer recipe-matcher behavior.
-const Interpret = {
-  normalize(n){
-    return String(n||'').toLowerCase()
-      .replace(/\bunsalted\b|\bsalted\b/g,'')
-      .replace(/\ball[-\s]purpose\b|\bplain\b/g,'ap')
-      .replace(/,.*$/,'')
-      .replace(/\s+/g,' ')
-      .trim();
-  },
-  parseLine(line){
-    const clean=String(line||'').replace(/^[\s\-•·–*]+/,'').trim();
-    if(!clean) return null;
-    let name='',qty=1;
-    const m1=clean.match(/^(.+?)[,\-–]\s*(\d+)\s*$/);
-    const m2=clean.match(/^(\d+)\s*[x×]\s*(.+)$/i);
-    const m3=clean.match(/^(.+?)\s*\((\d+)\)\s*$/);
-    const m4=clean.match(/^(.+?)\s+(\d+)$/);
-    if(m1){name=m1[1].trim();qty=parseInt(m1[2],10);}
-    else if(m2){qty=parseInt(m2[1],10);name=m2[2].trim();}
-    else if(m3){name=m3[1].trim();qty=parseInt(m3[2],10);}
-    else if(m4){name=m4[1].trim();qty=parseInt(m4[2],10);}
-    else{name=clean;qty=1;}
-    return name?{name,qty:qty||1}:null;
-  },
-  match(name, itemList){
-    const list=itemList||items;
-    const n=Interpret.normalize(name);
-    return list.find(i=>{
-      const m=Interpret.normalize(i.name);
-      return m===n||m.includes(n)||n.includes(m);
-    });
-  }
-};
-
-// ── PLANNER (recipe quantity semantics, stated once) ─────────────────────────
-// Semantics:
-// - item.qty is a PACKAGE COUNT (how many packages you have on the shelf).
-// - ing.amount is an informational measure in recipe units (g, ml, cups, …).
-// - The two are NEVER compared arithmetically.
-// - Availability = a matched, unmuted item with qty>0 (or a staple).
-// - Consumption = 1 package per cooked non-staple matched ingredient.
-const Planner = {
-  _isStaple(ingName, stapleList){
-    const n=String(ingName||'').toLowerCase().trim();
-    return (stapleList||[]).some(s=>n===s||n.includes(s)||s.includes(n));
-  },
-  readiness(recipe, itemList, stapleList){
-    itemList=itemList||items;
-    stapleList=stapleList||staples;
-    const ings=recipe.ingredients||[];
-    if(!ings.length) return'ready';
-    let ok=0;
-    for(const ing of ings){
-      if(Planner._isStaple(ing.name, stapleList)){ok++;continue;}
-      const item=Interpret.match(ing.name, itemList);
-      if(item&&(item.noAlert||item.qty>0)) ok++;
-    }
-    if(ok===ings.length) return'ready';
-    if(ok>=Math.ceil(ings.length/2)) return'mostly';
-    return'missing';
-  },
-  detail(recipe, scale, itemList, stapleList){
-    scale=scale||1;
-    itemList=itemList||items;
-    stapleList=stapleList||staples;
-    const details=(recipe.ingredients||[]).map(ing=>{
-      if(Planner._isStaple(ing.name, stapleList)) return{...ing,status:'staple'};
-      const item=Interpret.match(ing.name, itemList);
-      if(!item) return{...ing,status:'missing'};
-      // qty is package count — never compared to ing.amount*scale
-      if(item.noAlert||item.qty>0) return{...ing,status:'ok',haveQty:item.qty,haveUnit:item.unit||''};
-      return{...ing,status:'out',haveQty:0,haveUnit:item.unit||''};
-    });
-    return{details};
-  },
-  consumption(recipe, scale, itemList, stapleList){
-    itemList=itemList||items;
-    stapleList=stapleList||staples;
-    const used=[],skipped=[],plan=[];
-    // Simulate package decrements so multi-ingredient hits on one item match original cook loop
-    const sim={};
-    itemList.forEach(i=>{sim[i.id]=i.qty;});
-    for(const ing of(recipe.ingredients||[])){
-      if(Planner._isStaple(ing.name, stapleList)){skipped.push({name:ing.name,reason:'staple'});continue;}
-      const item=Interpret.match(ing.name, itemList);
-      if(!item){skipped.push({name:ing.name,reason:'not in station'});continue;}
-      if(item.noAlert){skipped.push({name:ing.name,reason:'muted'});continue;}
-      if((sim[item.id]||0)<=0){skipped.push({name:ing.name,reason:'already out'});continue;}
-      plan.push({id:item.id,name:item.name});
-      sim[item.id]=(sim[item.id]||0)-1;
-    }
-    return{plan,used,skipped};
-  }
-};
+// Interpret / Planner live in ./js/*.js (window bridges set by the module script above).
 
 // ── KITCHEN (deep domain module) ─────────────────────────────────────────────
 // Owns station state. Mutations: validate → change → persist → notify.
@@ -3952,7 +3867,12 @@ document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible') fbPull();
 });
 
-init();
+// Module scripts are deferred; classic script may run first. Boot only after bridges exist.
+function bootApp(){
+  if(window.Interpret && window.Planner){ init(); return; }
+  window.addEventListener('mise-modules-ready', ()=>init(), {once:true});
+}
+bootApp();
 </script>
 <div class="toast" id="toast"></div>
 </body>
