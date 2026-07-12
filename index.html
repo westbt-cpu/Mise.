@@ -839,7 +839,7 @@ option{color:var(--ink);background:var(--bg-card);}
       <div class="page-header-row">
         <div>
           <div class="page-title">haul import.</div>
-          <div class="page-sub">import via Claude</div>
+          <div class="page-sub">import via <span class="ai-tool-name">Claude</span></div>
         </div>
         <button class="btn btn-ghost" onclick="switchScreen('station',document.getElementById('nav-station'))" style="font-size:11px;padding:8px 14px;">← back</button>
       </div>
@@ -855,10 +855,13 @@ option{color:var(--ink);background:var(--bg-card);}
           </select>
         </div>
         <div class="import-prompt-box" id="import-prompt-preview" style="min-height:56px;transition:opacity 0.2s;"></div>
-        <button class="btn btn-green btn-full" onclick="copyPrompt()" style="border-radius:12px;min-height:50px">⎘ copy prompt for Claude</button>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-green" onclick="copyPrompt()" style="flex:1;border-radius:12px;min-height:50px">⎘ copy prompt</button>
+          <button class="btn btn-outline" onclick="openAiTool()" id="import-open-ai" style="flex:1;border-radius:12px;min-height:50px">open Claude ↗</button>
+        </div>
       </div>
       <div class="form-row">
-        <label>Paste Claude's response here</label>
+        <label>Paste the reply here</label>
         <textarea class="import-paste-area" id="import-paste" placeholder="Rolled Oats, 2&#10;Coconut Milk, 3&#10;Black Beans, 4&#10;..."></textarea>
       </div>
       <div class="import-actions">
@@ -921,6 +924,25 @@ option{color:var(--ink);background:var(--bg-card);}
             <button type="button" id="theme-btn-light" onclick="setAppearance('light')">light</button>
             <button type="button" id="theme-btn-dark" onclick="setAppearance('dark')">dark</button>
           </div>
+        </div>
+      </div>
+    </div>
+    <div class="settings-section">
+      <div class="settings-heading">ai assistant</div>
+      <div class="settings-card">
+        <div class="settings-row" style="flex-direction:column;align-items:stretch;gap:10px">
+          <div>
+            <div class="settings-row-label">where prompts go</div>
+            <div class="settings-row-sub">haul photos and recipe drafting copy a prompt for your assistant.</div>
+          </div>
+          <div class="theme-seg" role="group" aria-label="ai assistant" style="flex-wrap:wrap">
+            <button type="button" id="ai-btn-claude" onclick="setAiTool('claude')">claude</button>
+            <button type="button" id="ai-btn-chatgpt" onclick="setAiTool('chatgpt')">chatgpt</button>
+            <button type="button" id="ai-btn-gemini" onclick="setAiTool('gemini')">gemini</button>
+            <button type="button" id="ai-btn-grok" onclick="setAiTool('grok')">grok</button>
+            <button type="button" id="ai-btn-custom" onclick="setAiTool('custom')">custom</button>
+          </div>
+          <input type="text" id="ai-custom-url" placeholder="https://your-assistant.example" autocomplete="off" autocapitalize="off" spellcheck="false" onchange="saveAiCustomUrl(this.value)" style="display:none;width:100%;padding:12px 14px;border:1px solid var(--rule);border-radius:var(--radius-sm);background:var(--bg);font-family:var(--font-mono);font-size:13px;color:var(--ink);outline:none;box-sizing:border-box;">
         </div>
       </div>
     </div>
@@ -1084,12 +1106,15 @@ option{color:var(--ink);background:var(--bg-card);}
           Replace existing contents at this location
         </label>
         <div style="margin-top:14px;padding:13px 14px;background:var(--bg);border:1.5px solid var(--rule);border-radius:12px;font-size:12px;color:var(--ink-soft);line-height:1.7">
-          1. Tap <strong>Open Claude</strong> — the prompt is copied<br>
-          2. Paste it in Claude, take a photo of your haul<br>
-          3. Copy Claude's reply, come back &amp; tap <strong>Paste result</strong>
+          1. Tap <strong>copy prompt</strong><br>
+          2. Paste it in <span class="ai-tool-name">Claude</span> with a photo of your haul<br>
+          3. Copy the reply, come back &amp; tap <strong>paste result</strong>
         </div>
         <div style="margin-top:12px;display:flex;flex-direction:column;gap:8px">
-          <button class="btn btn-green btn-full" onclick="openHaulInClaude()">Open Claude →</button>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-green" style="flex:1" onclick="copyHaulPrompt()">⎘ copy prompt</button>
+            <button class="btn btn-outline" style="flex:1" id="haul-open-ai" onclick="openAiTool()">open Claude ↗</button>
+          </div>
           <button class="btn btn-outline btn-full" onclick="goToHaulPaste()">paste result →</button>
           <button class="btn btn-ghost btn-full" onclick="closeItemSheet()">cancel</button>
         </div>
@@ -1299,8 +1324,12 @@ option{color:var(--ink);background:var(--bg-card);}
   <div class="modal-overlay" onclick="if(event.target===event.currentTarget)closeRecipeImport()">
     <div class="sheet" onclick="event.stopPropagation()">
       <div class="sheet-handle"></div>
-      <h2>import from Claude</h2>
-      <div style="font-size:12px;color:var(--ink-soft);line-height:1.6;margin-bottom:14px;">Develop a recipe in Claude chat, then copy the JSON and paste it here.</div>
+      <h2>import a recipe</h2>
+      <div style="font-size:12px;color:var(--ink-soft);line-height:1.6;margin-bottom:14px;">Develop a recipe in <span class="ai-tool-name">Claude</span>, then copy the JSON and paste it here.</div>
+      <div style="display:flex;gap:8px;margin-bottom:12px;">
+        <button class="btn btn-green" style="flex:1" onclick="copyRecipePrompt()">⎘ copy recipe prompt</button>
+        <button class="btn btn-outline" style="flex:1" id="recipe-open-ai" onclick="openAiTool()">open Claude ↗</button>
+      </div>
       <textarea id="recipe-import-textarea" rows="7" placeholder='Paste recipe JSON here...' oninput="previewRecipeImport()" style="width:100%;padding:12px;border:1.5px solid var(--rule);border-radius:10px;background:var(--bg);font-family:var(--font-mono);font-size:11px;color:var(--ink);resize:none;box-sizing:border-box;outline:none;line-height:1.6;"></textarea>
       <div id="recipe-import-error" style="display:none;margin-top:8px;padding:10px 12px;background:var(--out-light);border:1.5px solid var(--out-light);border-radius:8px;font-size:11px;color:var(--out);font-family:var(--font-mono);"></div>
       <div id="recipe-import-preview" style="display:none;margin-top:10px;padding:13px 14px;background:var(--accent-pale);border:1.5px solid var(--accent-light);border-radius:10px;"></div>
@@ -1681,6 +1710,7 @@ const Kitchen = (() => {
           r.matched.category=category;
           r.matched.location=location;
           if(r.notes) r.matched.notes=r.notes;
+          if(r.expiry) r.matched.expiry=r.expiry;
           restocked++;
         }else{
           _items.push({
@@ -1691,7 +1721,7 @@ const Kitchen = (() => {
             qty:ensureNonNegInt(r.qty)||1,
             threshold:1,
             notes:r.notes||'',
-            expiry:'',
+            expiry:r.expiry||'',
             lastConfirmed:Date.now(),
           });
           added++;
@@ -1901,6 +1931,7 @@ function init(){
   if(lbl)lbl.textContent=`${days[d.getDay()]}, ${months[d.getMonth()]} ${d.getDate()}`;
   loadRecipes();loadStaples();
   initAppearance();
+  updateAiToolUI();
   initAutoRepeat();
   initSheetDrag();
   initKeyboardAvoidance();
@@ -2519,17 +2550,27 @@ function clearChecked(){
 // ── IMPORT ────────────────────────────────────────────────────────────────────
 function locationPromptText(loc){
   const l=(loc||'').toLowerCase();
-  if(l.includes('fridge'))
-    return `What's in this fridge? List every item you can see, one per line:\nitem name, quantity\nInclude fresh produce, dairy, leftovers, condiments. Plain names only (e.g. "Cheddar Cheese, 1"). No commentary, no headers.`;
-  if(l.includes('freezer'))
-    return `What's in this freezer? List every item you can see, one per line:\nitem name, quantity\nInclude frozen meals, proteins, vegetables, ice cream. Plain names only. No commentary, no headers.`;
-  if(l.includes('pantry'))
-    return `What's on this pantry shelf? List every item you can see, one per line:\nitem name, quantity\nInclude canned goods, dry goods, jars, boxes, packets. Plain names only (e.g. "Coconut Milk, 2"). No commentary, no headers.`;
-  if(l.includes(' — '))
-    return `List every item you can see inside this box or area, one per line:\nitem name, quantity\nPlain names only (e.g. "Baking Soda, 2"). No commentary, no headers, no categories.`;
-  if(l.includes('basement')||l.includes('box')||l.includes('shelf'))
-    return `What's in this storage area? List every item you can see, one per line:\nitem name, quantity\nInclude all packaged items, bottles, cans, boxes. Plain names only. No commentary, no headers.`;
-  return `List every item you can see, one per line:\nitem name, quantity\nPlain names only (e.g. "Coconut Milk, 2"). No commentary, no headers.`;
+  let opener=`List every item you can see in this photo.`,hint=`Include all packaged items, bottles, cans, boxes.`;
+  if(l.includes('fridge')){opener=`What's in this fridge?`;hint=`Include fresh produce, dairy, leftovers, condiments.`;}
+  else if(l.includes('freezer')){opener=`What's in this freezer?`;hint=`Include frozen meals, proteins, vegetables, ice cream.`;}
+  else if(l.includes('pantry')){opener=`What's on this pantry shelf?`;hint=`Include canned goods, dry goods, jars, boxes, packets.`;}
+  else if(l.includes('basement')||l.includes('box')||l.includes('shelf')||l.includes(' — ')){opener=`What's in this storage area?`;}
+  return `${opener} ${hint}
+One item per line, fields separated by | :
+name | quantity | category | notes | expiry
+
+Rules:
+- name: short product name, no brand (brand goes in notes)
+- quantity: how many of that item you can count (default 1)
+- category: closest match from: ${categories.join(', ')}
+- notes: brand and package size if readable (e.g. "Bob's Red Mill 32oz"), else empty
+- expiry: best-by date if readable, as YYYY-MM-DD or YYYY-MM, else empty
+- trailing empty fields may be dropped ("Coconut Milk | 2" is fine)
+- plain text only: no bullets, numbering, headers, markdown, or commentary
+
+Example:
+Coconut Milk | 2 | Canned Goods | Thai Kitchen 13.5oz | 2027-03
+Rolled Oats | 1 | Grains & Pasta | Bob's Red Mill 32oz`;
 }
 
 function getImportLoc(){
@@ -2559,14 +2600,12 @@ function haulEffectiveLoc(){
   const box=(document.getElementById('haul-box-input')?.value||'').trim();
   return box?`${loc} — ${box}`:loc;
 }
-function openHaulInClaude(){
-  const effectiveLoc=haulEffectiveLoc();
-  const prompt=locationPromptText(effectiveLoc);
-  navigator.clipboard?.writeText(prompt).catch(()=>{});
-  const t=Date.now();
-  location.href='claude://';
-  setTimeout(()=>{if(Date.now()-t<2000)window.open('https://claude.ai','_blank');},1500);
-  showToast('prompt copied — paste in Claude');
+function copyHaulPrompt(){
+  const prompt=locationPromptText(haulEffectiveLoc());
+  navigator.clipboard?.writeText(prompt)
+    .then(()=>showToast('prompt copied.'))
+    .catch(()=>showToast("couldn't copy — try again."));
+  haptic(8);
 }
 function goToHaulPaste(){
   const effectiveLoc=haulEffectiveLoc();
@@ -2583,7 +2622,7 @@ function clearImport(){document.getElementById('import-paste').value='';showToas
 function parseImport(){
   const raw=document.getElementById('import-paste').value.trim();
   if(!raw){showToast('paste a list first');return;}
-  const parsed=raw.split('\n').map(Interpret.parseLine).filter(Boolean);
+  const parsed=raw.split('\n').map(Interpret.parseHaulLine).filter(Boolean);
   if(!parsed.length){showToast("couldn't parse any items");return;}
   openReviewSheet(parsed,getImportLoc());
 }
@@ -2599,10 +2638,12 @@ function openReviewSheet(parsed,forceLoc){
     return{...p,
       name:match?match.name:p.name,  // use canonical name from inventory when matched
       matched:match||null,include:true,expanded:false,
-      category:match?match.category:defCat,
+      // AI-provided fields win when valid; else inherit from the matched item / defaults
+      category:(p.category&&categories.includes(p.category))?p.category:(match?match.category:defCat),
       // In replace mode every item goes to the exact box location; otherwise guess from inventory
       location:haulReplaceLoc?defLoc:guessItemLoc(p.name,defLoc),
-      notes:match?(match.notes||''):'',
+      notes:p.notes||(match?(match.notes||''):''),
+      expiry:p.expiry||'',
     };
   });
   renderReviewSheet();
@@ -2667,7 +2708,7 @@ function closeReviewSheet(){closeDialog('review-sheet');haulReplaceLoc=null;}
 function renderSettings(){
   renderLocationsList();renderCategoriesList();renderNfcUrls();renderMiseUrl();
   renderStaplesList();renderFbStatus();
-  updateAppearanceUI();
+  updateAppearanceUI();updateAiToolUI();
 }
 
 function renderMiseUrl(){
@@ -2882,6 +2923,88 @@ async function startScan(){
 function stopScan(){if(scanStream){scanStream.getTracks().forEach(t=>t.stop());scanStream=null;}}
 
 // ── APPEARANCE / THEME ────────────────────────────────────────────────────────
+// ── AI ASSISTANT (where copied prompts are pasted) ────────────────────────────
+const AI_TOOL_KEY='mise_ai_tool_v1';
+const AI_TOOLS={
+  claude:{name:'Claude',url:'https://claude.ai/new'},
+  chatgpt:{name:'ChatGPT',url:'https://chatgpt.com/'},
+  gemini:{name:'Gemini',url:'https://gemini.google.com/app'},
+  grok:{name:'Grok',url:'https://grok.com/'}
+};
+function aiToolConfig(){
+  try{return JSON.parse(localStorage.getItem(AI_TOOL_KEY))||{};}catch(e){return{};}
+}
+function aiTool(){
+  const c=aiToolConfig();
+  if(c.id==='custom'&&c.url)return{id:'custom',name:'your assistant',url:c.url};
+  if(AI_TOOLS[c.id])return{id:c.id,...AI_TOOLS[c.id]};
+  return{id:'claude',...AI_TOOLS.claude};
+}
+function setAiTool(id){
+  localStorage.setItem(AI_TOOL_KEY,JSON.stringify({...aiToolConfig(),id}));
+  haptic(8);
+  updateAiToolUI();
+  if(id!=='custom')showToast(`prompts go to ${AI_TOOLS[id].name}.`);
+}
+function saveAiCustomUrl(v){
+  let url=(v||'').trim();
+  if(url&&!/^https?:\/\//i.test(url))url='https://'+url;
+  localStorage.setItem(AI_TOOL_KEY,JSON.stringify({...aiToolConfig(),id:'custom',url}));
+  updateAiToolUI();
+  if(url)showToast('assistant saved.');
+}
+function updateAiToolUI(){
+  const c=aiToolConfig();
+  const cur=(c.id==='custom'||AI_TOOLS[c.id])?c.id:'claude';
+  ['claude','chatgpt','gemini','grok','custom'].forEach(id=>{
+    const b=document.getElementById('ai-btn-'+id);
+    if(b)b.classList.toggle('active',cur===id);
+  });
+  const inp=document.getElementById('ai-custom-url');
+  if(inp){
+    inp.style.display=cur==='custom'?'':'none';
+    if(c.url&&!inp.value)inp.value=c.url;
+  }
+  const t=aiTool();
+  document.querySelectorAll('.ai-tool-name').forEach(el=>{el.textContent=t.name;});
+  // open-buttons get plain textContent — .btn is inline-flex, which swallows the
+  // whitespace around a nested span, so a live span there renders "openGrok↗"
+  ['haul-open-ai','import-open-ai','recipe-open-ai'].forEach(id=>{
+    const b=document.getElementById(id);
+    if(b)b.textContent=`open ${t.name} ↗`;
+  });
+}
+function copyRecipePrompt(){
+  const prompt=`Help me develop a recipe. When we're done, give me the final recipe as JSON in exactly this shape:
+{
+  "title": "Recipe Name",
+  "servings": 2,
+  "tags": ["weeknight", "vegetarian"],
+  "ingredients": [
+    {"name": "Rolled Oats", "amount": 90, "unit": "g"}
+  ],
+  "steps": [
+    {"title": "Cook", "content": "What to do in this step.", "timer_seconds": 420}
+  ],
+  "notes": "optional tips"
+}
+
+Rules:
+- ingredient name: plain product name so it can match a pantry (no "diced", no brand)
+- amount: a number; use 0 for to-taste items; unit: g, ml, tsp, tbsp, cup, or "" for count-based
+- steps: short imperative title + one clear paragraph; timer_seconds only when a step has a real timed wait or cook
+- tags: 1-3 short lowercase tags
+- return ONLY the JSON — no markdown fences, no commentary`;
+  navigator.clipboard?.writeText(prompt)
+    .then(()=>showToast('recipe prompt copied.'))
+    .catch(()=>showToast("couldn't copy — try again."));
+  haptic(8);
+}
+function openAiTool(){
+  const t=aiTool();
+  window.open(t.url,'_blank','noopener');
+}
+
 function initAppearance(){
   const stored=localStorage.getItem(THEME_KEY)||'auto';
   applyTheme(stored,true);
@@ -3459,7 +3582,7 @@ function renderRecipes(){
   renderTagFilters();
   const sub=document.getElementById('recipes-sub');
   if(!recipes.length){
-    el.innerHTML=`<div class="recipe-empty"><h3>no recipes yet.</h3><p>develop a recipe in Claude chat and tap <strong>import →</strong> to bring it here.</p><button class="btn btn-green" onclick="openRecipeImport()">import from Claude</button></div>`;
+    el.innerHTML=`<div class="recipe-empty"><h3>no recipes yet.</h3><p>develop a recipe in ${esc(aiTool().name)} and tap <strong>import →</strong> to bring it here.</p><button class="btn btn-green" onclick="openRecipeImport()">import a recipe</button></div>`;
     if(sub)sub.textContent='what you can cook right now';
     return;
   }

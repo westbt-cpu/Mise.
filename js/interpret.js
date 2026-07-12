@@ -61,3 +61,31 @@ export function match(name, itemList) {
   if (exact) return exact;
   return list.find((i) => sharesToken(normalize(i.name), n));
 }
+
+// Accept "YYYY-MM-DD" or "YYYY-MM" (day defaults to 01); anything else -> ''.
+export function normalizeExpiry(s) {
+  const v = String(s || '').trim();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(v)) return v;
+  if (/^\d{4}-\d{2}$/.test(v)) return v + '-01';
+  return '';
+}
+
+// Haul/photo import lines: "name | qty | category | notes | expiry" with
+// trailing fields optional; lines without pipes fall back to parseLine.
+export function parseHaulLine(line) {
+  const clean = String(line || '')
+    .replace(/^[\s\-•·–*]+/, '')
+    .trim();
+  if (!clean) return null;
+  if (!clean.includes('|')) return parseLine(clean);
+  const parts = clean.split('|').map((s) => s.trim());
+  const name = parts[0];
+  if (!name) return null;
+  const qty = parseInt(parts[1], 10);
+  const out = { name, qty: qty > 0 ? qty : 1 };
+  if (parts[2]) out.category = parts[2];
+  if (parts[3]) out.notes = parts[3];
+  const expiry = normalizeExpiry(parts[4]);
+  if (expiry) out.expiry = expiry;
+  return out;
+}
