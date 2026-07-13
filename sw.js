@@ -1,4 +1,4 @@
-const VERSION = '9'; // bump VERSION on deploy
+const VERSION = '10'; // bump VERSION on deploy
 const CACHE = 'mise-' + VERSION;
 const SHELL = ['./index.html', './manifest.json', './icon.svg', './js/interpret.js', './js/planner.js',
   './js/vendor/barcode-detector-ponyfill.js', './js/vendor/zxing_reader.wasm'];
@@ -17,6 +17,10 @@ self.addEventListener('activate', e => {
       Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
     ).then(() => clients.claim())
   );
+});
+
+self.addEventListener('message', event => {
+  if (event.data?.type==='SKIP_WAITING') self.skipWaiting();
 });
 
 self.addEventListener('fetch', e => {
