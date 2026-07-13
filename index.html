@@ -391,6 +391,8 @@ header{background:var(--bg);border-bottom:1px solid var(--rule);padding:max(var(
 .settings-row-label{font-size:15px;font-weight:600;color:var(--ink);}
 .settings-row-sub{font-size:12px;color:var(--ink-soft);margin-top:2px;}
 .s-btn{font-family:var(--font-mono);font-size:10px;padding:8px 13px;border-radius:8px;cursor:pointer;white-space:nowrap;min-height:38px;display:flex;align-items:center;border:1.5px solid transparent;}
+.s-btn.order-btn{width:34px;padding:8px 0;justify-content:center;font-size:15px;}
+.s-btn:disabled{opacity:0.3;cursor:default;}
 .s-btn-rename{background:var(--green-pale);color:var(--green);border-color:var(--green-light);}
 .s-btn-rename:active{background:var(--green-light);}
 .s-btn-del{background:var(--red-light);color:var(--red);border-color:var(--red-light);margin-left:4px;}
@@ -429,7 +431,7 @@ header{background:var(--bg);border-bottom:1px solid var(--rule);padding:max(var(
 .theme-seg button.active{background:var(--accent);color:var(--accent-ink);}
 .swipe-hint-line{font-size:11px;color:var(--ink-faint);text-align:center;padding:6px 12px 2px;letter-spacing:0.04em;}
 .items-grid .swipe-item{margin-bottom:0;border-radius:var(--radius);border:1px solid var(--rule);overflow:hidden;}
-.items-grid .swipe-item .swipe-inner.item-card{border-radius:0;margin-bottom:0;border:none;border-bottom:none;}
+.items-grid .swipe-item .swipe-inner.item-card{height:100%;border-radius:0;margin-bottom:0;border:none;border-bottom:none;}
 .lc-manage-staples{display:block;margin-top:14px;font-size:12px;font-weight:600;color:var(--accent);text-decoration:none;cursor:pointer;background:none;border:none;font-family:inherit;padding:0;}
 .lc-manage-staples:active{opacity:0.7;}
 .cook-step-pane{will-change:transform;}
@@ -1063,6 +1065,10 @@ option{color:var(--ink);background:var(--bg-card);}
       <div class="settings-heading">about</div>
       <div class="settings-card">
         <div class="settings-row">
+          <div style="flex:1"><div class="settings-row-label">app updates</div><div class="settings-row-sub">fetch the latest version and restart mise. your data stays on this device.</div></div>
+          <button class="s-btn s-btn-rename" id="app-update-btn" onclick="refreshApp()">check &amp; reload</button>
+        </div>
+        <div class="settings-row">
           <div><div class="settings-row-label">mise.</div><div class="settings-row-sub">your kitchen, prepped.</div></div>
         </div>
         <div class="settings-row" style="flex-direction:column;align-items:flex-start;gap:6px">
@@ -1541,6 +1547,14 @@ const Kitchen = (() => {
   function notify(){ if(_silent) return; for(const fn of _subs){ try{fn();}catch(e){} } }
   function withSilent(fn){ _silent=true; try{return fn();}finally{ _silent=false; notify(); } }
   function replace(arr, next){ arr.length=0; if(next&&next.length) for(const x of next) arr.push(x); return arr; }
+  function move(arr, idx, delta){
+    const to=idx+delta;
+    if(idx<0||idx>=arr.length||to<0||to>=arr.length) return false;
+    const [value]=arr.splice(idx,1);
+    arr.splice(to,0,value);
+    persist();notify();
+    return true;
+  }
   function ensureNonNegInt(n){ const v=parseInt(n,10); return isNaN(v)?0:Math.max(0,v); }
   function trimName(n){ return String(n==null?'':n).trim(); }
   function ensureLoc(name){ const loc=trimName(name); if(loc&&!_locations.includes(loc)) _locations.push(loc); return loc||(_locations[0]||''); }
@@ -1592,7 +1606,7 @@ const Kitchen = (() => {
         category:ensureCat(fields.category),
         location:ensureLoc(fields.location),
         qty:ensureNonNegInt(fields.qty),
-        threshold:ensureNonNegInt(fields.threshold!=null?fields.threshold:1)||1,
+        threshold:ensureNonNegInt(fields.threshold!=null?fields.threshold:1),
         notes:fields.notes||'',
         expiry:fields.expiry||'',
         noAlert:!!fields.noAlert,
@@ -1614,7 +1628,7 @@ const Kitchen = (() => {
         next.name=name;
       }
       if(fields.qty!=null) next.qty=ensureNonNegInt(fields.qty);
-      if(fields.threshold!=null) next.threshold=ensureNonNegInt(fields.threshold)||1;
+      if(fields.threshold!=null) next.threshold=ensureNonNegInt(fields.threshold);
       if(fields.location!=null) next.location=ensureLoc(fields.location);
       if(fields.category!=null) next.category=ensureCat(fields.category);
       if(fields.lastConfirmed==null) next.lastConfirmed=Date.now();
@@ -1796,6 +1810,7 @@ const Kitchen = (() => {
       persist(); notify();
       return true;
     },
+    moveLocation(idx, delta){ return move(_locations, idx, delta); },
     prependLocations(locs){
       if(!locs||!locs.length) return;
       const next=[...locs, ..._locations.filter(l=>!locs.includes(l))];
@@ -1828,6 +1843,7 @@ const Kitchen = (() => {
       persist(); notify();
       return true;
     },
+    moveCategory(idx, delta){ return move(_categories, idx, delta); },
 
     addStaple(name){
       const v=trimName(name).toLowerCase();
@@ -2091,8 +2107,50 @@ function handleUrlParams(){
 }
 
 // ── SERVICE WORKER ────────────────────────────────────────────────────────────
+let serviceWorkerRegistration=null;
 if('serviceWorker' in navigator){
-  navigator.serviceWorker.register('./sw.js').catch(()=>{});
+  navigator.serviceWorker.register('./sw.js').then(registration=>{
+    serviceWorkerRegistration=registration;
+  }).catch(()=>{});
+}
+
+async function refreshApp(){
+  const button=document.getElementById('app-update-btn');
+  if(button){button.disabled=true;button.textContent='checking…';}
+  if(!('serviceWorker' in navigator)){
+    window.location.reload();
+    return;
+  }
+
+  let reloadStarted=false;
+  const reload=()=>{
+    if(reloadStarted)return;
+    reloadStarted=true;
+    window.location.reload();
+  };
+  navigator.serviceWorker.addEventListener('controllerchange',reload,{once:true});
+
+  try{
+    const registration=serviceWorkerRegistration||await navigator.serviceWorker.ready;
+    await registration.update();
+    if(registration.waiting){
+      registration.waiting.postMessage({type:'SKIP_WAITING'});
+      setTimeout(reload,1500);
+      return;
+    }
+    if(registration.installing){
+      registration.installing.addEventListener('statechange',()=>{
+        if(registration.installing&&registration.installing.state==='activated')reload();
+      });
+      setTimeout(reload,3000);
+      return;
+    }
+    reload();
+  }catch(error){
+    navigator.serviceWorker.removeEventListener('controllerchange',reload);
+    if(button){button.disabled=false;button.textContent='check & reload';}
+    showToast(navigator.onLine?'update failed. try again.':'offline — connect to update.');
+  }
 }
 
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
@@ -2480,7 +2538,7 @@ function saveItem(){
     category:document.getElementById('f-category').value,
     location:document.getElementById('f-location').value,
     qty:parseInt(document.getElementById('f-qty').value)||0,
-    threshold:parseInt(document.getElementById('f-thresh').value)||1,
+    threshold:document.getElementById('f-thresh').value,
     notes:document.getElementById('f-notes').value.trim(),
     expiry:document.getElementById('f-expiry').value||'',
     noAlert:document.getElementById('f-noAlert').checked,
@@ -2807,6 +2865,8 @@ function renderLocationsList(){
     locations.map((loc,idx)=>`
       <div class="settings-row">
         <div style="flex:1"><div class="settings-row-label">${esc(loc)}</div><div class="settings-row-sub">${items.filter(i=>i.location===loc).length} items</div></div>
+        <button class="s-btn s-btn-rename order-btn" onclick="moveLocation(${idx},-1)" aria-label="Move ${esc(loc)} up" title="Move up" ${idx===0?'disabled':''}>↑</button>
+        <button class="s-btn s-btn-rename order-btn" onclick="moveLocation(${idx},1)" aria-label="Move ${esc(loc)} down" title="Move down" ${idx===locations.length-1?'disabled':''}>↓</button>
         <button class="s-btn s-btn-rename" onclick="openRenameSheet('location',${idx})">rename</button>
         <button class="s-btn s-btn-del" onclick="confirmDeleteLocation(${idx})">✕</button>
       </div>`).join('')||`<div class="settings-row"><div class="settings-row-label" style="color:var(--ink-3);font-style:italic;font-family:var(--font-serif)">no locations yet</div></div>`;
@@ -2817,6 +2877,8 @@ function renderCategoriesList(){
     categories.map((cat,idx)=>`
       <div class="settings-row">
         <div style="flex:1"><div class="settings-row-label">${esc(cat)}</div><div class="settings-row-sub">${items.filter(i=>i.category===cat).length} items</div></div>
+        <button class="s-btn s-btn-rename order-btn" onclick="moveCategory(${idx},-1)" aria-label="Move ${esc(cat)} up" title="Move up" ${idx===0?'disabled':''}>↑</button>
+        <button class="s-btn s-btn-rename order-btn" onclick="moveCategory(${idx},1)" aria-label="Move ${esc(cat)} down" title="Move down" ${idx===categories.length-1?'disabled':''}>↓</button>
         <button class="s-btn s-btn-rename" onclick="openRenameSheet('category',${idx})">rename</button>
         <button class="s-btn s-btn-del" onclick="confirmDeleteCategory(${idx})">✕</button>
       </div>`).join('')||`<div class="settings-row"><div class="settings-row-label" style="color:var(--ink-3);font-style:italic;font-family:var(--font-serif)">no categories yet</div></div>`;
@@ -2824,6 +2886,8 @@ function renderCategoriesList(){
 
 function addLocation(){const input=document.getElementById('new-loc-input');const name=input.value.trim();if(!name)return;const r=Kitchen.addLocation(name);if(!r.ok){showToast(r.reason==='exists'?'already exists':'');return;}input.value='';showToast('location added.');}
 function addCategory(){const input=document.getElementById('new-cat-input');const name=input.value.trim();if(!name)return;const r=Kitchen.addCategory(name);if(!r.ok){showToast(r.reason==='exists'?'already exists':'');return;}input.value='';showToast('category added.');}
+function moveLocation(idx,delta){Kitchen.moveLocation(idx,delta);}
+function moveCategory(idx,delta){Kitchen.moveCategory(idx,delta);}
 
 function openRenameSheet(type,idx){
   renameType=type;renameIdx=idx;
